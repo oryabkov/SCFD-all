@@ -14,5 +14,4 @@
 *.o
 *.bin
 *.a
-.editorconfig
 generated
