@@ -1,0 +1,53 @@
+
+    Rationale
+
+Idea in dividing concept into two parts is the following. 
+LogBasic concept supposed to be used for 'external' users, who needs
+to give just some basic interface for logging in their code.
+Log concept is for internal SCFD usage, it gives many usefull s-style
+format shortcuts. logged_obj_base uses Log as parameter. 
+LogCFormatted is basically LogBasic + all these s-style format methods.
+For now LogCFormatted == Log but perhaps some other usefull functionality 
+will be added to Log concept.
+
+log_cformatted template class takes LogBasic as base class and adds all 
+needed format methods, so log_cformatted<LogBasic> is LogCFormatted.
+Note that log_cformatted inherits all constructors from LogBasic.
+
+If there is need to use extenal instance of LogBasic (for example, given
+by library user) but wrapped into log_cformatted one can use following combination:
+log_cformatted<log_basic_wrap<LogBasic>>
+or just shotcut
+log_basic_cformatted_wrap<LogBasic>
+
+log_basic_wrap<LogBasic> is LogBasic itself and redirects all calls into its
+template parameter class instance. This instance is held as pointer inside
+log_basic_wrap that can be set by user in constuctor or by set_log_basic method.
+
+
+    LogBasic concept:
+
+Nested types:
+
+class enum log_msg_type that contains at least INFO,INFO_ALL,WARNING,ERROR,DEBUG
+
+Methods:
+
+void msg(const std::string &s, log_msg_type mt = log_msg_type::INFO, int _log_lev = 1);
+lesser log level corresponds to more important messages
+
+TODO if set_verbosity is really needed in CONCEPT?? Logging algorithm must not use it, I suppose
+void set_verbosity(int _log_lev = 1);
+set_verbosity sets maximum level of messages to log
+NOTE log_lev doesnot affects errors
+
+    
+    Log (LogCFormatted) concept:
+
+Refinement of LogBasic.
+
+Adds c-style format methods, like info_f and v_info_f, error_f, etc.
+
+TODO make detailed description from log_cformatted.
+
+
