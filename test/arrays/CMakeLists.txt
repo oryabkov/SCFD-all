@@ -1,0 +1,26 @@
+
+add_executable(test_tensor_host.bin test_tensor.cpp)
+target_link_libraries(test_tensor_host.bin gtest_main)
+
+add_executable(test_tensor_array_nd_cuda.bin test_tensor_array_nd.cu)
+target_link_libraries(test_tensor_array_nd_cuda.bin gtest_main)
+add_executable(test_tensor_array_nd_host.bin test_tensor_array_nd.cpp)
+target_link_libraries(test_tensor_array_nd_host.bin gtest_main)
+
+add_executable(test_tensor_array_nd_visible_cuda.bin test_tensor_array_nd_visible.cu)
+target_link_libraries(test_tensor_array_nd_visible_cuda.bin gtest_main)
+
+add_executable(test_tensor_array_nd_syntax_host.bin test_tensor_array_nd_syntax.cpp)
+target_link_libraries(test_tensor_array_nd_syntax_host.bin gtest_main)
+
+add_executable(test_last_index_fast_arranger_host.bin test_last_index_fast_arranger.cpp)
+target_link_libraries(test_last_index_fast_arranger_host.bin gtest_main)
+
+add_test(NAME test_tensor_host COMMAND test_tensor_host.bin)
+add_test(NAME test_tensor_array_nd_cuda COMMAND test_tensor_array_nd_cuda.bin)
+add_test(NAME test_tensor_array_nd_host COMMAND test_tensor_array_nd_host.bin)
+add_test(NAME test_tensor_array_nd_visible_cuda COMMAND test_tensor_array_nd_visible_cuda.bin)
+add_test(NAME test_tensor_array_nd_syntax_host COMMAND test_tensor_array_nd_syntax_host.bin)
+add_test(NAME test_last_index_fast_arranger_host COMMAND test_last_index_fast_arranger_host.bin)
+
+add_subdirectory(detail)
