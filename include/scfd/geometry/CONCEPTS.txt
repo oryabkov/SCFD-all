@@ -1,0 +1,5 @@
+StaticVec concept:
+DefaultConstructable
+CopyConstructable and CopyAssignable
+Must have scfd::geometry::static_vec_traits specialization
+with all operations (see static_vec_traits.h)
