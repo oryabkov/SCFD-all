@@ -1,0 +1,8 @@
+
+TODO MemoryType concept
+
+memory::malloc(pointer_type* p, size_t size) 
+for size == 0 it MUST NOT generate an error and it MUST return NULL ptr
+
+free(pointer_type p)
+for p == NULL it MUST NOT generate an error
