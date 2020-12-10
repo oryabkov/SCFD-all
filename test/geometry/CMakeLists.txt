@@ -1,0 +1,8 @@
+
+add_executable(intersect_triangles_test.bin intersect_triangles_test.cpp)
+target_link_libraries(intersect_triangles_test.bin gtest_main)
+add_executable(static_vec_traits_test.bin static_vec_traits_test.cpp)
+target_link_libraries(static_vec_traits_test.bin gtest_main)
+
+add_test(NAME intersect_triangles_test COMMAND intersect_triangles_test.bin)
+add_test(NAME static_vec_traits_test COMMAND static_vec_traits_test.bin)
