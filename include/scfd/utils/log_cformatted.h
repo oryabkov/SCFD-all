@@ -41,7 +41,7 @@ namespace utils
 * LogBasic concept see in LOG_CONCEPTS.txt
 */ 
 
-template<class LogBasic>
+template<class LogBasic, std::size_t BufSize = 512>
 class log_cformatted : public LogBasic
 {
 public:
@@ -53,25 +53,25 @@ public:
     using LogBasic::set_verbosity;
 
 public:
-    void info(const std::string &s, int _log_lev = 1)
+    void info(const std::string &s)
     {
-        msg(s, log_msg_type::INFO, _log_lev);
+        msg(s, log_msg_type::INFO, 1);
     }
-    void info_all(const std::string &s, int _log_lev = 1)
+    void info_all(const std::string &s)
     {
-        msg(s, log_msg_type::INFO_ALL, _log_lev);
+        msg(s, log_msg_type::INFO_ALL, 1);
     }
-    void warning(const std::string &s, int _log_lev = 1)
+    void warning(const std::string &s)
     {
-        msg(s, log_msg_type::WARNING, _log_lev);
+        msg(s, log_msg_type::WARNING, 1);
     }
-    void error(const std::string &s, int _log_lev = 1)
+    void error(const std::string &s)
     {
-        msg(s, log_msg_type::ERROR, _log_lev);
+        msg(s, log_msg_type::ERROR, 1);
     }
-    void debug(const std::string &s, int _log_lev = 1)
+    void debug(const std::string &s)
     {
-        msg(s, log_msg_type::DEBUG, _log_lev);
+        msg(s, log_msg_type::DEBUG, 1);
     }
     void info(int _log_lev, const std::string &s)
     {
@@ -102,8 +102,8 @@ public:
 
     #define LOG__FORMATTED_OUT_V__(METHOD_NAME,LOG_LEV)   \
         SCFD_UTILS_LOG__FORMATTED_LOCK                    \
-        vsprintf(buf, s.c_str(), arguments);              \
-        METHOD_NAME(std::string(buf), LOG_LEV);
+        vsnprintf(buf, BufSize, s.c_str(), arguments);    \
+        METHOD_NAME(LOG_LEV, std::string(buf));
     void v_info_f(int _log_lev, const std::string &s, va_list arguments)
     {
         LOG__FORMATTED_OUT_V__(info, _log_lev)
@@ -151,8 +151,8 @@ public:
         SCFD_UTILS_LOG__FORMATTED_LOCK                  \
         va_list arguments;                              \
         va_start ( arguments, s );                      \
-        vsprintf(buf, s.c_str(), arguments);            \
-        METHOD_NAME(std::string(buf), LOG_LEV);         \
+        vsnprintf(buf, BufSize, s.c_str(), arguments);  \
+        METHOD_NAME(LOG_LEV, std::string(buf));         \
         va_end ( arguments );   
     void info_f(int _log_lev, const std::string &s, ...)
     {
@@ -197,7 +197,7 @@ public:
     #undef LOG__FORMATTED_OUT__
 
 private:
-    char        buf[200];
+    char        buf[BufSize];
     #if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE==1
     std::mutex  mtx_;
     #endif

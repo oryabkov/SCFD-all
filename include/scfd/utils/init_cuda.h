@@ -66,7 +66,8 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
             }            
             //printf("Device number for it to use>>>\n");
             log.info_f(log_lev, "init_cuda: Device number for it to use>>>\n");
-            scanf("%i", &res_dev_num);
+            if (scanf("%i", &res_dev_num) != 1)
+                throw std::runtime_error("init_cuda: problem with interactive device number input\n");
         }
         else if (pci_id==-2) 
         {
@@ -125,7 +126,7 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
 template<class Log>
 inline int init_cuda(Log &log, int pci_id, int dev_num = -2)
 {
-    init_cuda(1, log, pci_id, dev_num);
+    return init_cuda(1, log, pci_id, dev_num);
 }
 
 /// Default std::cout log version
@@ -133,7 +134,7 @@ inline int init_cuda(Log &log, int pci_id, int dev_num = -2)
 inline int init_cuda(int pci_id, int dev_num = -2)
 {
     log_std   log;
-    init_cuda(log, pci_id, dev_num);
+    return init_cuda(log, pci_id, dev_num);
 }
 
 /// cuda_device_string:
@@ -170,7 +171,7 @@ inline int init_cuda_str(Log &log, const std::string &cuda_device_string)
 inline int init_cuda_str(const std::string &cuda_device_string)
 {
     log_std   log;
-    init_cuda_str(log, cuda_device_string);
+    return init_cuda_str(log, cuda_device_string);
 }
 
 inline std::string init_cuda_str_cmd_help(const std::string &arg_name)

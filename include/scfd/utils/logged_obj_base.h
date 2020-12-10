@@ -49,32 +49,52 @@ public:
     }
     const std::string   &get_log_msg_prefix()const { return log_msg_prefix_; }
 
-    void info(const std::string &s, int log_lev_ = 1)const
+    void info(int log_lev_, const std::string &s)const
     {
-        if (log_ != NULL) log_->info(log_msg_prefix_ + s, obj_log_lev_ + log_lev_);
+        if (log_ != NULL) log_->info(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void info_all(const std::string &s, int log_lev_ = 1)const
+    void info_all(int log_lev_, const std::string &s)const
     {
-        if (log_ != NULL) log_->info_all(log_msg_prefix_ + s, obj_log_lev_ + log_lev_);
+        if (log_ != NULL) log_->info_all(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void warning(const std::string &s, int log_lev_ = 1)const
+    void warning(int log_lev_, const std::string &s)const
     {
-        if (log_ != NULL) log_->warning(log_msg_prefix_ + s, obj_log_lev_ + log_lev_);
+        if (log_ != NULL) log_->warning(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void error(const std::string &s, int log_lev_ = 1)const
+    void error(int log_lev_, const std::string &s)const
     {
-        if (log_ != NULL) log_->error(log_msg_prefix_ + s, obj_log_lev_ + log_lev_);
+        if (log_ != NULL) log_->error(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void debug(const std::string &s, int log_lev_ = 1)const
+    void debug(int log_lev_, const std::string &s)const
     {
-        if (log_ != NULL) log_->debug(log_msg_prefix_ + s, obj_log_lev_ + log_lev_);
+        if (log_ != NULL) log_->debug(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
+    }
+    void info(const std::string &s)const
+    {
+        info(1, s);
+    }
+    void info_all(const std::string &s)const
+    {
+        info_all(1, s);
+    }
+    void warning(const std::string &s)const
+    {
+        warning(1, s);
+    }
+    void error(const std::string &s)const
+    {
+        error(1, s);
+    }
+    void debug(const std::string &s)const
+    {
+        debug(1, s);
     }
 
     #define LOGGED_OBJ_BASE__FORMATTED_OUT__(METHOD_NAME, LOG_LEV)              \
         if (log_ == NULL) return;                                               \
         va_list arguments;                                                      \
         va_start ( arguments, s );                                              \
-        log_->METHOD_NAME(obj_log_lev_, log_msg_prefix_ + s, arguments);        \
+        log_->METHOD_NAME(LOG_LEV, log_msg_prefix_ + s, arguments);             \
         va_end ( arguments );    
     void info_f(int log_lev_, const std::string &s, ...)const
     {
@@ -98,23 +118,23 @@ public:
     }
     void info_f(const std::string &s, ...)const
     {
-        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_f, obj_log_lev_)
+        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_f, obj_log_lev_ + 1)
     }
     void info_all_f(const std::string &s, ...)const
     {
-        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_all_f, obj_log_lev_)
+        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_all_f, obj_log_lev_ + 1)
     }
     void warning_f(const std::string &s, ...)const
     {
-        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_warning_f, obj_log_lev_)
+        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_warning_f, obj_log_lev_ + 1)
     }
     void error_f(const std::string &s, ...)const
     {
-        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_error_f, obj_log_lev_)
+        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_error_f, obj_log_lev_ + 1)
     }
     void debug_f(const std::string &s, ...)const
     {
-        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_debug_f, obj_log_lev_)
+        LOGGED_OBJ_BASE__FORMATTED_OUT__(v_debug_f, obj_log_lev_ + 1)
     }
     #undef LOGGED_OBJ_BASE__FORMATTED_OUT__
 };
