@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8.2)
-project(gProximity_mod3 LANGUAGES C CXX CUDA)
+project(SCFD LANGUAGES C CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
