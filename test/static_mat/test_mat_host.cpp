@@ -15,11 +15,78 @@
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+#include <scfd/static_vec/vec.h>
 #include <scfd/static_mat/mat.h>
 
 #include "gtest/gtest.h"
 
+using namespace scfd::static_vec;
 using namespace scfd::static_mat;
+
+TEST(StaticMatTest, InitFloatByValues) 
+{
+    mat<float,2,3>    m1( 0.f, 1.f, 2,
+                         -0.f,-1.f,-2);
+
+    ASSERT_EQ(m1(0,0), 0.f);
+    ASSERT_EQ(m1(0,1), 1.f);
+    ASSERT_EQ(m1(0,2), 2.f);
+
+    ASSERT_EQ(m1(1,0), -0.f);
+    ASSERT_EQ(m1(1,1), -1.f);
+    ASSERT_EQ(m1(1,2), -2.f);
+}
+
+TEST(StaticMatTest, InitIntByInitializerLists) 
+{
+    mat<float,2,3>       m1 = { 0.f, 1.f, 2.f,
+                               -0.f,-1.f,-2.f};
+    /// NOTE that this version is impossible
+    //                     m2 = { { 3.f, 2.f, 1.f},
+    //                            {-3.f,-2.f,-1.f}};
+
+    ASSERT_EQ(m1(0,0), 0.f);
+    ASSERT_EQ(m1(0,1), 1.f);
+    ASSERT_EQ(m1(0,2), 2.f);
+
+    ASSERT_EQ(m1(1,0), -0.f);
+    ASSERT_EQ(m1(1,1), -1.f);
+    ASSERT_EQ(m1(1,2), -2.f);
+}
+
+TEST(StaticMatTest, ScalarMul)
+{
+    mat<int,2,3>    m0( 0, 1, 2,
+                        0,-1,-2),
+                    m1,m2;
+
+    m1 = m0*2;
+    ASSERT_EQ(m1(0,0), 0);
+    ASSERT_EQ(m1(0,1), 2);
+    ASSERT_EQ(m1(0,2), 4);
+    ASSERT_EQ(m1(1,0), -0);
+    ASSERT_EQ(m1(1,1), -2);
+    ASSERT_EQ(m1(1,2), -4);
+    m2 = 3*m0;
+    ASSERT_EQ(m2(0,0), 0);
+    ASSERT_EQ(m2(0,1), 3);
+    ASSERT_EQ(m2(0,2), 6);
+    ASSERT_EQ(m2(1,0), -0);
+    ASSERT_EQ(m2(1,1), -3);
+    ASSERT_EQ(m2(1,2), -6);
+}
+
+TEST(StaticMatTest, VecMul)
+{
+    mat<int,2,3>    m( 0, 1, 2,
+                       0,-1,-2);
+    vec<int,3>      v(1,2,3);
+    vec<int,2>      v1;
+
+    v1 = m*v;
+    ASSERT_EQ(v1(0), 8);
+    ASSERT_EQ(v1(1),-8);
+}
 
 /*template<typename T, class T_mat>
 __host__ __device__ T some_func(T_mat& m2)
