@@ -17,7 +17,10 @@
 #ifndef __SCFD_MAT_H__
 #define __SCFD_MAT_H__
 
+#include <type_traits>
 #include <scfd/utils/device_tag.h>
+#include <scfd/static_vec/vec.h>
+#include "detail/bool_array.h"
 
 namespace scfd
 {
@@ -27,6 +30,7 @@ namespace static_mat
 template<class T,int Dim1,int Dim2>
 class mat
 {
+    template<class X>using help_t = T;
 public:
 
     T d[Dim1][Dim2];
@@ -37,6 +41,16 @@ public:
 
     __DEVICE_TAG__                      mat() = default;
     __DEVICE_TAG__                      mat(const mat &v) = default;
+    template<typename... Args,
+             class = typename std::enable_if<sizeof...(Args) == Dim1*Dim2>::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< 
+                                      std::is_convertible<Args,help_t<Args> >::value... 
+                                  >::value
+                              >::type>
+    __DEVICE_TAG__                      mat(const Args&... args) : d{static_cast<T>(args)...}
+    {
+    }
 
     __DEVICE_TAG__ mat                  operator*(value_type mul)const
     {
@@ -137,6 +151,23 @@ public:
         return *this;
     }
 
+    __DEVICE_TAG__ static_vec::vec<T,Dim1> operator*(const static_vec::vec<T,Dim2> &v)const
+    {
+        static_vec::vec<T,Dim1> res;
+
+        #pragma unroll
+        for (int i = 0;i < Dim1;++i) {
+            T sum = T(0);
+            #pragma unroll
+            for (int l = 0; l < Dim2; ++l) {
+                sum += d[i][l]*v[l];
+            }
+            res[i] = sum;
+        }
+
+        return res;
+    }
+
     template<int Dim3>
     __DEVICE_TAG__ mat<T,Dim1,Dim3>      operator*(const mat<T,Dim2,Dim3> &m)const
     {
@@ -168,7 +199,22 @@ public:
         }
         return res;
     }
+    __DEVICE_TAG__ T                     trace()const
+    {
+        T res(0);
+        #pragma unroll
+        for (int i = 0;i < (dim1 < dim2?dim1:dim2);++i) {
+            res += d[i][i];
+        }
+        return res;
+    }
 };
+
+template<class T,int Dim1,int Dim2>
+__DEVICE_TAG__ mat<T,Dim1,Dim2> operator*(T mul, const mat<T,Dim1,Dim2> &m)
+{
+    return m*mul;
+}
 
 }
 }

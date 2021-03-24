@@ -160,6 +160,12 @@ public:
 };
 
 template<class T,int Dim>
+__DEVICE_TAG__ vec<T,Dim>   operator*(T mul, const vec<T,Dim> &v)
+{
+    return v*mul;
+}
+
+template<class T,int Dim>
 __DEVICE_TAG__ T            scalar_prod(const vec<T,Dim> &v1, const vec<T,Dim> &v2)
 {
     T   res(0.);
@@ -177,6 +183,15 @@ __DEVICE_TAG__ vec<T,Dim>   vector_prod(const vec<T,Dim> &v1, const vec<T,Dim> &
     res[1] = -(v1[0]*v2[2] - v1[2]*v2[0]);
     res[2] =   v1[0]*v2[1] - v1[1]*v2[0];
     return res;
+}
+
+template<class T,int Dim>
+__DEVICE_TAG__ T triple_prod(const vec<T,Dim>& x,
+                             const vec<T,Dim>& y,
+                             const vec<T,Dim>& z)
+{
+    static_assert(Dim==3, "static_vec::triple_prod: trying to apply to non 3d vectors");
+    return scalar_prod(x,vector_prod(y,z));
 }
 
 }
