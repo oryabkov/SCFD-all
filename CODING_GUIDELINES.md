@@ -7,7 +7,7 @@ git.
 # Basic guidelines
 [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) is taken as basis for out guidelines. When something is not stated in this document try to follow rules from this reference.
 
-##Formatting
+## Formatting
 
 4 spaces are used for idents. Max 120 symbols for string is used.
 
@@ -120,11 +120,11 @@ A member function defined in a class definition is implicitly inline, but prefer
 All of a project's header files should be listed as descendants of the project's source directory without use of UNIX directory shortcuts . (the current directory) or .. (the parent directory). Within each section the includes should be ordered alphabetically. Separate the categories with empty lines.
 
 Order of Includes (Within each section the includes should be ordered alphabetically):  
-* Precompiled header file or project headers neccecary for containing compile unit. For example, for file "fooserver.cpp" it may be "fooserver.h". 
 * C system files.  
 * C++ system files.  
 * Other libraries' .h files.  
 * Your project's .h files.  
+* Precompiled header file or project headers neccecary for containing compile unit. For example, for file "foo_server.cpp" it may be "foo_server.h". 
 
 Example:  
 ```
@@ -257,15 +257,17 @@ Always make class methods ‘const’ when they do not modify any class variable
 Use the specified order of declarations within a class: "public:" before private:, methods before data members (variables), etc.  
 place constructors and assignment operators before other methods.  
 
-* Using-declarations
+* static_assert's (for templates)
 * list of friend classes
-* Typedefs and Enums  
-* public class methods  
-* protected class methods  
-* private class methods  
+* public using-declarations, typedefs, Enums and constants.
 * public class variables  
+* public class methods  
+* protected using-declarations, typedefs, Enums and constants.
 * protected class variables  
+* protected class methods  
+* private using-declarations, typedefs, Enums and constants.
 * private class variables  
+* private class methods  
 
 ## Parameter Ordering  
 When defining a function, parameter order is: 
