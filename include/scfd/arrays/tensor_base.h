@@ -259,11 +259,15 @@ protected:
 
 public:
     __DEVICE_TAG__                  tensor_base() : d_(NULL) {}
-    __DEVICE_TAG__                  tensor_base(const tensor_base &t) { assign(t); }
-    __DEVICE_TAG__                  tensor_base(tensor_base &&t) { move(std::move(t)); }
+    #ifndef __CUDA_ARCH__
+    tensor_base(const tensor_base &t) { assign(t); }
+    tensor_base(tensor_base &&t) { move(std::move(t)); }
+    #endif
 
-    __DEVICE_TAG__ tensor_base      &operator=(const tensor_base &t) { assign(t); return *this; }
-    __DEVICE_TAG__ tensor_base      &operator=(tensor_base &&t) { move(std::move(t)); return *this; }
+    #ifndef __CUDA_ARCH__
+    tensor_base                     &operator=(const tensor_base &t) { assign(t); return *this; }
+    tensor_base                     &operator=(tensor_base &&t) { move(std::move(t)); return *this; }
+    #endif
 
     __DEVICE_TAG__ bool             is_free()const { return d_ == NULL; }
     __DEVICE_TAG__ bool             is_own()const { return own_; }

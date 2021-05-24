@@ -84,12 +84,12 @@ private:
     };
 
 public:
-    __DEVICE_TAG__                  tensor_array_nd() = default;
-    __DEVICE_TAG__                  tensor_array_nd(const tensor_array_nd &) = default;
-    __DEVICE_TAG__                  tensor_array_nd(tensor_array_nd &&t) = default;
+    __DEVICE_TAG__                  tensor_array_nd();
+    __DEVICE_TAG__                  tensor_array_nd(const tensor_array_nd &);
+    __DEVICE_TAG__                  tensor_array_nd(tensor_array_nd &&t);
 
-    __DEVICE_TAG__ tensor_array_nd  &operator=(const tensor_array_nd &t) = default;
-    __DEVICE_TAG__ tensor_array_nd  &operator=(tensor_array_nd &&t) = default;
+    __DEVICE_TAG__ tensor_array_nd  &operator=(const tensor_array_nd &t);
+    __DEVICE_TAG__ tensor_array_nd  &operator=(tensor_array_nd &&t);
 
     using                           parent_t::init;
     template<class SizeVec, class... Args,
@@ -339,6 +339,33 @@ public:
         }
     }
 };
+
+template<class T, ordinal_type ND, class Memory, 
+         template <ordinal_type... Dims> class Arranger, 
+         ordinal_type... TensorDims>
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>::tensor_array_nd() = default;
+
+template<class T, ordinal_type ND, class Memory, 
+         template <ordinal_type... Dims> class Arranger, 
+         ordinal_type... TensorDims>
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>::tensor_array_nd(const tensor_array_nd &) = default;
+
+template<class T, ordinal_type ND, class Memory, 
+         template <ordinal_type... Dims> class Arranger, 
+         ordinal_type... TensorDims>
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>::tensor_array_nd(tensor_array_nd &&t) = default;
+
+template<class T, ordinal_type ND, class Memory, 
+         template <ordinal_type... Dims> class Arranger, 
+         ordinal_type... TensorDims>
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>&
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>::operator=(const tensor_array_nd &t) = default;
+
+template<class T, ordinal_type ND, class Memory, 
+         template <ordinal_type... Dims> class Arranger, 
+         ordinal_type... TensorDims>
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>&
+tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>::operator=(tensor_array_nd &&t) = default;
 
 }
 }
