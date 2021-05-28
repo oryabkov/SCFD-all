@@ -92,6 +92,10 @@ public:
         for (int j = 0;j < dim;++j) res.d[j] = -d[j];
         return res;
     }
+    __DEVICE_TAG__ vec                  inverted()const
+    {
+        return -(*this);
+    }    
     __DEVICE_TAG__ value_type            &operator[](int j) { return d[j]; }
     __DEVICE_TAG__ const value_type      &operator[](int j)const { return d[j]; }
     __DEVICE_TAG__ value_type            &operator()(int j) { return d[j]; }
