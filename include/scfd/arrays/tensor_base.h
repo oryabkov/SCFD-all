@@ -62,12 +62,20 @@ protected:
     {
         assert(is_free());
         arranger_type::set_dyn_dims(dyn_dims);
-        memory_type::malloc((void**)&d_, sizeof(T)*arranger_type::total_size());
-        own_ = true;
+        try 
+        {
+            memory_type::malloc((void**)&d_, sizeof(T)*arranger_type::total_size());
+            own_ = true;
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        arranger_type::set_zero_dyn_indexes0();
+            arranger_type::set_zero_dyn_indexes0();
 #endif
-        assert((!is_free() || (arranger_type::total_size() == 0)) && own_);
+            assert((!is_free() || (arranger_type::total_size() == 0)) && own_);
+        }
+        catch (...)
+        {
+            arranger_type::set_zero_dyn_dims();
+            std::throw_with_nested( std::runtime_error("tensor_base::init1_: failed memory allocation") );
+        }
     }
     void                            init1_by_raw_data_(pointer_type raw_data_ptr, 
                                                        const vec<ordinal_type,arranger_type::dynamic_dims_num> &dyn_dims)
@@ -258,7 +266,13 @@ protected:
     }
 
 public:
-    __DEVICE_TAG__                  tensor_base() : d_(NULL) {}
+    __DEVICE_TAG__                  tensor_base() : d_(NULL) 
+    { 
+        arranger_type::set_zero_dyn_dims();
+#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+        arranger_type::set_zero_dyn_indexes0();
+#endif
+    }
     #ifndef __CUDA_ARCH__
     tensor_base(const tensor_base &t) { assign(t); }
     tensor_base(tensor_base &&t) { move(std::move(t)); }

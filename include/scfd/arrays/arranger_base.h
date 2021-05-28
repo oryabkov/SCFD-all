@@ -60,6 +60,12 @@ protected:
     {
         dyn_dims_ = vec<Ord,dynamic_dims_num>(dyn_dims);
     }
+    //TODO not sure about this device tag though
+    __DEVICE_TAG__ void set_zero_dyn_dims()
+    {
+        #pragma unroll
+        for (Ord j = 0;j < dynamic_dims_num;++j) dyn_dims_[j] = 0;
+    }
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
     template<class... Args,
              class = typename std::enable_if<sizeof...(Args)==dynamic_dims_num>::type, 
@@ -74,8 +80,10 @@ protected:
     {
         dyn_indexes0_ = vec<Ord,dynamic_dims_num>(dyn_indexes0);
     }
-    void set_zero_dyn_indexes0()
+    //TODO not sure about this device tag though
+    __DEVICE_TAG__ void set_zero_dyn_indexes0()
     {
+        #pragma unroll
         for (Ord j = 0;j < dynamic_dims_num;++j) dyn_indexes0_[j] = 0;
     }
 #endif
