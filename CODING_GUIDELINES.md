@@ -863,8 +863,8 @@ class foo_class
 Use lowercase_underscore   
 
 ```
-		/** Set duration elapsed when the timer was running and not paused **/
-		void setTotalRunning(const Duration& duration);
+/** Set duration elapsed when the timer was running and not paused **/
+void set_total_running(const duration& d);
 ```
 
 One of the reasons for this is the range-based for-loop (since C++11). If you want to make your class work with the range-for, you have to define functions called begin and end for that class. The names must be exactly begin and end, so e.g. Begin and End are not supported.   
@@ -898,28 +898,28 @@ Macro should be named with all capitals and underscores.
 # Enumerator Names  
 Enumerators (for both scoped and unscoped enums) should be named like macros.  
 ```
-enum AlternateUrlTableErrors 
+enum alternate_url_table_errors 
 {
-    OK = 0,
-    OUT_OF_MEMORY = 1,
-    MALFORMED_INPUT = 2,
+    ok = 0,
+    out_of_memory = 1,
+    malformed_input = 2,
 };
 ```
 Prefix is allowed, but prefer enum without prefix:  
 ```
-// Good, use as Color::RED e.t.c.
-enum Color 
+// Good, use as color::red e.t.c.
+enum color 
 {
-    RED,
-    GREEN,
-    BLUE
+    red,
+    green,
+    blue
 };
 // Allowed
-enum Color 
+enum color 
 {
-    COLOR_RED,
-    COLOR_GREEN,
-    COLOR_BLUE
+    color_red,
+    color_green,
+    color_blue
 };
 ```
 
@@ -930,7 +930,7 @@ Code that is not used (commented out) and not part of an explanation shall be de
 ## Output arguments
 Output arguments to methods / functions (i.e., variables that the function can modify) are passed by pointer, not by reference. E.g.:
 ```
-int examplemethod(FooThing input, BarThing* output);
+int example_method(foo_thing input, bar_thing* output);
 ```
 
 ## Deprecation code
@@ -952,13 +952,13 @@ Use doxygen @todo comment style.
 Prefer   
 ````
 ProductOptions options;
-options.setPrecision(7);
-options.setCache(ProductOptions::c_DontUseCache);
-const DecimalNumber product = calculateProduct(values, options, /*completion_callback=*/nullptr);
+options.set_precision(7);
+options.set_cache(product_options::c_dont_use_cache);
+const DecimalNumber product = calculate_product(values, options, /*completion_callback=*/nullptr);
 ````
 to  
 ````
-const DecimalNumber product = CalculateProduct(values, 7, false, nullptr); // Bad: What are these arguments?
+const DecimalNumber product = calculate_product(values, 7, false, nullptr); // Bad: What are these arguments?
 ````
 
 ## Tabulation  
@@ -1167,7 +1167,7 @@ which looks awfull in the begining of the line
 // Bad - directives at beginning of line
 if (lopsided_score) 
 {
-#if THAT_IS_NICE      // Correct -- Starts at beginning of line
+#if THAT_IS_NICE      // Wrong! -- Starts at beginning of line
     drop_everything();
 #endif
     back_to_normal();
@@ -1175,16 +1175,16 @@ if (lopsided_score)
 // Good - indented directives
 if (lopsided_score) 
 {
-    #if DISASTER_PENDING  // Wrong!  The "#if" should be at beginning of line
+    #if DISASTER_PENDING  // Correct The "#if" should be at beginning of line
     drop_everything();
-    #endif                // Wrong!  Do not indent "#endif"
+    #endif                // Correct Do not indent "#endif"
     back_to_normal();
 }
 ```
 
 ## Class Format  
-* Any base class name should be on the same line as the subclass name, subject to the 80-column limit.  
-* The public:, protected:, and private: keywords should be indented 2 space.  
+* Any base class name should be on the same line as the subclass name, subject to the 120-column limit.  
+* The public:, protected:, and private: keywords should be indented 4 space.  
 * Except for the first instance, these keywords should be preceded by a blank line. This rule is optional in small classes.  
 * Do not leave a blank line after these keywords.  
 * The public section should be first, followed by the protected and finally the private section (methods first, then members, see Declaration Order).  
@@ -1347,26 +1347,20 @@ char *blockOfMemory = reinterpret_cast<char *>(malloc(data.size()));
 * "#pragma once" is pretty widely [supported](https://en.wikipedia.org/wiki/Pragma_once#Portability), you can use it.  
 
 ## Boolean variables  
-Use "b" prefix for boolean variables.  
-```
-        /**  Is timer running **/
-        bool mb_Running;
-        
-        bool bError; // Dont use isError/isNotError
-```
+TODO 
 
 ## Abbreviations  
-Abbreviations must use lowerCamelCase (in the start of variable name) or UpperCamelCase (in the middle of variable name).  
+Abbreviations must use  lowercase.
 ```
-exportHtmlSource(); // Bad: exportHTMLSource();  
-openDvdPlayer();    // Good: openDVDPlayer();  
-dvdReader();         // Good
+export_html_source();
+open_dvd_player();
+dvd_reader();
 ```
 ## Global variables  
 Prefer :: prefix for global variables (refers to the global namespace).  
 ```
-::mainWindow.open()
-::applicationContext.getName()  
+::main_window.open()
+::application_context.get_name()  
 ```
 ## Types to use
 * Do not use unsigned types to mean “this value should never be < 0”. For that, use assertions or run-time checks (as appropriate).
@@ -1622,11 +1616,13 @@ Note: You should never depend on assert to do anything because the code can be c
 * Don’t evaluate end() every time through a loop.
 ```
 BasicBlock *BB = ...
-for (BasicBlock::iterator I = BB->begin(); I != BB->end(); ++I) { // Bad
+for (BasicBlock::iterator I = BB->begin(); I != BB->end(); ++I) 
+{ // Bad
   ... use I ...
 }
 BasicBlock *BB = ...
-for (BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I) { // Good, added E = BB->end()
+for (BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I) 
+{ // Good, added E = BB->end()
   ... use I ...
 }
 ```
@@ -1680,36 +1676,45 @@ if (condition) doIt();
 * An else statement should go on the same line as a preceding close brace if one is present, else it should line up with the if statement.
 Good:  
 ```
-if (condition) {
+if (condition) 
+{
     ...
-} else {
+} else 
+{
     ...
 }
 ```
 Bad:  
 ```
-if (condition) {
+if (condition) 
+{
     ...
 }
-else {
+else 
+{
     ...
 }
 ```
 * An else if statement should be written as an if statement when the prior if concludes with a return statement.
 Good:
 ```
-if (condition) {
+if (condition) 
+{
     return someValue;
 }
-if (condition) {
+if (condition) 
+{
     return someOtherValue;
 }
 ```
 Bad:
 ```
-if (condition) {
+if (condition) 
+{
     return someValue;
-} else if (condition) {
+} 
+else if (condition) 
+{
     ...
 }
 ```
@@ -1721,21 +1726,25 @@ int main()
     ...
 }
 
-class my_class {
+class my_class 
+{
     ...
 };
 
-namespace webcore {
+namespace webcore 
+{
     ...
 }
 
-for (int i = 0; i < 10; ++i) {
+for (int i = 0; i < 10; ++i) 
+{
     ...
 }
 ```
 Bad:
 ```
-int main() {
+int main() 
+{
     ...
 }
 
@@ -1746,8 +1755,9 @@ class my_class
 ```
 * One-line control clauses should use braces (simplifies further editing and prevents bugs).
 ```
-if (condition) {
-    doIt();
+if (condition) 
+{
+    do_it();
 }
 ```
 * Prefer Using Directive (using std::vector;) over Using Declaration (using namespace std;).
@@ -1762,9 +1772,10 @@ void do_something(ScriptExecutionContext* context); // Good, bad is: void do_som
 * Singleton pattern  
 Use a static member function named “instance()” to access the instance of the singleton.  
 ```
-class MySingleton {
+class my_singleton 
+{
 public:
-    static MySingleton& instance();
+    static my_singleton& instance();
 ```
 * Use parentheses to group expressions.
 * Avoid 64-bit enum values. Not all compilers suppert them.
@@ -1807,10 +1818,10 @@ Many classes shouldn't be copied or assigned. If you're writing one of these, th
 ```
 class foo 
 {
-  ...
-  private:
-    foo(const foo& x) = delete;
-    foo& operator=(const foo& x) = delete;
+    ...
+    private:
+        foo(const foo& x) = delete;
+        foo& operator=(const foo& x) = delete;
 };
 ```
 Any code that implicitly calls the copy constructor will hit a compile-time error. That way nothing happens in the dark. When a user's code won't compile, they'll see that they were passing by value, when they meant to pass by reference (oops).
@@ -1823,8 +1834,8 @@ Any code that implicitly calls the copy constructor will hit a compile-time erro
 ```
 struct 
 { // Following struct might have a size of 8 bytes, even though it would fit in 1:
-  char ch : 1;
-  int i : 1;
+    char ch : 1;
+    int i : 1;
 };
 ```
 * Prefer [enum classes as type-safe bitmasks](http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/), see [example here](https://gist.github.com/derofim/0188769131c62c8aff5e1da5740b3574)
