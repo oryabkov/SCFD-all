@@ -128,10 +128,6 @@ Order of Includes (Within each section the includes should be ordered alphabetic
 
 Example:  
 ```
-#include "PrecompiledHeader.h" // Precompiled header files
-
-#include "MainProjectClass.h" // Project headers neccecary for containing compile unit MainProjectClass.cpp
-
 #include <math.h> // C system files
 #include <stdarg.h>
 
@@ -145,8 +141,13 @@ Example:
 #include <qt/qbutton.h> // qt`s libraries' .h files.  
 #include <qt/qtextfield.h>
 
-#include "ProjectHeaderUseful.h" // Project's .h files.  
-#include "ProjectHeaderUtils.h"
+#include "project_header_useful.h" // Project's .h files.  
+#include "project_header_utils.h"
+
+#include "precompiled_header.h" // Precompiled header files
+
+#include "main_project_class.h" // Project headers neccecary for containing compile unit main_project_class.cpp
+
 ```
 
 The first header included should be the header related to this source file, thus in position 1. This way you make sure that it includes anything it needs and that there is no "hidden" dependency: if there is, it'll be exposed right away and prevent compilation.  
@@ -165,12 +166,13 @@ Place "{" right after namespace name.
 Prefer :: prefix (refers to the global namespace).  
 
 ```
-#pragma once
 
-#include "Era.h"
+#include "era.h"
 
-namespace exa {
-namespace era {
+namespace exa 
+{
+namespace era 
+{
 
 	using namespace ::exa::era;
 	
@@ -188,15 +190,16 @@ Prefer placing nonmember functions in a namespace; use completely global functio
 Global variables should almost never be used (see below for more on this). When they are used, global variables are with a leading g_ added.
 
 ```
-int g_Shutdown; // Good: Really need this global variable
-const bool gcb_Loaded; 
+int g_shutdown; // Good: Really need this global variable
+const bool gcb_loaded; 
 ```
 
 ## Local Variables  
 Initialize variables in the declaration.  
 
 ```
-void f(){
+void f()
+{
 	int i;
 	i = f();      // Bad
 	int j = g();  // Good
@@ -208,15 +211,17 @@ Put variable declaration before loop.
 
 ```
 // Inefficient implementation:
-for (int i = 0; i < 1000000; ++i) {
-  Foo f;  // My ctor and dtor get called 1000000 times each.
-  f.DoSomething(i);
+for (int i = 0; i < 1000000; ++i) 
+{
+  foo f;  // My ctor and dtor get called 1000000 times each.
+  f.do_something(i);
 }
 
 // It may be more efficient to declare such a variable used in a loop outside that loop:
-Foo f;  // My ctor and dtor get called once each.
-for (int i = 0; i < 1000000; ++i) {
-  f.DoSomething(i);
+foo f;  // My ctor and dtor get called once each.
+for (int i = 0; i < 1000000; ++i) 
+{
+  f.do_something(i);
 }
 ```
 
@@ -236,13 +241,14 @@ A POD struct is a non-union class that is both a trivial class and a standard-la
 ## Implicit Conversions  
 Do not define implicit conversions. Use the explicit keyword for conversion operators and single-argument constructors.  
 ```
-class Foo {
-  explicit Foo(int x, double y); // Good
+class foo 
+{
+  explicit foo(int x, double y); // Good
   ...
 };
 
-void Func(Foo f);
-Func({42, 3.14});  // Error, as expected
+void func(foo f);
+func({42, 3.14});  // Error, as expected
 ```
 
 One-argument constructors that are not copy or move constructors should generally be marked explicit.  
@@ -285,7 +291,7 @@ Prefer small and focused functions.
 * Do not be unnecessarily verbose or state the completely obvious. Notice below that it is not necessary to say "returns false otherwise" because this is implied.
 ```
 // Returns true if the table cannot hold any more entries.
-bool IsTableFull();
+bool is_table_full();
 ```
 * When commenting constructors and destructors, remember that the person reading your code knows what constructors and destructors are for, so comments that just say something like "destroys this object" are not useful. 
 * Comments should be descriptive ("Opens the file") rather than imperative ("Open the file");
@@ -298,45 +304,46 @@ Note: You can use tools like clang-format for automatic formatting.
 Prefer code with newline between logical blocks:
 Good:
 ```
-    GLuint vertexShader;
-    GLuint fragmentShader;
+    GLuint vertex_shader;
+    GLuint fragment_shader;
     GLint linked = GL_FALSE; // Ok, variables separated from functions that use them
     
-    vertexShader = LoadShader(GL_VERTEX_SHADER, vShaderStr);
-    fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
+    vertex_shader = load_shader(GL_VERTEX_SHADER, vShaderStr);
+    fragment_shader = load_shader(GL_FRAGMENT_SHADER, fShaderStr);
 ```
 Appropriate:
 ```
-    GLuint vertexShader;
-    GLuint fragmentShader;
+    GLuint vertex_shader;
+    GLuint fragment_shader;
     GLint linked = GL_FALSE; // Still ok, but may be better
-    vertexShader = LoadShader(GL_VERTEX_SHADER, vShaderStr);
-    fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
+    vertex_shader = load_shader(GL_VERTEX_SHADER, vShaderStr);
+    fragment_shader = load_shader(GL_FRAGMENT_SHADER, fShaderStr);
 ```
 Bad, total chaos:
 ```
-    GLuint vertexShader;
+    GLuint vertex_shader;
     
-    GLuint fragmentShader;
+    GLuint fragment_shader;
     
     GLint linked = GL_FALSE;
-    vertexShader = LoadShader(GL_VERTEX_SHADER, vShaderStr);
+    vertex_shader = load_shader(GL_VERTEX_SHADER, vShaderStr);
     
-    fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
+    fragment_shader = load_shader(GL_FRAGMENT_SHADER, fShaderStr);
 ```
 ## Make nice columns
 Indent the names of class variables and class methods to make nice columns. The variable type or method return type is in the first column and the variable name or method name is in the second column.
 ```
-class ExampleClass {
-  public:
-    float		getLength( void ) const;
-    const float *	toFloatPtr( void ) const;
+class example_class 
+{
+    public:
+        float		     get_length( void ) const;
+        const float *	 to_float_ptr( void ) const;
     
-  public: // Good: Padding inside struct/class
-    float		x;
-    float		y;
-    float		z;
-}
+    public: // Good: Padding inside struct/class
+        float		x;
+        float		y;
+        float		z;
+};
 ```
 The * of the pointer is in the first column because it improves readability when considered part of the type.
 
@@ -361,16 +368,24 @@ baz1 = "jklm";
 
 Bad:
 ```
-a = array([[1,0, 0], // Forgotten spaces, needs padding [ 1, 0, 0] e.t.c.
-           [0,32,0],
-           [0,0, 1]])
-a = array([[1,0, 0],[0,32,0],[0,0, 1]])
+a = 
+    array
+    (
+        [[1,0, 0], // Forgotten spaces, needs padding [ 1, 0, 0] e.t.c.
+         [0,32,0],
+         [0,0, 1]]
+    );
+a = array([[1,0, 0],[0,32,0],[0,0, 1]]);
 ```
 Good:
 ```
-a = array([ [ 1, 0,     0 ], // Notice padding
-            [ 0, 31232, 0 ],
-            [ 0, 0,     1 ] ]);
+a = 
+    array
+    (
+        [ [ 1, 0,     0 ], // Notice padding
+          [ 0, 31232, 0 ],
+          [ 0, 0,     1 ] ]
+    );
 ```
 
 But dont align operators or arguments:
@@ -379,22 +394,28 @@ abcd = hello(34, 12) +   fgh( 2,  3); // Bad
 foo  =  boop( 1,  5) + thing(12, 19); // Bad
 fun(123456, 7,  89,    0) // Bad
 fun(    12, 3, 456, 7890) // Bad
-matrix( 1, 0,
-        0, 1 ); // Bad, pass array/container for matrix as argument
-matrix([ 1, 0,
-         0, 1 ]); // Good
+matrix
+( 
+    1, 0,
+    0, 1 
+); // Bad, pass array/container for matrix as argument
+matrix
+(
+    [ 1, 0,
+      0, 1 ]
+); // Good
 ```
 
 ## Reference Arguments  
 All parameters passed by reference must be labeled const.  
 
 ```
-void Foo(const string &in, string *out);
+void foo(const string &in, string *out);
 ```
 
 An out argument of a function should be passed by reference except rare cases where it is optional in which case it should be passed by pointer.  
 ```
-void MyClass::getSomeValue(OutArgumentType& outArgument) const // Good, bad is: doSomething(OutArgumentType* outArgument)
+void my_class::get_some_value(out_argument_type& out_argument) const // Good, bad is: do_something(out_argument_type* out_argument)
 ```
 
 ## DELETE and RELEASE (macro or functions)  
@@ -403,17 +424,21 @@ SafeDelete should be used for memory allocated with new
 SafeRelease should be called for com objects (like directx objects) and "under the hood" is doind something like this  
 
 ```
-inline template< class T > void SafeDelete( T*& p )
+inline template< class T > 
+void SafeDelete( T*& p )
 {
-    if(p != nullptr) {
+    if(p != nullptr) 
+    {
         delete p;
         p = nullptr;
     }
 }
 
-inline template< class T > void SafeDeleteArray( T*& p )
+inline template< class T > 
+void SafeDeleteArray( T*& p )
 {
-    if(p != nullptr) {
+    if(p != nullptr) 
+    {
         delete[] p;
         p = nullptr;
     }
@@ -421,7 +446,8 @@ inline template< class T > void SafeDeleteArray( T*& p )
 
 inline template< class T > void SafeRelease( T*& p )
 {
-    if(p) {
+    if(p) 
+    {
         p->Release();
         p = nullptr;
     }
@@ -550,7 +576,7 @@ Use const whenever it makes sense.
 With C++11, constexpr is a better choice for some uses of const.   
 Prefer enums to define constants over "static const int" or "define".  
 Declared variables and parameters can be preceded by the keyword const to indicate the variables are not changed (e.g., const int foo).   
-Class functions can have the const qualifier to indicate the function does not change the state of the class member variables (e.g., class Foo { int Bar(char c) const; };).  
+Class functions can have the const qualifier to indicate the function does not change the state of the class member variables (e.g., class foo { int Bar(char c) const; };).  
 Prefer "const int* foo" to "int const *foo" (same result).   
 In C++11, use constexpr to define true constants (fixed at compilation/link time) or to ensure constant initialization.  
 
@@ -582,7 +608,7 @@ File documentation style example:
 *
 * @license This file is distributed under the MIT License. See LICENSE.TXT for details.
 *
-* @brief This header file defines the ChronoTimer class.
+* @brief This header file defines the chrono_timer class.
 *
 * @author derofim@yandex.ru (Denis Trofimov).
 *
@@ -596,10 +622,10 @@ Class documentation style example:
 	/**
 	* @brief Class based on std::chrono functionality to measure elapsed time.\n
 	*
-	* ChronoTimer allows to create pausable timer based on std::chrono.
+	* chrono_timer allows to create pausable timer based on std::chrono.
 	* Example usage:
 	* -# Create timer\n
-	*    exa::ChronoTimer myTimer;
+	*    exa::chrono_timer myTimer;
 	* -# Start timer\n
 	*    myTimer.start();
 	* -# Get timer value in seconds\n
@@ -636,16 +662,16 @@ Local convenience aliases are allowed in function definitions, private sections 
 
 Use type aliases in classes where possible if its helps readability and maintainance:
 ```
-class Student
+class student
 {
 public:
-  typedef std::vector<Teacher*> Teachers; // Good
-  const Teachers& getTeachers();
+  using std::vector<teacher*> teachers; // Good
+  const teachers& get_teachers();
 private:
-  Teachers m_teachers;
+  teachers teachers_;
 };
 ```
-The `typedef` makes it easier to read and makes future possible modifications to what is a collection of Teachers easier (for instance, changing `std::vector<>` to `std::list<>`)
+The `using` makes it easier to read and makes future possible modifications to what is a collection of teachers easier (for instance, changing `std::vector<>` to `std::list<>`)
 
 ## RAII
 * RAII guarantees that the resource is available to any function that may access the object (resource availability is a class invariant). 
@@ -665,13 +691,13 @@ Functions declared in the header must be marked inline because otherwise, every 
 * Forwarding functions are to be inline.  
 * Constructors and destructors must *not* be inline.  
  
-Move Inline Method Bodies Out of Class Definitions. Instead of inlining method bodies in a class definition, instead declare the method regularly and define it in the header file below the class definition with an inline specifier:
+Move Inline method Bodies Out of Class Definitions. Instead of inlining method bodies in a class definition, instead declare the method regularly and define it in the header file below the class definition with an inline specifier:
 
 ```
 class foo
 {
 public:
- void bar();
+    void bar();
 };
 
 inline void foo::bar()
@@ -691,82 +717,84 @@ Single character variable names are only okay for counters and temporaries, wher
 int integralValue;
 
 // private class members:
-Timepoint m_StartMark;
-bool mb_Paused;
-const bool mcb_Debug;
+time_point start_mark;
+bool mb_paused;
+const bool mcb_debug;
 ```
 
 ## Type Names  
-Type names start with a capital letter and have a capital letter for each new word, with no underscores: MyExcitingClass, MyExcitingEnum.  
+Type names are lowercase_underscore.
 
 ```
-exa::ChronoTimer fpsTimer;
+exa::chrono_timer fps_timer;
 ```
 
 ## File and directory names  
-Use CamelCase for source file names and lowerCamelCase for directory names.  
+Use lowercase_underscore for source file names and lowercase_underscore for directory names.  
 
 ## Useful class names
 
 For "Writer" class with <name> use as:
-<name>Writer
+<name>_writer
 
 ```
 class Tool; // Bad: Doesn't describe anything. A tool which does what?
-class AbstractTool; // Good
-class ToolInterface; // Good
+class abstract_tool; // Good
+class tool_interface; // Good
 class DebugTool; // Good
 ```
 
 Prefer class naming convention:
-* Abstract // (prefix) Class with virtual methods that can be overridden, and some code, but at least one pure virtual method that makes the class not instantiable
-* Interface // (suffix) Class with only pure virtual methods (i.e. without any code)
-* Writer
-* Reader
-* Handler
-* Helper
-* Container
-* Protocol
-* Controller
-* Converter
-* View
-* Factory
-* Entity
-* Attribute
-* Provider
-* Service
-* Element
-* Manager
-* Node
-* Option
-* Context
-* Item
-* Base
-* Editor
-* Designer
+* abstract // (prefix) Class with virtual methods that can be overridden, and some code, but at least one pure virtual method that makes the class not instantiable
+* interface // (suffix) Class with only pure virtual methods (i.e. without any code)
+* writer
+* reader
+* handler
+* helper
+* container
+* protocol
+* controller
+* converter
+* view
+* factory
+* entity
+* attribute
+* provider
+* service
+* element
+* manager
+* node
+* option
+* context
+* item
+* base
+* editor
+* designer
 
 ```
-class ToolInterface
+class tool_interface
 {
   public:
   // Empty virtual destructor for proper cleanup
-  virtual ~ToolInterface() {}
+  virtual ~tool_interface() 
+  {
+  }
 
-  virtual void Method1() = 0;
-  virtual void Method2() = 0;
+  virtual void method1() = 0;
+  virtual void method2() = 0;
 };
 
 
-class AbstractTool
+class abstract_tool
 {
   public:
-  virtual ~AbstractTool();
+  virtual ~abstract_tool();
 
-  virtual void Method1();
-  virtual void Method2();
-  void Method3();
+  virtual void method1();
+  virtual void method2();
+  void method3();
 
-  virtual void Method4() = 0; // make not instantiable
+  virtual void method4() = 0; // make not instantiable
 };
 ```
 
@@ -777,20 +805,24 @@ When using inheritance, make it public.
 
 Inheritance:
 ```
-class Manager : Person, Employee { // The Manager object is inherited from Employee and Person.
+// The manager object is inherited from employee and person.
+class manager : person, employee 
+{ 
    ...
 }
 ```
 Composition:
 ```
-Class Manager { // The Manager object is composed as an Employee and a Person. 
-   private m_Title;
-   private m_Employee;
+// The manager object is composed as an employee and a person. 
+Class manager 
+{ 
+   private title_;
+   private employee_;
    ...
-   public Manager(Person p, Employee e)
+   public manager(person p, employee e)
    {
-      m_Title = e.Title;
-      m_Employee = e;
+      title_ = e.title_;
+      employee_ = e;
       ...
    }
 }
@@ -799,35 +831,36 @@ Class Manager { // The Manager object is composed as an Employee and a Person.
 Use multiple inheritance only when at most one of the base classes has an implementation and all other base classes must be pure interface classes tagged with the Interface suffix.
 
 ## Class Data Members  
-Data members of classes, both static and non-static, are named like ordinary nonmember variables, but with a leading "m_".  
+Data members of classes, both static and non-static, are named like ordinary nonmember variables, but with a suffix "_".  
 ```
 	private:
 		/** The timepoint stored when the timer was paused last time **/
-		timepoint m_PausedMark;
+		timepoint paused_mark_;
 
 		/**  Is timer running **/
-		bool m_Running;
+		bool running_;
 
 		/** Is timer paused **/
-		bool m_Paused;
+		bool paused_;
 ```
 
 ## Constant Names  
 Variables declared constexpr or const, and whose value is fixed for the duration of the program, are named with a leading "c_" followed by mixed case. All such variables with static storage duration (i.e. statics and globals, see Storage Duration for details) should be named this way. For example:  
 
 ```
-const int c_DaysInAWeek = 7; 
+const int c_days_in_a_week = 7; 
 // In class:
-class FooClass {
-  public:
-    c_MyConstValue;
-  private:
-    mc_MyConstPrivateValue;
+class foo_class 
+{
+    public:
+        c_my_const_value;
+    private:
+        mc_my_const_private_value;
 };
 ```
 
 ## Function Names  
-Use lowerCamelCase   
+Use lowercase_underscore   
 
 ```
 		/** Set duration elapsed when the timer was running and not paused **/
@@ -845,14 +878,16 @@ You may use final keyword when overriding the virtual method and requiring that 
 Dont annotate a method with more than one of the virtual, override, or final keywords.
 
 ## Namespace Names  
-Namespace names are all lowerCamelCase. Prefer lowercase namespaces by creting inner namespaces instead of longLowerCamelCaseNamespace.
+Namespace names are all lowercase_underscore. Prefer lowercase namespaces by creting inner namespaces instead of long_long_lowercase_underscore.
 
 ```
 namespace chronics; // Good
-namespace fastElectronics; // Good
-namespace exaTiming; // Bad, may split into "exa" and "timing".
-namespace exa { // Good
-namespace timing {
+namespace fast_electronics; // Good
+namespace exa_timing; // Bad, may split into "exa" and "timing".
+namespace exa  // Good
+{ 
+namespace timing 
+{
 }
 }
 ```
@@ -863,25 +898,28 @@ Macro should be named with all capitals and underscores.
 # Enumerator Names  
 Enumerators (for both scoped and unscoped enums) should be named like macros.  
 ```
-enum AlternateUrlTableErrors {
-  OK = 0,
-  OUT_OF_MEMORY = 1,
-  MALFORMED_INPUT = 2,
+enum AlternateUrlTableErrors 
+{
+    OK = 0,
+    OUT_OF_MEMORY = 1,
+    MALFORMED_INPUT = 2,
 };
 ```
 Prefix is allowed, but prefer enum without prefix:  
 ```
 // Good, use as Color::RED e.t.c.
-enum Color {
-  RED,
-  GREEN,
-  BLUE
+enum Color 
+{
+    RED,
+    GREEN,
+    BLUE
 };
 // Allowed
-enum Color {
-  COLOR_RED,
-  COLOR_GREEN,
-  COLOR_BLUE
+enum Color 
+{
+    COLOR_RED,
+    COLOR_GREEN,
+    COLOR_BLUE
 };
 ```
 
@@ -892,7 +930,7 @@ Code that is not used (commented out) and not part of an explanation shall be de
 ## Output arguments
 Output arguments to methods / functions (i.e., variables that the function can modify) are passed by pointer, not by reference. E.g.:
 ```
-int exampleMethod(FooThing input, BarThing* output);
+int examplemethod(FooThing input, BarThing* output);
 ```
 
 ## Deprecation code
@@ -900,7 +938,8 @@ You can use [[deprecated]] on separate line:
 
 ```
 [[deprecated]]
-void foo() {
+void foo() 
+{
     // ...
 }
 ```
@@ -945,14 +984,14 @@ Visual Assist allows automatic creation of getters and setters (Refactor (VA X) 
 ## Use compute, find, initialize in function names  
 If function just calculates/changes something, then prefer compute as part of function name.  
 ```
-void computeDuration();
-valueSet->computeAverage();
-matrix->computeInverse()
+void compute_duration();
+valueSet->compute_average();
+matrix->compute_inverse()
 ```
 If function just finds something, then prefer find as part of function name.  
 ```
-vertex.findNearestVertex();
-matrix.findMinElement();
+vertex.find_nearest_vertex();
+matrix.find_min_element();
 ```
 If function just initializes something, then prefer initialize as part of function name.  
 ```
@@ -966,18 +1005,23 @@ engine.initialize();
 * Always prefer braces  
 
 ```
-if ( condition ) {  // Good - proper space after IF and before {.
-} else {          // Spaces around else.
+if ( condition )  // Good - proper space after IF.
+{  
+} 
+else 
+{
 }
 ```
 * Pad parenthesized expressions with spaces
 ```
 // Good:
-if ( x ) {
+if ( x ) 
+{
 }
 x = ( y * 0.5f + (y * 0.5f) ); // Note padding for inner parentheses
 // Bad:
-if (x) {
+if (x) 
+{
 }
 x = (y * 0.5f + (y * 0.5f));
 ```
@@ -987,19 +1031,24 @@ x = (y * 0.5f + (y * 0.5f));
 * Don’t use default labels in fully covered switches over enumerations.
 * Not fully covered switch statements should always have a default case.  If the default case should never execute, simply assert:  
 ```
-switch (var) {
-  case 0: {t
-    ...
-    break;
-  }
-  case 1: {
-    ...
-    break;
-  }
-  default: {
-    assert(false);
-    break;
-  }
+switch (var) 
+{
+    case 0: 
+    {
+        t
+        ...
+        break;
+    }
+    case 1: 
+    {
+        ...
+        break;
+    }
+    default: 
+    {
+        assert(false);
+        break;
+    }
 }
 ```
 Every case must have a break (or return) statement at the end or a comment to indicate that there's intentionally no break, unless another case follows immediately.  
@@ -1087,44 +1136,50 @@ if ( isCallAvailable ) {
 ## Return Values  
 Use parentheses in "return expr;" only where you would use them in "x = expr;".  
 ```
-return (some_long_condition &&
-        another_condition);
-return (now() - m_StartMark);
-return defaultDuration;
+return (some_long_condition && another_condition);
+return (now() - start_mark);
+return default_duration;
 ```
 
 Don't use else after return. So use:
 ```
-  if (foo) {
+if (foo) 
+{
     return 1;
-  }
-  return 2;
+}
+return 2;
 ```
 instead of:
 ```
-  if (foo) {
+if (foo) 
+{
     return 1;
-  } else {
+} 
+else 
+{
     return 2;
-  }
+}
 ```
 ## Preprocessor Directives  
-The hash mark that starts a preprocessor directive should always be at the beginning of the line. Even when preprocessor directives are within the body of indented code, the directives should start at the beginning of the line!  
+We USE identination for preprocessor directives instead of preprocessor directive be at the beginning of the line. Rationale for this is openmp directives like #pragma omp parallel for
+which looks awfull in the begining of the line
 ```
-// Good - directives at beginning of line
-  if (lopsided_score) {
+// Bad - directives at beginning of line
+if (lopsided_score) 
+{
 #if THAT_IS_NICE      // Correct -- Starts at beginning of line
-    DropEverything();
+    drop_everything();
 #endif
-    BackToNormal();
-  }
-// Bad - indented directives
-  if (lopsided_score) {
+    back_to_normal();
+}
+// Good - indented directives
+if (lopsided_score) 
+{
     #if DISASTER_PENDING  // Wrong!  The "#if" should be at beginning of line
-    DropEverything();
+    drop_everything();
     #endif                // Wrong!  Do not indent "#endif"
-    BackToNormal();
-  }
+    back_to_normal();
+}
 ```
 
 ## Class Format  
@@ -1135,36 +1190,39 @@ The hash mark that starts a preprocessor directive should always be at the begin
 * The public section should be first, followed by the protected and finally the private section (methods first, then members, see Declaration Order).  
 
 ```
-    class ChronoTimer : public ATimer<ticks> {
-     public:
-        ChronoTimer();
+class chrono_timer : public a_timer<ticks> 
+{
+public:
+    chrono_timer();
 
-        ~ChronoTimer();
+    ~chrono_timer();
 
-        /** Start timer execution **/
-        void start() override;
-    protected:
-        /** Recalculate timer durations and states **/
-        void update();
-    private:
-        /** The duration elapsed when the timer was running and not paused **/
-        duration m_TotalRunning;
-    };
+    /** Start timer execution **/
+    void start() override;
+protected:
+    /** Recalculate timer durations and states **/
+    void update();
+private:
+    /** The duration elapsed when the timer was running and not paused **/
+    duration total_running_;
+};
 ```
 
 ## Constructor Initializer Lists  
 Prefer constructor initializer lists be all on one line when everything fits on one line.  When the list spans multiple lines, put each member on its own line and align them:  
 ```
 // When everything fits on one line:
-MyClass::MyClass(int var) : m_someVar(var) {
-  doSomething();
+my_class::my_class(int var) : m_someVar(var) 
+{
+  do_something();
 }
 
 // When the list spans multiple lines, put each member on its own line and align them:
-MyClass::MyClass(int var)
-    : m_someVar(var),        // 4 space indent
-      m_otherVar(var + 1) {  // lined up
-  doSomething();
+my_class::my_class(int var) : 
+    some_var(var),        // 4 space indent
+    other_var(var + 1) 
+{  // lined up
+  do_something();
 }
 
 ```
@@ -1173,8 +1231,10 @@ MyClass::MyClass(int var)
 The contents of namespaces are not indented.  
 Namespaces do not add an extra level of indentation.  
 ```
-namespace foo {
-namespace bar {
+namespace foo 
+{
+namespace bar 
+{
 } // namespace foo
 } // namespace bar
 ```
@@ -1186,12 +1246,14 @@ Anonymous namespaces are a great language feature that tells the C++ compiler th
 
 Good:
 ```
-namespace {
-class StringSort {
+namespace 
+{
+class string_sort 
+{
 ...
 public:
-  StringSort(...)
-  bool operator<(const char *RHS) const;
+    string_sort(...)
+    bool operator<(const char *RHS) const;
 };
 } // anonymous namespace
 ```
@@ -1199,20 +1261,24 @@ public:
 Bad:
 
 ```
-namespace {
+namespace 
+{
 
-class StringSort {
+class string_sort 
+{
 ...
 public:
-  StringSort(...)
-  bool operator<(const char *RHS) const;
+    string_sort(...)
+    bool operator<(const char *RHS) const;
 };
 
-void runHelper() {
+void run_helper() 
+{
   ...
 }
 
-bool StringSort::operator<(const char *RHS) const {
+bool string_sort::operator<(const char *RHS) const 
+{
   ...
 }
 
@@ -1246,12 +1312,12 @@ void func()
   T value = T{};
 }
 ```
-Prefer "typename" instead of "class" (the difference is "nothing") [where possible](http://stackoverflow.com/a/11311432).  
+Prefer "class" instead of "typename" (the difference is "nothing") [where possible](http://stackoverflow.com/a/11311432).  
 
 ```
-template <typename T>     // Good: Padding after "template"; T is UpperCamelCase; "typename" used instead of "class".
-class CompressionUtil     // Good: Class name is UpperCamelCase and meaningful.
-{                         // Good: "{" on new line.
+template <class T>     // Good: Padding after "template"; T is UpperCamelCase; "class" used instead of "typename".
+class compression_util     // Good: Class name is UpperCamelCase and meaningful.
+{                          // Good: "{" on new line.
 ...
 };
 ```
@@ -1309,47 +1375,49 @@ Prefer :: prefix for global variables (refers to the global namespace).
 * In cases where the exact size of the type matters (e.g. a 32-bit pixel value, a bitmask, or a counter that has to be a particular width), use one of the sized types.
 
 ## Type name  
-Prefer UpperCamelCase type names.  
+Use lowercase_underscore type names.  
 
 ## Paramater name  
-Prefer lowerCamelCase for paramater name based on its type.  
+use lowercase_underscore for paramater name based on its type.  
 ```
-void setTopic(Topic* topic)  
-void connect(Database* database)
+void set_topic(topic* t)  
+void connect(database* d)
 ```
 
-## Use "n, s and Id" in variable name where possible.  
+## Use "n, s and id" (or "num, s") in variable name where possible.  
 ```
-vector<Point>  points;
+vector<point>  points;
 int            values[];
 ```
 
 ```
-nPoints, nLines
+points_n,lines_num
 ```
 
 ```
-tableId, clientId
+table_id, client_id
 ```
 
 ## Use  i, j, k... in loops where possible.  
 ```
-for (int i = 0; i < nTables); i++) {
+for (int i = 0; i < tables_n); i++) 
+{
 }
 ```
 
 ## Prefer "is" in boolean function name  
 ```
         /** Is timer paused **/
-        inline const bool isPaused() const { 
-            return  mb_Paused; 
+        inline const bool is_paused() const 
+        {
+            return  paused_; 
         }
 ```
 If "is" not appropriate use has/an/should e.t.c.  
 ```
-  bool hasLicense();
-  bool canEvaluate();
-  bool shouldSort();
+  bool has_license();
+  bool can_evaluate();
+  bool should_sort();
 ```
 
 ## Prefer symmetric names  
@@ -1409,7 +1477,7 @@ Use english language in source code. All code is ascii only (7-bit characters on
 ```
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-almostEquals(T a, T b)
+almost_equals(T a, T b)
 {
     if(!std::isfinite(a) || !std::isfinite(b)) return false;
     T maximum = std::max( { T{1.0}, std::fabs(a) , std::fabs(b) } );
@@ -1441,11 +1509,13 @@ Prefer 1D (one-dimensional approach) to 2D (two-dimensional approach) [for 2D ar
 Two-dimensional approach (Bad):
 ```
 int **ary = new int*[sizeY]; // Bad
-for(int i = 0; i < sizeY; ++i) { // Create
+for(int i = 0; i < sizeY; ++i) 
+{ // Create
     ary[i] = new int[sizeX];
 }
 // May be used as ary[i][j]
-for(int i = 0; i < sizeY; ++i) { // Cleanup
+for(int i = 0; i < sizeY; ++i) 
+{ // Cleanup
     delete[] ary[i];
 }
 delete[] ary;
@@ -1464,33 +1534,43 @@ If you want to have a matrix class that's always, say, 4x4, prefer container [li
   constexpr int sizeY = 4;
   
   // Fill with identity matrix
-  std::array<float, 4*4> m_array{ 1, 0, 0, 0, 
-                                  0, 1, 0, 0, 
-                                  0, 0, 1, 0 , 
-                                  0, 0, 0, 1 };
+  std::array<float, 4*4> m_array
+    { 
+        1, 0, 0, 0, 
+        0, 1, 0, 0, 
+        0, 0, 1, 0 , 
+        0, 0, 0, 1 
+    };
                                   
   // Prints identity matrix
-  for(size_t i = 0; i < sizeX; ++i) {
-    for(size_t j = 0; j < sizeY; ++j) {
+for(size_t i = 0; i < sizeX; ++i) 
+{
+    for(size_t j = 0; j < sizeY; ++j) 
+    {
         std::cout << m_array.at(i*sizeY+j) <<  " ";
     }
     std::cout << "\n";
-  }
+}
 ```
 
 ## Lambda
 Format Lambdas Like Blocks Of Code:
 ```
-std::sort(foo.begin(), foo.end(), [&](Foo a, Foo b) -> bool { // Good
-  return a.bam < b.bam;
-});
-std::sort(foo.begin(), foo.end(), [&](Foo a, Foo b) -> bool { return a.bam < b.bam; }); // Bad
+std::sort
+(
+    foo.begin(), foo.end(), 
+    [&](foo a, foo b) -> bool 
+    { // Good
+        return a.bam < b.bam;
+    }
+);
+std::sort(foo.begin(), foo.end(), [&](foo a, foo b) -> bool { return a.bam < b.bam; }); // Bad
 ```
 
 Always write parentheses for the parameter list, even if the function does not take parameters.  
 
 ```
-[]() { doSomething(); } // Good, bad is: [] { doSomething(); }
+[]() { do_something(); } // Good, bad is: [] { do_something(); }
 ```
 
 You have to explicitly specify the return type, if the lambda contains more than a single expression.
@@ -1510,10 +1590,12 @@ llvm::Constant *Mask[] = {
 * Treat Compiler Warnings Like Errors.
 Any Compiler warning that annoys you can be fixed by massaging the code appropriately:
 ```
-if (V = getValue()) { // Bad: warning about == operator.
+if (V = getValue()) 
+{ // Bad: warning about == operator.
   ...
 }
-if ((V = getValue())) { // Dood: no warning
+if ((V = getValue())) 
+{ // Dood: no warning
   ...
 }
 ```
@@ -1569,7 +1651,7 @@ A = foo(42, 92) + bar(X); // Good, bad is: A = foo (42, 92) + bar (X);
 ```
 inline int count() const { return count_; } // Ok, int is small type
 inline MyType getData() { return m_data; } // Bad, m_data is big struct
-inline MyType const & MyClass::getMyType() const { return mMyType; } // Ok, used refference
+inline MyType const & my_class::getMyType() const { return mMyType; } // Ok, used refference
 ```
 * Do place spaces around binary and ternary operators.
 ```
@@ -1639,7 +1721,7 @@ int main()
     ...
 }
 
-class MyClass {
+class my_class {
     ...
 };
 
@@ -1657,7 +1739,7 @@ int main() {
     ...
 }
 
-class MyClass 
+class my_class 
 {
     ...
 };
@@ -1674,7 +1756,7 @@ if (condition) {
 ```
 void setCount(size_t count); // Good, bad is: void setCount(size_t count);
 
-void doSomething(ScriptExecutionContext* context); // Good, bad is: void doSomething(ScriptExecutionContext* context);
+void do_something(ScriptExecutionContext* context); // Good, bad is: void do_something(ScriptExecutionContext* context);
 ```
 * Avoid “using” statements in namespace (or global) scope of header files.  
 * Singleton pattern  
@@ -1693,7 +1775,7 @@ enum class Enum2 : __int64 {Val1, Val2, val3}; // Avoid
     * If a binary operator does not treat both of its operands equally (usually it will change its left operand), it might be useful to make it a member function of its left operand’s type, if it has to access the operand's private parts.
 Also dont forget about ["self assignment"](http://yosefk.com/c++fqa/assign.html):
 ```
-MyClass& MyClass::operator=(const MyClass& other)  // copy assignment operator
+my_class& my_class::operator=(const my_class& other)  // copy assignment operator
 {
     if(this != &other) // <-- self assignment check
     {
@@ -1707,8 +1789,8 @@ MyClass& MyClass::operator=(const MyClass& other)  // copy assignment operator
     * don't give variables the same name as functions declared in your class
 * Always check whether a preprocessor variable is defined before probing its value
 ```
-#if Foo == 0  // Bad
-#if defined(Foo) && (Foo == 0) // Good
+#if foo == 0  // Bad
+#if defined(foo) && (foo == 0) // Good
 ```
 * Avoid varargs. Especially inline variadic functions. Use containers like std::initializer_list<T> instead.
 ```
@@ -1723,11 +1805,12 @@ void func(T t, Args... args) // Avoid, its recursive variadic function.
 * Always declare a copy constructor and assignment operator
 Many classes shouldn't be copied or assigned. If you're writing one of these, the way to enforce your policy is to declare a deleted copy constructor as private and not supply a definition. While you're at it, do the same for the assignment operator used for assignment of objects of the same class:
 ```
-class Foo {
+class foo 
+{
   ...
   private:
-    Foo(const Foo& x) = delete;
-    Foo& operator=(const Foo& x) = delete;
+    foo(const foo& x) = delete;
+    foo& operator=(const foo& x) = delete;
 };
 ```
 Any code that implicitly calls the copy constructor will hit a compile-time error. That way nothing happens in the dark. When a user's code won't compile, they'll see that they were passing by value, when they meant to pass by reference (oops).
@@ -1738,7 +1821,8 @@ Any code that implicitly calls the copy constructor will hit a compile-time erro
 * Every .cpp source file should have a unique name: Avoid generic names like Module.cpp and instead use PlacesModule.cpp.
 * Avoid declaring a class data member with explicit size, in bits (Bit field).
 ```
-struct { // Following struct might have a size of 8 bytes, even though it would fit in 1:
+struct 
+{ // Following struct might have a size of 8 bytes, even though it would fit in 1:
   char ch : 1;
   int i : 1;
 };
@@ -1753,17 +1837,17 @@ UInstead use "constexpr" or ["extern const"](http://www.cplusplus.com/faq/beginn
 Function overloading should be avoided in most cases.  For example, instead of:
 ```
 // Good:
-    const Anim*	GetAnimByIndex( int index ) const;
-    const Anim*	GetAnimByName( const char *name ) const;
-    const Anim*	GetRandomAnim( float randomDiversity ) const;
+    const anim*	get_anim_by_index( int index ) const;
+    const anim*	get_anim_by_name( const char *name ) const;
+    const anim*	get_random_anim( float randomDiversity ) const;
 // Bad:
-    const Anim*	GetAnim( int index ) const;
-    const Anim*	GetAnim( const char *name ) const;
-    const Anim*	GetAnim( float randomDiversity ) const;
+    const anim*	get_anim( int index ) const;
+    const anim*	get_anim( const char *name ) const;
+    const anim*	get_anim( float random_diversity ) const;
 ```
 Explicitly named functions tend to be less prone to programmer error and inadvertent calls to functions due to wrong data types being passed in as arguments.  Example:
 
-Anim = GetAnim( 0 );
+anim = Getanim( 0 );
 
 This could be meant as a call to get a random animation, but the compiler would interpret it as a call to get one by index.
 
@@ -1815,7 +1899,7 @@ remove c_ for const
 place boolean "b" before name m_bVar   
 precompiled headers   
 VS directory or filters     
-Method separation in realisation aka:   
+method separation in realisation aka:   
 ```
 //-----------------------------------------------------------------------
 INLINE MouseButton getMouseButton(uint8_t state)
