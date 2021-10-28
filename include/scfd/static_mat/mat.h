@@ -226,6 +226,117 @@ __DEVICE_TAG__ mat<T,Dim1,Dim2> operator*(T mul, const mat<T,Dim1,Dim2> &m)
     return m*mul;
 }
 
+namespace detail
+{
+
+template<class T,int Dim>
+struct det_calc
+{
+    static __DEVICE_TAG__ T calc(const mat<T,Dim,Dim> &m)
+    {
+        /// TODO general implementation or error
+    }
+};
+
+template<class T>
+struct det_calc<T,2>
+{
+    static __DEVICE_TAG__ T calc(const mat<T,2,2> &m)
+    {
+        return m(0, 0) * m(1, 1) - m(0, 1) * m(1, 0);
+    }
+};
+
+template<class T>
+struct det_calc<T,3>
+{
+    static __DEVICE_TAG__ T calc(const mat<T,3,3> &m)
+    {
+        return  
+            m(0, 0) * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) -
+            m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0)) +
+            m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+    }
+};
+
+template<class T,int Dim>
+struct inv_calc
+{
+    static __DEVICE_TAG__ mat<T,Dim,Dim> calc(const mat<T,Dim,Dim> &m)
+    {
+        /// TODO general implementation or error
+    }
+};
+
+template<class T>
+struct inv_calc<T,2>
+{
+    // taken from https://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
+    static __DEVICE_TAG__ mat<T,2,2> calc(const mat<T,2,2> &m)
+    {
+        T det = m(0, 0) * m(1, 1) - m(0, 1) * m(1, 0);
+
+        T invdet = T(1) / det;
+
+        mat<T,2,2> minv; // inverse of matrix m
+        minv(0, 0) =  m(1, 1) * invdet;
+        minv(0, 1) = -m(0, 1) * invdet;
+        minv(1, 0) = -m(1, 0) * invdet;
+        minv(1, 1) =  m(0, 0) * invdet;
+
+        return minv;
+    }
+};
+
+template<class T>
+struct inv_calc<T,3>
+{
+    // taken from https://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
+    static __DEVICE_TAG__ mat<T,3,3> calc(const mat<T,3,3> &m)
+    {
+        T det = m(0, 0) * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) -
+                m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0)) +
+                m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+
+        T invdet = T(1) / det;
+
+        mat<T,3,3> minv; // inverse of matrix m
+        minv(0, 0) = (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) * invdet;
+        minv(0, 1) = (m(0, 2) * m(2, 1) - m(0, 1) * m(2, 2)) * invdet;
+        minv(0, 2) = (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1)) * invdet;
+        minv(1, 0) = (m(1, 2) * m(2, 0) - m(1, 0) * m(2, 2)) * invdet;
+        minv(1, 1) = (m(0, 0) * m(2, 2) - m(0, 2) * m(2, 0)) * invdet;
+        minv(1, 2) = (m(1, 0) * m(0, 2) - m(0, 0) * m(1, 2)) * invdet;
+        minv(2, 0) = (m(1, 0) * m(2, 1) - m(2, 0) * m(1, 1)) * invdet;
+        minv(2, 1) = (m(2, 0) * m(0, 1) - m(0, 0) * m(2, 1)) * invdet;
+        minv(2, 2) = (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1)) * invdet;
+
+        return minv;
+    }
+};
+
+}
+
+template<class T,int Dim>
+__DEVICE_TAG__ T det(const mat<T,Dim,Dim> &m)
+{
+    return detail::det_calc<T,Dim>::calc(m);
+}
+
+template<class T,int Dim>
+__DEVICE_TAG__ mat<T,Dim,Dim> inv(const mat<T,Dim,Dim> &m)
+{
+    return detail::inv_calc<T,Dim>::calc(m);
+}
+
+// TODO temporal solution
+// computes the inverse of a matrix m
+template<class T>
+__DEVICE_TAG__ mat<T,3,3> inv33(const mat<T,3,3> &m)
+{
+    return inv(m);
+}
+
 }
 }
 

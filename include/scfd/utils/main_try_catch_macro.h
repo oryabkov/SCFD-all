@@ -19,19 +19,51 @@
 
 #include <string>
 #include <exception>
+#include <chrono>
+#include <ratio>
 #include "log.h"
 
-#define USE_MAIN_TRY_CATCH(log_obj)                                       \
-    auto                  *MAIN_TRY_CATCH_LOG_OBJ_POINTER = &log_obj;     \
-    std::string           MAIN_TRY_CATCH_CURRENT_BLOCK_NAME;
+#ifndef SCFD_MAIN_TRY_CATCH_DISABLE_CATCH
+#define SCFD_MAIN_TRY_CATCH_DISABLE_CATCH 0
+#endif
 
-#define MAIN_TRY(block_name) try {                                  \
-    MAIN_TRY_CATCH_CURRENT_BLOCK_NAME = block_name;                 \
-    MAIN_TRY_CATCH_LOG_OBJ_POINTER->info(block_name);
+#define USE_MAIN_TRY_CATCH(log_obj)                                                                     \
+    auto                  *MAIN_TRY_CATCH_LOG_OBJ_POINTER = &log_obj;                                   \
+    std::string           MAIN_TRY_CATCH_CURRENT_BLOCK_NAME;                                            \
+    auto                  MAIN_TRY_CATCH_CURRENT_TIMER1 = std::chrono::high_resolution_clock::now();    \
+    auto                  MAIN_TRY_CATCH_CURRENT_TIMER2 = std::chrono::high_resolution_clock::now();    \
+    std::chrono::duration<double, std::milli> MAIN_TRY_CATCH_CURRENT_FP_MS;
 
-#define MAIN_CATCH(error_return_code) } catch (std::exception &e) {                                                                                     \
-        MAIN_TRY_CATCH_LOG_OBJ_POINTER->error(std::string("error during ") + MAIN_TRY_CATCH_CURRENT_BLOCK_NAME + std::string(": ") + e.what());         \
-        return error_return_code;                                                                                                                       \
+#if SCFD_MAIN_TRY_CATCH_DISABLE_CATCH == 0
+
+#define MAIN_TRY(block_name)                                                        \
+    try {                                                                           \
+        MAIN_TRY_CATCH_CURRENT_BLOCK_NAME = block_name;                             \
+        MAIN_TRY_CATCH_LOG_OBJ_POINTER->info(block_name);                           \
+        MAIN_TRY_CATCH_CURRENT_TIMER1 = std::chrono::high_resolution_clock::now();  
+
+#define MAIN_CATCH(error_return_code)                                                                                                                         \
+        MAIN_TRY_CATCH_CURRENT_TIMER2 = std::chrono::high_resolution_clock::now();                                                                            \
+        MAIN_TRY_CATCH_CURRENT_FP_MS = MAIN_TRY_CATCH_CURRENT_TIMER2 - MAIN_TRY_CATCH_CURRENT_TIMER1;                                                         \
+        MAIN_TRY_CATCH_LOG_OBJ_POINTER->info(MAIN_TRY_CATCH_CURRENT_BLOCK_NAME + " done");                                                                    \
+        MAIN_TRY_CATCH_LOG_OBJ_POINTER->info_f("wall host time for " + MAIN_TRY_CATCH_CURRENT_BLOCK_NAME + ": %f ms", MAIN_TRY_CATCH_CURRENT_FP_MS.count());  \
+    } catch (std::exception &e) {                                                                                                                             \
+        MAIN_TRY_CATCH_LOG_OBJ_POINTER->error(std::string("error during ") + MAIN_TRY_CATCH_CURRENT_BLOCK_NAME + std::string(": ") + e.what());               \
+        return error_return_code;                                                                                                                             \
     }
+
+#else
+
+#define MAIN_TRY(block_name)                                                    \
+    MAIN_TRY_CATCH_CURRENT_BLOCK_NAME = block_name;                             \
+    MAIN_TRY_CATCH_LOG_OBJ_POINTER->info(block_name);                           \
+    MAIN_TRY_CATCH_CURRENT_TIMER1 = std::chrono::high_resolution_clock::now();  
+
+#define MAIN_CATCH(error_return_code)                             
+    MAIN_TRY_CATCH_CURRENT_TIMER2 = std::chrono::high_resolution_clock::now();                                                                            \
+    MAIN_TRY_CATCH_CURRENT_FP_MS = MAIN_TRY_CATCH_CURRENT_TIMER2 - MAIN_TRY_CATCH_CURRENT_TIMER1;                                                         \
+    MAIN_TRY_CATCH_LOG_OBJ_POINTER->info_f("wall host time for " + MAIN_TRY_CATCH_CURRENT_BLOCK_NAME + ": %f ms", MAIN_TRY_CATCH_CURRENT_FP_MS.count());  \
+
+#endif
 
 #endif

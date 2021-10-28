@@ -17,7 +17,7 @@
 #ifndef __SCFD_REDUCE_THRUST_H__
 #define __SCFD_REDUCE_THRUST_H__
 
-#include "scan_config.h"
+#include "reduce_config.h"
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 
