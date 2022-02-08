@@ -15,5 +15,9 @@ test_tensor_array_nd_cpp_deb.bin: test_tensor_array_nd.cpp
 	g++ -g -I$(SCFD_INCLUDE) --std c++11 test_tensor_array_nd.cpp -o test_tensor_array_nd_cpp_deb.bin
 test_tensor_array_nd_visible_cuda.bin: test_tensor_array_nd_visible.cu
 	nvcc -O3 -I$(SCFD_INCLUDE) -std=c++11 test_tensor_array_nd_visible.cu -o test_tensor_array_nd_visible_cuda.bin
+test_cuda_arrays_ptr.bin : test_cuda_arrays.cu
+	nvcc -DUSE_PTR -O3 -I$(SCFD_INCLUDE) -std=c++11 test_cuda_arrays.cu -o test_cuda_arrays_ptr.bin
+test_cuda_arrays_arr.bin : test_cuda_arrays.cu
+	nvcc -O3 -I$(SCFD_INCLUDE) -std=c++11 test_cuda_arrays.cu -o test_cuda_arrays_arr.bin
 
 all: test_last_index_fast_arranger.bin test_tensor.bin test_tensor_array_nd_syntax.bin test_tensor_array_nd_cuda.bin test_tensor_array_nd_cpp.bin test_tensor_array_nd_visible_cuda.bin
