@@ -129,12 +129,12 @@ __global__ void test_ker_ptr2(float *data, int sz1)
 {
     int     i = blockIdx.x * blockDim.x + threadIdx.x - 1;
     if (!(i+1 < sz1)) return;
-    data[i + 0*sz1 + 0*sz1*2] += i;
-    data[i + 0*sz1 + 1*sz1*2] += i;
-    data[i + 0*sz1 + 2*sz1*2] -= i;
-    data[i + 1*sz1 + 0*sz1*2] += i;
-    data[i + 1*sz1 + 1*sz1*2] += i;
-    data[i + 1*sz1 + 2*sz1*2] -= i;
+    data[i+1 + 0*sz1 + 0*sz1*2] += i;
+    data[i+1 + 0*sz1 + 1*sz1*2] += i;
+    data[i+1 + 0*sz1 + 2*sz1*2] -= i;
+    data[i+1 + 1*sz1 + 0*sz1*2] += i;
+    data[i+1 + 1*sz1 + 1*sz1*2] += i;
+    data[i+1 + 1*sz1 + 2*sz1*2] -= i;
 }
 
 __global__ void test_ker_array3(array3_t f)
@@ -220,9 +220,9 @@ __global__ void test_ker_ptr1_nd(float *data, int sz1, int sz2, int shift1, int 
     int     i1 = blockIdx.x * blockDim.x + threadIdx.x + shift1,
             i2 = blockIdx.y * blockDim.y + threadIdx.y + shift2;
     if (!((i1-shift1 < sz1)&&(i2-shift2 < sz2))) return;
-    data[i1 + i2*sz1 + 0*sz1*sz2] += 1;
-    data[i1 + i2*sz1 + 1*sz1*sz2] -= i1;
-    data[i1 + i2*sz1 + 2*sz1*sz2] -= i2;
+    data[i1-shift1 + (i2-shift2)*sz1 + 0*sz1*sz2] += 1;
+    data[i1-shift1 + (i2-shift2)*sz1 + 1*sz1*sz2] -= i1;
+    data[i1-shift1 + (i2-shift2)*sz1 + 2*sz1*sz2] -= i2;
 }
 
 __global__ void test_ker_array1_nd_2(array1_nd_dyn_t f)
