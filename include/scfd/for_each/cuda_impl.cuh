@@ -45,6 +45,13 @@ void cuda<T>::operator()(FUNC_T f, T i1, T i2)const
 }
 
 template<class T>
+template<class FUNC_T>
+void cuda<T>::operator()(FUNC_T f, T size)const
+{
+    this->operator()(f, 0, size);
+}
+
+template<class T>
 void cuda<T>::wait()const
 {
     //TODO error check?

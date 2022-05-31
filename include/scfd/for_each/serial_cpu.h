@@ -45,6 +45,11 @@ struct serial_cpu
             f(i);
         }
     }
+    template<class FUNC_T>
+    void operator()(FUNC_T f, T size)const
+    {
+        this->operator()(f, 0, size);
+    }
     void    wait()const
     {
     }

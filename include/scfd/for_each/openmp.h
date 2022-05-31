@@ -38,6 +38,8 @@ struct openmp
 
     template<class FUNC_T>
     void operator()(FUNC_T f, T i1, T i2)const;
+    template<class FUNC_T>
+    void operator()(FUNC_T f, T size)const;
     void wait()const;
 
     #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
