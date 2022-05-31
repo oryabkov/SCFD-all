@@ -38,7 +38,7 @@ void openmp_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
     int real_threads_num = threads_num;
     if (threads_num < 0) real_threads_num = omp_get_max_threads();
 
-        #pragma omp parallel for num_threads(real_threads_num)
+    #pragma omp parallel for num_threads(real_threads_num)
     for (int i = 0;i < total_sz;++i) {
         //printf("%d %d \n", omp_get_thread_num(), omp_get_thread_num());
         t_vec_tml<T, dim> idx;
