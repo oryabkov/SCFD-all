@@ -39,6 +39,8 @@ struct cuda_nd
 
     template<class FUNC_T>
     void operator()(const FUNC_T &f, const rect<T, dim> &range)const;
+    template<class FUNC_T>
+    void operator()(const FUNC_T &f, const vec<T, dim> &size)const;
 };
 
 }

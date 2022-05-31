@@ -51,6 +51,13 @@ void openmp_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
     }
 }
 
+template<int dim, class T>
+template<class FUNC_T>
+void openmp_nd<dim,T>::operator()(FUNC_T f, const vec<T, dim> &size)const
+{
+    this->operator()(f,rect(vec<T, dim>::make_zero(),size));
+}
+
 }
 }
 

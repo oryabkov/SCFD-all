@@ -50,6 +50,13 @@ void cuda_nd<dim,T>::operator()(const FUNC_T &f, const rect<T, dim> &range)const
     ker_for_each<FUNC_T,dim,T><<<(total_sz/block_size)+1,block_size>>>(f, range, total_sz);
 }
 
+template<int dim, class T>
+template<class FUNC_T>
+void cuda_nd<dim,T>::operator()(const FUNC_T &f, const vec<T, dim> &size)const
+{
+    this->operator()(f,rect(vec<T, dim>::make_zero(),size));
+}
+
 }
 }
 

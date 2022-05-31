@@ -56,6 +56,11 @@ struct serial_cpu_nd
             f(idx);
         } while (next(range, idx));
     }
+    template<class FUNC_T>
+    void operator()(FUNC_T f, const vec<T, dim> &size)const
+    {
+        this->operator()(f,rect(vec<T, dim>::make_zero(),size));
+    }
 };
 
 }
