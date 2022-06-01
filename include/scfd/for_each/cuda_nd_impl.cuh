@@ -54,7 +54,7 @@ template<int dim, class T>
 template<class FUNC_T>
 void cuda_nd<dim,T>::operator()(const FUNC_T &f, const vec<T, dim> &size)const
 {
-    this->operator()(f,rect(vec<T, dim>::make_zero(),size));
+    this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
 }
 
 }
