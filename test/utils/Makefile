@@ -9,6 +9,8 @@ main_try_catch.bin: main_try_catch.cpp
 	g++ -std=c++11 -I$(SCFD_INCLUDE) main_try_catch.cpp -o main_try_catch.bin
 cuda_test.bin: cuda_test.cu
 	nvcc -std=c++11 -I$(SCFD_INCLUDE) cuda_test.cu -o cuda_test.bin
+cuda_test_presist.bin: cuda_test_presist.cu
+	nvcc -std=c++11 -I$(SCFD_INCLUDE) cuda_test_presist.cu -o cuda_test_presist.bin	
 test_system_timer_event.bin: test_system_timer_event.cpp
 	nvcc -std=c++11 -I$(SCFD_INCLUDE) test_system_timer_event.cpp -o test_system_timer_event.bin
 test_log_basic_cformatted_wrap.bin: test_log_basic_cformatted_wrap.cpp
