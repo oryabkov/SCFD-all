@@ -210,6 +210,7 @@ inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::
         {
             max_free_mem = free_mem;
         }
+        CUDA_SAFE_CALL(cudaDeviceReset());
     }
 
     if( std::size_t(save_coefficient*max_total_mem) < device_memory_in_MB*1000*1000)
@@ -224,13 +225,13 @@ inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::
         {
             CUDA_SAFE_CALL( cudaSetDevice( dev ) );
             CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem, &total_mem ) );
-            // std::cout << "free_mem = " << free_mem << " total_mem = " << total_mem  << " device_memory = " << device_memory_in_MB*1000*1000 << std::endl;
             if (free_mem >= device_memory_in_MB*1000*1000)
             {
                 res_dev_num = dev;  
-                device_is_set = true;  
+                device_is_set = true;
                 break;
             }
+            CUDA_SAFE_CALL( cudaDeviceReset() );
         }
         if(device_is_set)
         {
