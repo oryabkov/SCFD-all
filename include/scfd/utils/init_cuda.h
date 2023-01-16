@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cuda_runtime.h>
 #include <string>
+#include <chrono>
 #include "cuda_safe_call.h"
 #include "log_std.h"
 
@@ -173,6 +174,95 @@ inline int init_cuda_str(const std::string &cuda_device_string)
     log_std   log;
     return init_cuda_str(log, cuda_device_string);
 }
+
+
+template<class Log>
+inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::size_t max_minutes = 10)
+{
+    int log_lev = 1;
+    double save_coefficient = 0.98;
+
+    auto start = std::chrono::steady_clock::now();
+
+    bool device_is_set = false;
+    int res_dev_num = 0;
+
+    int count = 0;
+    CUDA_SAFE_CALL( cudaGetDeviceCount(&count) );
+    if(count == 0)
+    {
+        throw std::runtime_error("init_cuda_persistent: There is no compartable device found\n");
+    }
+    std::size_t free_mem;
+    std::size_t total_mem;
+    std::size_t max_total_mem = 0;
+    std::size_t max_free_mem = 0;
+
+    for(int dev = 0;dev < count; dev++)
+    {
+        CUDA_SAFE_CALL( cudaSetDevice( dev ) );
+        CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem, &total_mem ) );
+        if( max_total_mem < total_mem )
+        {
+            max_total_mem = total_mem;
+        }
+        if( max_free_mem < free_mem )
+        {
+            max_free_mem = free_mem;
+        }
+        CUDA_SAFE_CALL(cudaDeviceReset());
+    }
+
+    if( std::size_t(save_coefficient*max_total_mem) < device_memory_in_MB*1000*1000)
+    {
+        throw std::runtime_error("init_cuda_persistent: no suitable device found with minimum required memory.\n  Maximum found device memory is " + std::to_string(save_coefficient*max_total_mem/1000.0/1000.0) + "MB \n" );
+    }
+
+    while(true)
+    {
+
+        for(int dev = 0;dev < count; dev++)
+        {
+            CUDA_SAFE_CALL( cudaSetDevice( dev ) );
+            CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem, &total_mem ) );
+            if (free_mem >= device_memory_in_MB*1000*1000)
+            {
+                res_dev_num = dev;  
+                device_is_set = true;
+                break;
+            }
+            CUDA_SAFE_CALL( cudaDeviceReset() );
+        }
+        if(device_is_set)
+        {
+            break;
+        }
+
+        auto current = std::chrono::steady_clock::now();
+        auto current_duration = std::chrono::duration_cast<std::chrono::minutes>(current - start).count();
+        if(current_duration >= max_minutes)
+        {
+            break;
+        }
+
+    }
+    if(!device_is_set)
+    {
+        throw std::runtime_error("init_cuda_persistent: failed to find a suitable device for the given time interval.\n");
+    }
+    cudaDeviceProp device_prop;
+    CUDA_SAFE_CALL( cudaGetDeviceProperties(&device_prop, res_dev_num) );
+    log.info_f(log_lev, "init_cuda_persistent: Using #%i:   %s@[%i:%i:%i], %i MB",res_dev_num,(char*)&device_prop,device_prop.pciBusID, device_prop.pciDeviceID,device_prop.pciDomainID, std::size_t(device_prop.totalGlobalMem/1000.0/1000.0) );
+
+    return res_dev_num;
+}
+
+inline int init_cuda_persistent(std::size_t device_memory, std::size_t max_minutes = 10)
+{
+    log_std   log;
+    return init_cuda_persistent(log, device_memory, max_minutes);
+}
+
 
 inline std::string init_cuda_str_cmd_help(const std::string &arg_name)
 {
