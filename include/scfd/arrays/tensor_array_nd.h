@@ -160,6 +160,15 @@ public:
         for (ordinal_type i1 = 0;i1 < ND;++i1) res[i1] = arranger_type::dyn_dims_[i1];
         return res;
     }
+#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+    __DEVICE_TAG__ vec<ordinal_type,ND>     indexes0_nd()const 
+    {
+        vec<ordinal_type,ND>    res;
+        #pragma unroll
+        for (ordinal_type i1 = 0;i1 < ND;++i1) res[i1] = arranger_type::dyn_indexes0_[i1];
+        return res;
+    }
+#endif
 
     pointer_type                    raw_ptr()const { return this->d_; }
 
