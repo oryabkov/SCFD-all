@@ -40,6 +40,7 @@ struct arranger_base
 {
 public:
     static const Ord dynamic_dims_num = detail::dyn_dim_counter<Ord,sizeof...(Dims),Dims...>::value;
+    static const Ord dims_num = sizeof...(Dims);
 
 protected:
     vec<Ord,dynamic_dims_num>     dyn_dims_;
