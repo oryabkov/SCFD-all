@@ -35,6 +35,7 @@ class tensor_array_nd_view : public tensor_array_nd<T, ND, typename Memory::host
     typedef tensor_array_nd<T, ND, typename Memory::host_memory_type, Arranger, TensorDims...> parent_t;
 public: 
     typedef tensor_array_nd<T,ND,Memory,Arranger,TensorDims...>         array_type;
+    typedef parent_t                                                    host_array_type;
     typedef typename parent_t::arranger_type                            arranger_type;
     typedef Memory                                                      array_memory_type;
     static const bool                                                   has_separate_buffer = !Memory::is_host_visible;
