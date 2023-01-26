@@ -337,7 +337,8 @@ public:
         arranger_type::set_dyn_indexes0(indexes0_vec);
 #endif
     }
-    void                            init_alike(const arranger_type& a)
+    template<class OtherArranger>
+    void                            init_alike(const OtherArranger& a)
     {
         assert(is_free());
         arranger_type::copy_dyn_shape(a);
