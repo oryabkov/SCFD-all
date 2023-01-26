@@ -52,6 +52,7 @@ void openmp<T>::operator()(FUNC_T f, T size)const
 template<class T>
 void openmp<T>::wait()const
 {
+    //void function to sync with cuda
 }
 
 }

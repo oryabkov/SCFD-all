@@ -19,5 +19,7 @@ test_cuda_arrays_ptr.bin : test_cuda_arrays.cu
 	nvcc -DUSE_PTR -O3 -I$(SCFD_INCLUDE) -std=c++11 test_cuda_arrays.cu -o test_cuda_arrays_ptr.bin
 test_cuda_arrays_arr.bin : test_cuda_arrays.cu
 	nvcc -O3 -I$(SCFD_INCLUDE) -std=c++11 test_cuda_arrays.cu -o test_cuda_arrays_arr.bin
+test_cuda_unified_arrays.bin : test_cuda_unified_arrays.cu
+	nvcc -O3 -I$(SCFD_INCLUDE) -std=c++11 test_cuda_unified_arrays.cu -o test_cuda_unified_arrays.bin
 
-all: test_last_index_fast_arranger.bin test_tensor.bin test_tensor_array_nd_syntax.bin test_tensor_array_nd_cuda.bin test_tensor_array_nd_cpp.bin test_tensor_array_nd_visible_cuda.bin
+all: test_last_index_fast_arranger.bin test_tensor.bin test_tensor_array_nd_syntax.bin test_tensor_array_nd_cuda.bin test_tensor_array_nd_cpp.bin test_tensor_array_nd_visible_cuda.bin test_cuda_unified_arrays.bin

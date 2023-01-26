@@ -16,9 +16,13 @@
 
 
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-//#define TEST_HOST
-#define TEST_CUDA
-//#define TEST_OPENMP
+// #define TEST_HOST
+// #define TEST_CUDA
+// #define TEST_OPENMP
+#define TEST_UNIFIED_CUDA
+// #define TEST_UNIFIED_HOST
+// #define TEST_UNIFIED_OPENMP
+
 
 #include <cstdio>
 #include <stdexcept>
@@ -37,6 +41,20 @@
 #endif
 #ifdef TEST_OPENMP
 #include <scfd/memory/host.h>
+#include <scfd/for_each/openmp_nd.h>
+#include <scfd/for_each/openmp_nd_impl.h>
+#endif
+#ifdef TEST_UNIFIED_CUDA
+#include <scfd/memory/unified.h>
+#include <scfd/for_each/cuda_nd.h>
+#include <scfd/for_each/cuda_nd_impl.cuh>
+#endif
+#ifdef TEST_UNIFIED_HOST
+#include <scfd/memory/unified.h>
+#include <scfd/for_each/serial_cpu_nd.h>
+#endif
+#ifdef TEST_UNIFIED_OPENMP
+#include <scfd/memory/unified.h>
 #include <scfd/for_each/openmp_nd.h>
 #include <scfd/for_each/openmp_nd_impl.h>
 #endif
@@ -71,6 +89,23 @@ template<int dim>
 using for_each_t = scfd::for_each::openmp_nd<dim>;
 using mem_t = scfd::memory::host;
 #endif
+#ifdef TEST_UNIFIED_CUDA
+template<int dim>
+using for_each_t = scfd::for_each::cuda_nd<dim>;
+using mem_t = scfd::memory::unified;
+#endif
+#ifdef TEST_UNIFIED_HOST
+template<int dim>
+using for_each_t = scfd::for_each::serial_cpu_nd<dim>;
+using mem_t = scfd::memory::unified;
+#endif
+#ifdef TEST_UNIFIED_OPENMP
+template<int dim>
+using for_each_t = scfd::for_each::openmp_nd<dim>;
+using mem_t = scfd::memory::unified;
+#endif
+
+
 
 using scfd::static_vec::rect;
 
@@ -124,11 +159,11 @@ bool    test_field0_nd3()
 
     rect<int, 3>              range(t_idx3(0,0,0), t_idx3(SZ_X,SZ_Y,SZ_Z));
     for_each_t<3>             for_each;
-    #ifdef TEST_CUDA
+    #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
     for_each.block_size = 128;
-    #endif
+    #endif    
     for_each(func_test_field0_nd3(f),range);
-
+    for_each.wait();
     bool    result = true;
 
     t_field0_nd3_view     view2;
@@ -181,11 +216,11 @@ bool    test_field1_nd2()
 
     rect<int, 2>              range(t_idx2(0,0), t_idx2(SZ_X,SZ_Y));
     for_each_t<2>             for_each;
-    #ifdef TEST_CUDA
+    #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
     for_each.block_size = 128;
-    #endif
+    #endif    
     for_each(func_test_field1_nd2(f),range);
-
+    for_each.wait();
     bool    result = true;
 
     t_field1_nd2_view     view2;
@@ -217,8 +252,9 @@ int main()
 {
     try {
 
-    #ifdef TEST_CUDA
-    scfd::utils::init_cuda(-2, 0);
+    #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
+    //scfd::utils::init_cuda(-2, 0);
+    scfd::utils::init_cuda_persistent(1000);
     #endif
     int err_code = 0;
 
