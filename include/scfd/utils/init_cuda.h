@@ -232,7 +232,6 @@ inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::
                 break;
             }
             CUDA_SAFE_CALL( cudaDeviceReset() );
-<<<<<<< HEAD
         }
         if(device_is_set)
         {

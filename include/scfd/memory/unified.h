@@ -44,7 +44,7 @@ struct unified
 
     /// NOTE: cudaMalloc returns NULL for size==0 without error,
     /// however it's not stated explicitly in documentation
-    static void    malloc(pointer_type* p, size_t size, unsigned int flags = cudaMemAttachHost)
+    static void    malloc(pointer_type* p, size_t size, unsigned int flags = cudaMemAttachGlobal)
     {
         CUDA_SAFE_CALL(cudaMallocManaged(p, size, flags));
     }

@@ -61,6 +61,10 @@ struct serial_cpu_nd
     {
         this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
     }
+    void wait()const
+    {
+        //void function to sync with cuda
+    }
 };
 
 }

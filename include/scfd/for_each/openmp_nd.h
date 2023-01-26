@@ -42,6 +42,7 @@ struct openmp_nd
     void operator()(FUNC_T f, const rect<T, dim> &range)const;
     template<class FUNC_T>
     void operator()(FUNC_T f, const vec<T, dim> &size)const;
+    void wait()const;
 };
 
 }

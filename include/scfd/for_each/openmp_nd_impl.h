@@ -35,7 +35,7 @@ void openmp_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
     int total_sz = 1;
     for (int j = 0;j < dim;++j) total_sz *= (range.i2[j]-range.i1[j]);
     
-    int real_threads_num = threads_num;
+    int real_threads_num = threads_num; //NOLINT
     if (threads_num < 0) real_threads_num = omp_get_max_threads();
 
     #pragma omp parallel for num_threads(real_threads_num)
@@ -56,6 +56,11 @@ template<class FUNC_T>
 void openmp_nd<dim,T>::operator()(FUNC_T f, const vec<T, dim> &size)const
 {
     this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
+}
+template<int dim, class T>
+void openmp_nd<dim,T>::wait()const
+{
+    //void function to sync with cuda
 }
 
 }

@@ -17,8 +17,12 @@
 
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
 //#define TEST_HOST
-#define TEST_CUDA
+// #define TEST_CUDA
 //#define TEST_OPENMP
+#define TEST_UNIFIED_CUDA
+// #define TEST_UNIFIED_HOST
+// #define TEST_UNIFIED_OPENMP
+
 
 #include <cstdio>
 #include <stdexcept>
@@ -39,7 +43,20 @@
 #include <scfd/for_each/openmp.h>
 #include <scfd/for_each/openmp_impl.h>
 #endif
-
+#ifdef TEST_UNIFIED_CUDA
+#include <scfd/memory/unified.h>
+#include <scfd/for_each/cuda.h>
+#include <scfd/for_each/cuda_impl.cuh>
+#endif
+#ifdef TEST_UNIFIED_HOST
+#include <scfd/memory/unified.h>
+#include <scfd/for_each/serial_cpu.h>
+#endif
+#ifdef TEST_UNIFIED_OPENMP
+#include <scfd/memory/unified.h>
+#include <scfd/for_each/openmp.h>
+#include <scfd/for_each/openmp_impl.h>
+#endif
 //#include <scfd/for_each/for_each_storage_types.h>
 
 
@@ -63,6 +80,18 @@ using mem_t = scfd::memory::host;
 #ifdef TEST_OPENMP
 using for_each_t = scfd::for_each::openmp<>;
 using mem_t = scfd::memory::host;
+#endif
+#ifdef TEST_UNIFIED_CUDA
+using for_each_t = scfd::for_each::cuda<>;
+using mem_t = scfd::memory::unified;
+#endif
+#ifdef TEST_UNIFIED_HOST
+using for_each_t = scfd::for_each::serial_cpu<>;
+using mem_t = scfd::memory::unified;
+#endif
+#ifdef TEST_UNIFIED_OPENMP
+using for_each_t = scfd::for_each::openmp<>;
+using mem_t = scfd::memory::unified;
 #endif
 
 //using scfd::static_vec::rect;
@@ -114,11 +143,11 @@ bool    test_field0()
     view.release();
 
     for_each_t             for_each;
-    #ifdef TEST_CUDA
+    #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
     for_each.block_size = 128;
     #endif
     for_each(func_test_field0(f), 0, SZ_X);
-
+    for_each.wait();
     bool    result = true;
 
     t_field0_view     view2;
@@ -168,11 +197,11 @@ bool    test_field1()
     view.release();
 
     for_each_t                for_each;
-    #ifdef TEST_CUDA
+    #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
     for_each.block_size = 128;
     #endif
     for_each(func_test_field1(f), 0, SZ_X);
-
+    for_each.wait();
     bool    result = true;
 
     t_field1_view     view2;
@@ -207,8 +236,9 @@ int main()
 {
     try {
 
-    #ifdef TEST_CUDA
-    scfd::utils::init_cuda(-2, 0);
+    #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
+    // scfd::utils::init_cuda(-2, 0);
+    scfd::utils::init_cuda_persistent(1000);
     #endif
     int err_code = 0;
 
