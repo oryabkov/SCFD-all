@@ -37,5 +37,6 @@ bool perform_test(int test_n, static_vec::vec<int,Sz> &dyn_sizes, int correct_as
 
 TEST(DetailTemplateArgSearchTest, ValueOneTest) 
 {
-    ASSERT_EQ((template_arg_search<int, double, int,int,double>::value),2);
+    auto found_index = template_arg_search<int, double, int,int,double>::value;
+    ASSERT_EQ(found_index,2);
 }
