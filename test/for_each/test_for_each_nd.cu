@@ -19,7 +19,7 @@
 // #define TEST_HOST
 // #define TEST_CUDA
 // #define TEST_OPENMP
-#define TEST_UNIFIED_CUDA
+// #define TEST_UNIFIED_CUDA
 // #define TEST_UNIFIED_HOST
 // #define TEST_UNIFIED_OPENMP
 
