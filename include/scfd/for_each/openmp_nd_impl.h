@@ -43,7 +43,7 @@ void openmp_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
         //printf("%d %d \n", omp_get_thread_num(), omp_get_thread_num());
         vec<T, dim> idx;
         int       i_tmp = i;
-        for (int j = 0;j < dim;++j) {
+        for (int j = dim-1;j >= 0;--j) {
             idx[j] = range.i1[j] + i_tmp%(range.i2[j]-range.i1[j]);
             i_tmp /= (range.i2[j]-range.i1[j]);
         }
