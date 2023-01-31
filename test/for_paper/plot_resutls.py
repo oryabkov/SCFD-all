@@ -40,8 +40,7 @@ def hist_data(data, file_name):
     meajure = "ms"
     if "host" in file_name:
         meajure = "s"
-    plt.ylabel(meajure)    
-    plt.xlabel("ms")
+    plt.xlabel(meajure)    
     plt.ylabel("relative number")
     plt.legend()
     plt.tight_layout()
