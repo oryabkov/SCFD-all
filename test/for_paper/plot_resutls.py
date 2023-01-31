@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import sys
 
-FontSize = 14
+FontSize = 18
 alpha_ = 0.75
 
 def modify_name(file_name, addition):
@@ -47,6 +47,11 @@ def hist_data(data, file_name):
     f_name = modify_name(file_name, "hist");
     plt.savefig(f_name)
     plt.show(); 
+    
+    print("tensor/ptr_ok: {val}".format(val = data['tensor'].mean()/data['ptr_ok'].mean()) );
+    print("ptr_ok/tensor: {val}".format(val = data['ptr_ok'].mean()/data['tensor'].mean()) );
+    print("ptr_bad/tensor: {val}".format(val = data['ptr_bad'].mean()/data['tensor'].mean()) );
+    print("ptr_bad/ptr_ok: {val}".format(val = data['ptr_bad'].mean()/data['ptr_ok'].mean()) );
 
 def main():
 
