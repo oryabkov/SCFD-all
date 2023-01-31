@@ -21,6 +21,10 @@
 #include <cuda_runtime.h>
 #include <string>
 #include <chrono>
+#include <utility>
+#include <tuple>
+#include <vector>
+#include <algorithm>
 #include "cuda_safe_call.h"
 #include "log_std.h"
 
@@ -175,7 +179,7 @@ inline int init_cuda_str(const std::string &cuda_device_string)
     return init_cuda_str(log, cuda_device_string);
 }
 
-
+// device_memory_in_MB = -1 <-automatic selection of a gpu with maximum free memory available
 template<class Log>
 inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::size_t max_minutes = 10)
 {
@@ -193,71 +197,94 @@ inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::
     {
         throw std::runtime_error("init_cuda_persistent: There is no compartable device found\n");
     }
-    std::size_t free_mem;
-    std::size_t total_mem;
+    using scft_init_cuda_tuple_t = std::tuple<int,std::size_t, std::size_t>;
+    std::vector<scft_init_cuda_tuple_t> device_mems;
+
     std::size_t max_total_mem = 0;
     std::size_t max_free_mem = 0;
 
     for(int dev = 0;dev < count; dev++)
     {
+        std::size_t free_mem_l;
+        std::size_t total_mem_l;
+
         CUDA_SAFE_CALL( cudaSetDevice( dev ) );
-        CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem, &total_mem ) );
-        if( max_total_mem < total_mem )
+        CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem_l, &total_mem_l ) );
+        device_mems.push_back({dev, free_mem_l, total_mem_l});
+
+        if( max_total_mem < total_mem_l )
         {
-            max_total_mem = total_mem;
+            max_total_mem = total_mem_l;
         }
-        if( max_free_mem < free_mem )
+        if( max_free_mem < free_mem_l )
         {
-            max_free_mem = free_mem;
+            max_free_mem = free_mem_l;
         }
         CUDA_SAFE_CALL(cudaDeviceReset());
     }
-
-    if( std::size_t(save_coefficient*max_total_mem) < device_memory_in_MB*1000*1000)
+    if(device_memory_in_MB > 0)
     {
-        throw std::runtime_error("init_cuda_persistent: no suitable device found with minimum required memory.\n  Maximum found device memory is " + std::to_string(save_coefficient*max_total_mem/1000.0/1000.0) + "MB \n" );
-    }
-
-    while(true)
-    {
-
-        for(int dev = 0;dev < count; dev++)
+        if( std::size_t(save_coefficient*max_total_mem) < device_memory_in_MB*1000*1000)
         {
-            CUDA_SAFE_CALL( cudaSetDevice( dev ) );
-            CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem, &total_mem ) );
-            if (free_mem >= device_memory_in_MB*1000*1000)
+            throw std::runtime_error("init_cuda_persistent: no suitable device found with minimum required memory.\n  Maximum found device memory is " + std::to_string(save_coefficient*max_total_mem/1000.0/1000.0) + "MB \n" );
+        }
+        while(true)
+        {
+            std::size_t free_mem, total_mem;
+            for(int dev = 0;dev < count; dev++)
             {
-                res_dev_num = dev;  
-                device_is_set = true;
+                CUDA_SAFE_CALL( cudaSetDevice( dev ) );
+                CUDA_SAFE_CALL( cudaMemGetInfo ( &free_mem, &total_mem ) );
+                if (free_mem >= device_memory_in_MB*1000*1000)
+                {
+                    res_dev_num = dev;  
+                    device_is_set = true;
+                    break;
+                }
+                CUDA_SAFE_CALL( cudaDeviceReset() );
+            }
+            if(device_is_set)
+            {
                 break;
             }
-            CUDA_SAFE_CALL( cudaDeviceReset() );
-        }
-        if(device_is_set)
-        {
-            break;
-        }
 
-        auto current = std::chrono::steady_clock::now();
-        auto current_duration = std::chrono::duration_cast<std::chrono::minutes>(current - start).count();
-        if(current_duration >= max_minutes)
-        {
-            break;
-        }
 
+
+            auto current = std::chrono::steady_clock::now();
+            auto current_duration = std::chrono::duration_cast<std::chrono::minutes>(current - start).count();
+            if(current_duration >= max_minutes)
+            {
+                break;
+            }
+
+        }    
     }
+    else
+    {
+        std::sort(device_mems.begin(), device_mems.end(), 
+            []
+            (const scft_init_cuda_tuple_t& a, const scft_init_cuda_tuple_t& b)
+            {
+                return std::get<1>(a) > std::get<1>(b);
+            }
+        );
+        res_dev_num = std::get<0>(device_mems[0]);  //device with the largest ammount of free mem
+        device_is_set = true;
+    }
+
+
     if(!device_is_set)
     {
         throw std::runtime_error("init_cuda_persistent: failed to find a suitable device for the given time interval.\n");
     }
     cudaDeviceProp device_prop;
     CUDA_SAFE_CALL( cudaGetDeviceProperties(&device_prop, res_dev_num) );
-    log.info_f(log_lev, "init_cuda_persistent: Using #%i:   %s@[%i:%i:%i], %i MB",res_dev_num,(char*)&device_prop,device_prop.pciBusID, device_prop.pciDeviceID,device_prop.pciDomainID, std::size_t(device_prop.totalGlobalMem/1000.0/1000.0) );
+    log.info_f(log_lev, "init_cuda_persistent%s: Using #%i:   %s@[%i:%i:%i], %i MB", device_memory_in_MB==0?"_best_mem":" ", res_dev_num,(char*)&device_prop,device_prop.pciBusID, device_prop.pciDeviceID,device_prop.pciDomainID, std::size_t(device_prop.totalGlobalMem/1000.0/1000.0) );
 
     return res_dev_num;
 }
-
-inline int init_cuda_persistent(std::size_t device_memory, std::size_t max_minutes = 10)
+// default is for automatic selection of a GPU with maximum available device memory
+inline int init_cuda_persistent(std::size_t device_memory = 0, std::size_t max_minutes = 10)
 {
     log_std   log;
     return init_cuda_persistent(log, device_memory, max_minutes);

@@ -254,7 +254,7 @@ int main()
 
     #if defined(TEST_CUDA)||defined(TEST_UNIFIED_CUDA)
     //scfd::utils::init_cuda(-2, 0);
-    scfd::utils::init_cuda_persistent(1000);
+    scfd::utils::init_cuda_persistent();
     #endif
     int err_code = 0;
 
