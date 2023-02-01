@@ -19,6 +19,7 @@
 #include <scfd/static_vec/vec.h>
 #include <scfd/arrays/tensorN_array.h>
 #include <scfd/arrays/tensorN_array_nd.h>
+#include <scfd/arrays/first_index_fast_arranger.h>
 #include <scfd/arrays/last_index_fast_arranger.h>
 
 #include <scfd/memory/cuda.h>
@@ -40,16 +41,29 @@ using for_each_omp_t = scfd::for_each::openmp<>;
 using mem_host_t = scfd::memory::host;
 
 
-using T = double;
-using array_device_t = scfd::arrays::tensor1_array<T, mem_device_t, 3>;
-using array_device_view_t = array_device_t::view_type;
+using T = float;
+template<scfd::arrays::ordinal_type... Dims>
+using gpu_arranger_t = scfd::arrays::first_index_fast_arranger<Dims...>;
+template<scfd::arrays::ordinal_type... Dims>
+using cpu_arranger_t = scfd::arrays::last_index_fast_arranger<Dims...>;
+
+using array_device_classic_t = scfd::arrays::tensor1_array<T, mem_device_t, 3>;
+using array_device_classic_view_t = array_device_classic_t::view_type;
+
+using array_device_like_host_t = scfd::arrays::tensor1_array<T, mem_device_t, 3, cpu_arranger_t>;
+using array_device_like_host_view_t = array_device_like_host_t::view_type;
+
+using array_device_t = array_device_like_host_t;
+using array_device_view_t = array_device_like_host_view_t;
+
+
 using array_host_t = scfd::arrays::tensor1_array<T, mem_host_t, 3>;
 using array_host_view_t = array_host_t::view_type;
 
 using array3_device_t = scfd::arrays::tensor0_array_nd<T, 3, mem_device_t>;
 
 
-const int block_size = 1024;
+const int block_size = 128;
 
 #define IC(j,k) (3)*(j)+(k)
 #define IG(j,k) (j)+(N)*(k)
