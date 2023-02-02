@@ -100,18 +100,18 @@ public:
     template<Ord Ind>
     __DEVICE_TAG__ Ord get_dim()const
     {
-        return detail::dim_getter_<Ord,Ind,detail::template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::get(dyn_dims_);
+        return detail::dim_getter_<Ord,Ind,detail::template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::template get<dynamic_dims_num>(dyn_dims_);
     }
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
     template<Ord Ind>
     __DEVICE_TAG__ Ord get_index0()const
     {
-        return detail::index0_getter_<Ord,Ind,detail::template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::get(dyn_indexes0_);
+        return detail::index0_getter_<Ord,Ind,detail::template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::template get<dynamic_dims_num>(dyn_indexes0_);
     }
 #endif
     Ord                total_size()const
     {
-        return detail::size_calculator<Ord,Dims...>::get(dyn_dims_);
+        return detail::size_calculator<Ord,Dims...>::template get<dynamic_dims_num>(dyn_dims_);
     }
 };
 

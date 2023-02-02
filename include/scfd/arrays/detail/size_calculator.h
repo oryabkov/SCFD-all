@@ -50,7 +50,7 @@ struct size_calculator_<Ord,Ind,false,Dims...>
     template<Ord sz>
     static Ord get(const vec<Ord,sz> &dyn_sizes)
     {
-        return dim_getter<Ord,Ind,Dims...>::get(dyn_sizes)*size_calculator_<Ord,Ind+1,sizeof...(Dims)==Ind+1,Dims...>::get(dyn_sizes);
+        return dim_getter<Ord,Ind,Dims...>::template get<sz>(dyn_sizes)*size_calculator_<Ord,Ind+1,sizeof...(Dims)==Ind+1,Dims...>::template get<sz>(dyn_sizes);
     }
 };
 
@@ -60,7 +60,7 @@ struct size_calculator
     template<Ord sz>
     static Ord get(const vec<Ord,sz> &dyn_sizes)
     {
-        return size_calculator_<Ord,0,sizeof...(Dims)==0,Dims...>::get(dyn_sizes);
+        return size_calculator_<Ord,0,sizeof...(Dims)==0,Dims...>::template get<sz>(dyn_sizes);
     }
 };
 

@@ -61,7 +61,7 @@ struct dim_getter
     template<Ord sz>
     static __DEVICE_TAG__ Ord get(const vec<Ord,sz> &dyn_sizes)
     {
-        return dim_getter_<Ord,Ind,template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::get(dyn_sizes);
+        return dim_getter_<Ord,Ind,template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::template get<sz>(dyn_sizes);
     }
 };
 
