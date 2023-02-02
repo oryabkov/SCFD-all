@@ -179,7 +179,7 @@ inline int init_cuda_str(const std::string &cuda_device_string)
     return init_cuda_str(log, cuda_device_string);
 }
 
-// device_memory_in_MB = -1 <-automatic selection of a gpu with maximum free memory available
+// device_memory_in_MB = 0 <-automatic selection of a gpu with maximum free memory available
 template<class Log>
 inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::size_t max_minutes = 10)
 {
@@ -269,6 +269,7 @@ inline int init_cuda_persistent(Log &log, std::size_t device_memory_in_MB, std::
             }
         );
         res_dev_num = std::get<0>(device_mems[0]);  //device with the largest ammount of free mem
+        CUDA_SAFE_CALL( cudaSetDevice( res_dev_num ) );
         device_is_set = true;
     }
 
