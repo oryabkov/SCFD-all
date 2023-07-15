@@ -36,8 +36,23 @@ protected:
     int             obj_log_lev_;
     std::string     log_msg_prefix_;
 public:
-    logged_obj_base(Log *log__ = NULL, int obj_log_lev__ = 0, const std::string &log_msg_prefix__ = "") : 
-        log_(log__),obj_log_lev_(obj_log_lev__),log_msg_prefix_(log_msg_prefix__) {}
+    struct params 
+    {
+        int             obj_log_lev;
+        std::string     log_msg_prefix;
+        params() : obj_log_lev(0), log_msg_prefix("")
+        {
+        }
+        params(int obj_log_lev_, const std::string &log_msg_prefix_) : 
+            obj_log_lev(obj_log_lev_), log_msg_prefix(log_msg_prefix_)
+        {
+        }
+    };
+
+    logged_obj_base(Log *log = NULL, int obj_log_lev = 0, const std::string &log_msg_prefix = "") : 
+        log_(log),obj_log_lev_(obj_log_lev),log_msg_prefix_(log_msg_prefix) {}
+    logged_obj_base(Log *log, const params &prm) : 
+        logged_obj_base(log, prm.obj_log_lev, prm.log_msg_prefix) {}
 
     void                set_log(Log *log__) { log_ = log__; }
     Log                 *get_log()const { return log_; }
