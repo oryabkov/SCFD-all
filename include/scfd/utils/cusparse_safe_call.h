@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __CUSPARSE_SAFE_CALL_H__
-#define __CUSPARSE_SAFE_CALL_H__
+#ifndef __SCFD_UTILS_CUSPARSE_SAFE_CALL_H__
+#define __SCFD_UTILS_CUSPARSE_SAFE_CALL_H__
 
 #include <stdexcept>
 #include <string>
@@ -30,7 +30,7 @@
                 cudaError_t cuda_res = cudaDeviceSynchronize();                                                                                                                                                                                        \
                 if (status != CUSPARSE_STATUS_SUCCESS) {                                                                                                                                                                                               \
                         std::stringstream ss;                                                                                                                                                                                                          \
-                        ss << std::string("CUSPARSE_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: returned status ") << status;                                                                                                          \
+                        ss << std::string("CUSPARSE_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: ") << cusparseGetErrorName(status);                                                                                                    \
                         std::string str = ss.str();                                                                                                                                                                                                    \
                         throw std::runtime_error(str);                                                                                                                                                                                                 \
                 }                                                                                                                                                                                                                                      \

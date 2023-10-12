@@ -82,4 +82,4 @@ static const char *_cublasGetErrorEnum(cublasStatus_t error)
 
 
 
-#endif  
+#endif

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __CURAND_SAFE_CALL_H__
-#define __CURAND_SAFE_CALL_H__
+#ifndef __SCFD_UTILS_CURAND_SAFE_CALL_H__
+#define __SCFD_UTILS_CURAND_SAFE_CALL_H__
 
 #include <cuda_runtime.h>
 #include <curand.h>
