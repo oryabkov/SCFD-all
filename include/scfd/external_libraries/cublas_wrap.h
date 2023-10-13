@@ -20,7 +20,7 @@
 #include <iostream>
 #include <cublas_v2.h>
 #include <thrust/complex.h>
-#include <utils/cublas_safe_call.h>
+#include <scfd/utils/cublas_safe_call.h>
 #include <stdexcept>
 
 /*
@@ -46,7 +46,11 @@ index of a matrix element in row ''i'' and column 'j'' can be computed via the f
 
 */
 
-namespace cublas_complex_types{
+namespace scfd
+{
+
+namespace cublas_complex_types
+{
     template<typename T>
     struct cublas_cuComplex_type_hlp
     {
@@ -66,7 +70,8 @@ namespace cublas_complex_types{
     };
 }
 
-namespace cublas_real_types{
+namespace cublas_real_types
+{
     template<typename T>
     struct cublas_real_type_hlp
     {
@@ -1122,7 +1127,7 @@ void cublas_wrap::geam(const char opA, size_t RowAC, size_t ColBC, const thrust:
 
 }
 
-
+} // namespace scfd
 
 
 #endif
