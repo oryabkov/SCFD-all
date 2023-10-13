@@ -1,3 +1,28 @@
+// Copyright © 2016-2023 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
+
+// This file is part of SCFD.
+
+// SCFD is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 2 only of the License.
+
+// SCFD is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef __CUBLAS_WRAP_H__
+#define __CUBLAS_WRAP_H__
+
+#include <iostream>
+#include <cublas_v2.h>
+#include <thrust/complex.h>
+#include <utils/cublas_safe_call.h>
+#include <stdexcept>
+
 /*
 
 https://docs.nvidia.com/cuda/cublas/index.html
@@ -20,16 +45,6 @@ index of a matrix element in row ''i'' and column 'j'' can be computed via the f
 #define IDX2C(i,j,ld) (((j)*(ld))+(i))
 
 */
-
-
-#ifndef __CUBLAS_WRAP_H__
-#define __CUBLAS_WRAP_H__
-
-#include <iostream>
-#include <cublas_v2.h>
-#include <thrust/complex.h>
-#include <utils/cublas_safe_call.h>
-#include <stdexcept>
 
 namespace cublas_complex_types{
     template<typename T>
@@ -315,14 +330,14 @@ public:
 
 
     //===cuBLAS Level-3 Functions=== see: https://docs.nvidia.com/cuda/cublas/index.html#cublas-level-3-function-reference
-// cublasStatus_t cublasSgemm(cublasHandle_t handle,
-//                            cublasOperation_t transa, cublasOperation_t transb,
-//                            int m, int n, int k,
-//                            const float           *alpha,
-//                            const float           *A, int lda,
-//                            const float           *B, int ldb,
-//                            const float           *beta,
-//                            float           *C, int ldc)
+    // cublasStatus_t cublasSgemm(cublasHandle_t handle,
+    //                            cublasOperation_t transa, cublasOperation_t transb,
+    //                            int m, int n, int k,
+    //                            const float           *alpha,
+    //                            const float           *A, int lda,
+    //                            const float           *B, int ldb,
+    //                            const float           *beta,
+    //                            float           *C, int ldc)
     template<typename T>
     void gemm(const char opA, const char opB, size_t RowAC, size_t ColBC, size_t ColARowB, const T alpha, const T* A, size_t LDimA, const T* B, size_t LDimB, const T beta, T* C, size_t LdimC);
 
