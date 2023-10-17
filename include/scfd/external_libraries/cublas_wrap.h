@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __CUBLAS_WRAP_H__
-#define __CUBLAS_WRAP_H__
+#ifndef __SCFD_CUBLAS_WRAP_H__
+#define __SCFD_CUBLAS_WRAP_H__
 
 #include <iostream>
 #include <cublas_v2.h>
