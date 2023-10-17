@@ -1,32 +1,33 @@
-/*
- *     This file is part of Common_GPU_Operations.
- *     Copyright (C) 2009-2021  Evstigneev Nikolay Mikhaylovitch <evstigneevnm@ya.ru>, Ryabkov Oleg Igorevitch
- *
- *     This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PUPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *      */
+// Copyright © 2016-2023 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
-#ifndef __CUSOLVER_WRAP_H__
-#define __CUSOLVER_WRAP_H__
+// This file is part of SCFD.
+
+// SCFD is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 2 only of the License.
+
+// SCFD is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef __SCFD_CUSOLVER_WRAP_H__
+#define __SCFD_CUSOLVER_WRAP_H__
 
 #include <iostream>
 #include <cuda_runtime.h>
 #include <cusolverDn.h>
 // #include <thrust/complex.h>
-#include <external_libraries/cublas_wrap.h>
-#include <utils/cusolver_safe_call.h>
-#include <utils/cuda_safe_call.h>
+#include <scfd/external_libraries/cublas_wrap.h>
+#include <scfd/utils/cusolver_safe_call.h>
+#include <scfd/utils/cuda_safe_call.h>
 #include <stdexcept>
+
+namespace scfd
+{
 
 class cusolver_wrap
 {
@@ -706,5 +707,6 @@ void cusolver_wrap::eig(size_t rows_cols, float* A, float* lambda)
 
 }
 
+} // namespace scfd
 
 #endif
