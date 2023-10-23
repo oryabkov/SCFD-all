@@ -21,6 +21,9 @@
 #include <thrust/complex.h>
 #include <scfd/utils/cufft_safe_call.h>
 
+//TODO make add move semantics
+//TODO why class itself is templated on type? seems cufft plan doesnot depent on specific float type
+
 namespace scfd
 {
 
@@ -78,6 +81,11 @@ public:
         plan_created=true;
     }        
 
+    cufft_wrap_C2C(const cufft_wrap_C2C&) = delete;
+    cufft_wrap_C2C(cufft_wrap_C2C&& w) = delete;
+    cufft_wrap_C2C &operator=(const cufft_wrap_C2C &) = delete;
+    cufft_wrap_C2C &operator=(cufft_wrap_C2C && w) = delete;
+
     ~cufft_wrap_C2C()
     {
         if(plan_created)
@@ -132,6 +140,11 @@ public:
     {
         CUFFT_SAFE_CALL(cufftPlan3d(&planC2C, size_x, size_y, size_z, CUFFT_C2C));
     }        
+
+    cufft_wrap_C2C(const cufft_wrap_C2C&) = delete;
+    cufft_wrap_C2C(cufft_wrap_C2C&& w) = delete;
+    cufft_wrap_C2C &operator=(const cufft_wrap_C2C &) = delete;
+    cufft_wrap_C2C &operator=(cufft_wrap_C2C && w) = delete;
 
     ~cufft_wrap_C2C()
     {
@@ -211,6 +224,11 @@ public:
         size_j_F=floor(size_z/2)+1;
     }        
 
+    cufft_wrap_R2C(const cufft_wrap_R2C&) = delete;
+    cufft_wrap_R2C(cufft_wrap_R2C&& w) = delete;
+    cufft_wrap_R2C &operator=(const cufft_wrap_R2C &) = delete;
+    cufft_wrap_R2C &operator=(cufft_wrap_R2C && w) = delete;
+
     ~cufft_wrap_R2C()
     {
         if(planR2C_created)
@@ -289,6 +307,11 @@ public:
         planC2R_created=true;
         size_j_F=floor(size_z/2)+1;
     }        
+
+    cufft_wrap_R2C(const cufft_wrap_R2C&) = delete;
+    cufft_wrap_R2C(cufft_wrap_R2C&& w) = delete;
+    cufft_wrap_R2C &operator=(const cufft_wrap_R2C &) = delete;
+    cufft_wrap_R2C &operator=(cufft_wrap_R2C && w) = delete;
 
     ~cufft_wrap_R2C()
     {
