@@ -57,6 +57,15 @@ public:
             throw std::logic_error("log_mpi_basic::log: wrong t_msg_type argument");
     }
     void set_verbosity(int _log_lev = 1) { log_lev = _log_lev; }
+
+    int comm_rank()const
+    {
+        return comm_rank_;
+    }
+    int comm_size()const
+    {
+        return comm_size_;
+    }
 };
 
 }
