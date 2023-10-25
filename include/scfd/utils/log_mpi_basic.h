@@ -51,13 +51,13 @@ public:
         if ((mt != log_msg_type::ERROR)&&(_log_lev > log_lev)) return;
         //TODO
         if (mt == log_msg_type::INFO) {
-            if (comm_rank_ == 0) printf("INFO:    %s\n", s.c_str());
+            if (comm_rank_ == 0) printf("INFO:         %s\n", s.c_str());
         } else if (mt == log_msg_type::INFO_ALL) {
-            printf("INFO_ALL(%2d):%s\n", comm_rank_, s.c_str());
+            printf("INFO_ALL(%3d):%s\n", comm_rank_, s.c_str());
         } else if (mt == log_msg_type::WARNING) {
-            printf("WARNING(%2d): %s\n", comm_rank_, s.c_str());
+            printf("WARNING(%3d): %s\n", comm_rank_, s.c_str());
         } else if (mt == log_msg_type::ERROR) {
-            printf("ERROR(%2d):   %s\n", comm_rank_, s.c_str());
+            printf("ERROR(%3d):   %s\n", comm_rank_, s.c_str());
         } else 
             throw std::logic_error("log_mpi_basic::log: wrong t_msg_type argument");
     }
