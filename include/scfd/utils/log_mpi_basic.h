@@ -23,7 +23,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <mpi.h>
-#include "log.h"
+#include "log_msg_type.h"
 
 namespace scfd
 {
@@ -32,8 +32,13 @@ namespace utils
 
 class log_mpi_basic
 {
+public:
+    using log_msg_type = utils::log_msg_type;
+
+private:
     int     log_lev;
     int     comm_rank_, comm_size_;
+
 public:
     log_mpi_basic() : log_lev(1) 
     {  
@@ -41,17 +46,17 @@ public:
         if (MPI_Comm_size(MPI_COMM_WORLD, &comm_size_) != MPI_SUCCESS) throw std::runtime_error("log_mpi_basic::MPI_Comm_size failed");
     }
 
-    void msg(const std::string &s, t_msg_type mt = INFO, int _log_lev = 1)
+    void msg(const std::string &s, log_msg_type mt = log_msg_type::INFO, int _log_lev = 1)
     {
-        if ((mt != ERROR)&&(_log_lev > log_lev)) return;
+        if ((mt != log_msg_type::ERROR)&&(_log_lev > log_lev)) return;
         //TODO
-        if (mt == INFO) {
+        if (mt == log_msg_type::INFO) {
             if (comm_rank_ == 0) printf("INFO:    %s\n", s.c_str());
-        } else if (mt == INFO_ALL) {
-            printf("INFO(%2d):%s\n", comm_rank_, s.c_str());
-        } else if (mt == WARNING) {
+        } else if (mt == log_msg_type::INFO_ALL) {
+            printf("INFO_ALL(%2d):%s\n", comm_rank_, s.c_str());
+        } else if (mt == log_msg_type::WARNING) {
             printf("WARNING(%2d): %s\n", comm_rank_, s.c_str());
-        } else if (mt == ERROR) {
+        } else if (mt == log_msg_type::ERROR) {
             printf("ERROR(%2d):   %s\n", comm_rank_, s.c_str());
         } else 
             throw std::logic_error("log_mpi_basic::log: wrong t_msg_type argument");

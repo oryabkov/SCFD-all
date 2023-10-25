@@ -1,4 +1,6 @@
 SCFD_INCLUDE=../../include
+MPI_INCLUDE_DIR=/usr/local/mpi/include
+MPI_LIB_DIR=/usr/local/mpi/lib
 test_constant_data_cpp.bin: test_constant_data.cpp 
 	g++ -std=c++11 -I$(SCFD_INCLUDE) test_constant_data.cpp -o test_constant_data_cpp.bin
 test_constant_data_cu.bin: test_constant_data.cu test_constant_data2.cu
@@ -21,3 +23,5 @@ test_log_std_thread_safety.bin: test_log_std_thread_safety.cpp
 	g++ -std=c++11 -I$(SCFD_INCLUDE) -DSCFD_UTILS_LOG_GARANTEE_THREAD_SAFE=1 test_log_std_thread_safety.cpp -lpthread -o test_log_std_thread_safety.bin
 test_log_std_thread_safety_cuda.bin: test_log_std_thread_safety.cu
 	nvcc -std=c++11 -I$(SCFD_INCLUDE) -DSCFD_UTILS_LOG_GARANTEE_THREAD_SAFE=1 test_log_std_thread_safety.cu -lpthread -o test_log_std_thread_safety_cuda.bin
+test_log_mpi_cuda.bin: test_log_mpi_cuda.cu
+	nvcc -std=c++11 -I$(SCFD_INCLUDE) -I$(MPI_INCLUDE_DIR) -L$(MPI_LIB_DIR) test_log_mpi_cuda.cu -lmpi -o test_log_mpi_cuda.bin
