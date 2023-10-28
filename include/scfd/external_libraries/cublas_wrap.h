@@ -361,7 +361,7 @@ public:
     //                            const float           *beta,
     //                            float           *C, int ldc)
     template<typename T>
-    void gemm(const char opA, const char opB, size_t RowAC, size_t ColBC, size_t ColARowB, const T alpha, const T* A, size_t LDimA, const T* B, size_t LDimB, const T beta, T* C, size_t LdimC);
+    void gemm(char opA, char opB, size_t RowAC, size_t ColBC, size_t ColARowB, T alpha, const T* A, size_t LDimA, const T* B, size_t LDimB, T beta, T* C, size_t LdimC);
 
     //===cuBLAS BLAS-like EXTENSIONS=== see: https://docs.nvidia.com/cuda/cublas/index.html#blas-like-extension
     
@@ -837,7 +837,7 @@ void cublas_wrap::gemv(const char op, size_t RowA, const thrust::complex<double>
 
 //level 3 BLAS specializations:
 template<> inline
-void cublas_wrap::gemm(const char opA, const char opB, size_t RowA, size_t ColBC, size_t ColARowB, const float alpha, const float* A, size_t LDimA, const float* B, size_t LDimB, const float beta, float* C, size_t LDimC)
+void cublas_wrap::gemm(char opA, char opB, size_t RowA, size_t ColBC, size_t ColARowB, float alpha, const float* A, size_t LDimA, const float* B, size_t LDimB, float beta, float* C, size_t LDimC)
 {
 /*
  C = α op ( A ) op ( B ) + β C 
@@ -877,7 +877,7 @@ cublasStatus_t cublasDgemm(cublasHandle_t handle,
 }
 
 template<> inline
-void cublas_wrap::gemm(const char opA, const char opB, size_t RowA, size_t ColBC, size_t ColARowB, const double alpha, const double* A, size_t LDimA, const double* B, size_t LDimB, const double beta, double* C, size_t LDimC)
+void cublas_wrap::gemm(char opA, char opB, size_t RowA, size_t ColBC, size_t ColARowB, double alpha, const double* A, size_t LDimA, const double* B, size_t LDimB, double beta, double* C, size_t LDimC)
 {
    CUBLAS_SAFE_CALL( cublasDgemm(handle, switch_operation_real(opA), switch_operation_real(opB),
                            RowA, ColBC, ColARowB,
@@ -889,7 +889,7 @@ void cublas_wrap::gemm(const char opA, const char opB, size_t RowA, size_t ColBC
 
 }
 template<> inline
-void cublas_wrap::gemm(const char opA, const char opB, size_t RowA, size_t ColBC, size_t ColARowB, const thrust::complex<float> alpha, const thrust::complex<float>* A, size_t LDimA, const thrust::complex<float>* B, size_t LDimB, const thrust::complex<float> beta, thrust::complex<float>* C, size_t LDimC)
+void cublas_wrap::gemm(char opA, char opB, size_t RowA, size_t ColBC, size_t ColARowB, thrust::complex<float> alpha, const thrust::complex<float>* A, size_t LDimA, const thrust::complex<float>* B, size_t LDimB, thrust::complex<float> beta, thrust::complex<float>* C, size_t LDimC)
 {
    CUBLAS_SAFE_CALL( cublasCgemm(handle, switch_operation_complex(opA), switch_operation_complex(opB),
                            RowA, ColBC, ColARowB,
@@ -901,7 +901,7 @@ void cublas_wrap::gemm(const char opA, const char opB, size_t RowA, size_t ColBC
 
 }
 template<> inline
-void cublas_wrap::gemm(const char opA, const char opB, size_t RowA, size_t ColBC, size_t ColARowB, const thrust::complex<double> alpha, const thrust::complex<double>* A, size_t LDimA, const thrust::complex<double>* B, size_t LDimB, const thrust::complex<double> beta, thrust::complex<double>* C, size_t LDimC)
+void cublas_wrap::gemm(char opA, char opB, size_t RowA, size_t ColBC, size_t ColARowB, thrust::complex<double> alpha, const thrust::complex<double>* A, size_t LDimA, const thrust::complex<double>* B, size_t LDimB, thrust::complex<double> beta, thrust::complex<double>* C, size_t LDimC)
 {
    CUBLAS_SAFE_CALL( cublasZgemm(handle, switch_operation_complex(opA), switch_operation_complex(opB),
                            RowA, ColBC, ColARowB,

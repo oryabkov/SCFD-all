@@ -229,6 +229,62 @@ public:
         gesv(rows_cols, A, b, x);
     }
 
+    /// Inplace QR decomposition of matrix A
+    /// Upper-diagonal part of A is replaced with R factor
+    /// Lower part is replaced with Householder vectors as Lapack and Cusolver suppose
+    /// tau array is filled with tau factors of Householder vectors as Lapack and Cusolver suppose
+    /// tau and A must be already allocated by user
+    /// A is mxn matrix with col-major ordering (lda supposed to be m)
+    /// tau is vector of size min(m,n)
+    template<class T>
+    void geqrf(size_t m, size_t n, T *A, T *tau)
+    {
+        auto lda = m;
+        geqrf_size(m,n,A,lda);
+        geqrf_perform(m,n,A,lda,tau);
+    }
+
+    template<class T>
+    void orgqr(size_t m, size_t n, size_t k, T *A, const T *tau)
+    {
+        auto lda = m;
+        orgqr_size(m,n,k,A,lda,tau);
+        orgqr_perform(m,n,k,A,lda,tau);
+    }
+    template<class T>
+    void orgqr(size_t m, size_t n, size_t k, const T *A, const T *tau, T *Q)
+    {
+        CUDA_SAFE_CALL( cudaMemcpy(Q, A, sizeof(T)*m*n, cudaMemcpyDeviceToDevice) );
+        orgqr(m, n, k, Q, tau);
+    }
+
+    template<class T>
+    void ormqr(char operation_, char side_, size_t m, size_t n, size_t k, const T *A, const T *tau, T* C)
+    {
+        auto lda = ((side_ == 'l')||(side_ == 'L') ? m : n);
+        auto ldc = m;
+        ormqr_size(operation_, side_, m, n, k, A, lda, tau, C, ldc);
+        ormqr_perform(operation_, side_, m, n, k, A, lda, tau, C, ldc);
+    }
+
+    /// A and tau must be results of geqrf call with square A passed as system matrix
+    template<typename T>
+    void gesv_apply_qr(const size_t rows_cols, const T* A, const T* tau, T* b_x)
+    {
+        check_blas();
+        ormqr(
+                'T',
+                'L',
+                rows_cols,
+                1,
+                rows_cols,
+                A,
+                tau,
+                b_x
+                );
+        
+        cublas->trsm('L', 'U', 'N', false, rows_cols, 1, T(1.0), A, rows_cols, b_x, rows_cols);
+    } 
 
 private:
 
@@ -313,6 +369,66 @@ private:
                 size_t ldb
                 );
 
+    template<class T>
+    void geqrf_size(
+                size_t m,
+                size_t n,
+                const T *A,
+                size_t lda
+                );
+    template<class T>
+    void geqrf_perform(
+                size_t m,
+                size_t n,
+                T *A,
+                size_t lda,
+                T *tau                
+                );
+
+    template<class T>
+    void orgqr_size(
+                size_t m,
+                size_t n,
+                size_t k,
+                const T *A,
+                size_t lda,
+                const T *tau
+                );
+    template<class T>
+    void orgqr_perform(
+                size_t m,
+                size_t n,
+                size_t k,
+                T *A,
+                size_t lda,
+                const T *tau
+                );
+
+    template<class T>
+    void ormqr_size(
+                char operation_, 
+                char side_, 
+                size_t m, 
+                size_t n, 
+                size_t k, 
+                const T *A, 
+                size_t lda, 
+                const T *tau, 
+                const T* C, 
+                size_t ldc);
+    template<class T>
+    void ormqr_perform(
+                char operation_, 
+                char side_, 
+                size_t m, 
+                size_t n, 
+                size_t k, 
+                const T *A, 
+                size_t lda, 
+                const T *tau, 
+                T* C, 
+                size_t ldc);
+
     void cusolver_destroy()
     {
         CUSOLVER_SAFE_CALL(cusolverDnDestroy(handle));
@@ -377,8 +493,8 @@ private:
 template<> inline
 void cusolver_wrap::geqrf_ormqr(char operation_, char side_, size_t rows, size_t cols, double *A, size_t lda, double* b, size_t ldb)
 {
-    int *devInfo = nullptr;
-    CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
     int info_gpu;
     CUSOLVER_SAFE_CALL
     (
@@ -448,8 +564,10 @@ void cusolver_wrap::geqrf_ormqr(char operation_, char side_, size_t rows, size_t
 template<> inline
 void cusolver_wrap::geqrf_ormqr(char operation_, char side_, size_t rows, size_t cols, float *A, size_t lda, float* b, size_t ldb)
 {
-    int *devInfo = nullptr;
-    CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
+    //int *devInfo = nullptr;
+    //CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
     int info_gpu;
     CUSOLVER_SAFE_CALL
     (
@@ -635,7 +753,393 @@ void cusolver_wrap::qr_size(char operation_, char side_, size_t rows, size_t col
     set_d_work_float(lwork);
 }
 
+template<> inline
+void cusolver_wrap::geqrf_size(size_t rows, size_t cols, const double *A, size_t lda)
+{
+    
+    int lwork_1 = 0;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnDgeqrf_bufferSize
+        (
+            handle,
+            (int) rows,
+            (int) cols,
+            (double*)A,
+            (int) lda,
+            &lwork_1
+        )
+    );
+    
+    int lwork = lwork_1;
+    set_d_work_double(lwork);
+}
 
+template<> inline
+void cusolver_wrap::geqrf_size(size_t rows, size_t cols, const float *A, size_t lda)
+{
+    
+    int lwork_1 = 0;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnSgeqrf_bufferSize
+        (
+            handle,
+            (int) rows,
+            (int) cols,
+            (float*)A,
+            (int) lda,
+            &lwork_1
+        )
+    );
+    
+    int lwork = lwork_1;
+    set_d_work_float(lwork);
+}
+
+template<> inline
+void cusolver_wrap::geqrf_perform(size_t rows, size_t cols, double *A, size_t lda, double *tau)
+{
+    //std::cout << "test:" << rows << " " << cols << " " << lda << std::endl;
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
+    int info_gpu;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnDgeqrf
+        (
+            handle,
+            (int) rows,
+            (int) cols, 
+            A, 
+            lda, 
+            tau, 
+            d_work_d, 
+            work_size, 
+            devInfo
+        )
+    );
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL( cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost) );
+    //std::cout << "test:" << info_gpu << std::endl;
+    if(info_gpu != 0)
+    {
+        throw std::runtime_error("cusolver_wrap::geqrf_perform.geqrf: info_gpu = " + std::to_string(info_gpu) );
+    }
+    
+}
+
+template<> inline
+void cusolver_wrap::geqrf_perform(size_t rows, size_t cols, float *A, size_t lda, float *tau)
+{
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
+    int info_gpu;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnSgeqrf
+        (
+            handle,
+            (int) rows,
+            (int) cols, 
+            A, 
+            lda, 
+            tau, 
+            d_work_f, 
+            work_size, 
+            devInfo
+        )
+    );
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL( cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost) );
+    if(info_gpu != 0)
+    {
+        throw std::runtime_error("cusolver_wrap::geqrf_perform.geqrf: info_gpu = " + std::to_string(info_gpu) );
+    }
+    
+}
+
+template<> inline
+void cusolver_wrap::orgqr_size(size_t rows, size_t cols, size_t k, const double *A, size_t lda, const double *tau)
+{
+    
+    int lwork_1 = 0;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnDorgqr_bufferSize
+        (
+            handle,
+            (int) rows,
+            (int) cols,
+            (int) k,
+            A,
+            (int) lda,
+            tau,
+            &lwork_1
+        )
+    );
+    
+    int lwork = lwork_1;
+    set_d_work_double(lwork);
+}
+
+template<> inline
+void cusolver_wrap::orgqr_size(size_t rows, size_t cols, size_t k, const float *A, size_t lda, const float *tau)
+{
+    
+    int lwork_1 = 0;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnSorgqr_bufferSize
+        (
+            handle,
+            (int) rows,
+            (int) cols,
+            (int) k,
+            A,
+            (int) lda,
+            tau,
+            &lwork_1
+        )
+    );
+    
+    int lwork = lwork_1;
+    set_d_work_float(lwork);
+}
+
+template<> inline
+void cusolver_wrap::orgqr_perform(size_t rows, size_t cols, size_t k, double *A, size_t lda, const double *tau)
+{
+    
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
+    int info_gpu;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnDorgqr
+        (
+            handle,
+            (int) rows,
+            (int) cols, 
+            (int) k,
+            A, 
+            lda, 
+            tau, 
+            d_work_d, 
+            work_size, 
+            devInfo
+        )
+    );
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL( cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost) );
+    if(info_gpu != 0)
+    {
+        throw std::runtime_error("cusolver_wrap::orgqr_perform.orgqr: info_gpu = " + std::to_string(info_gpu) );
+    }
+}
+
+template<> inline
+void cusolver_wrap::orgqr_perform(size_t rows, size_t cols, size_t k, float *A, size_t lda, const float *tau)
+{
+    
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
+    int info_gpu;
+    CUSOLVER_SAFE_CALL
+    (
+        cusolverDnSorgqr
+        (
+            handle,
+            (int) rows,
+            (int) cols, 
+            (int) k,
+            A, 
+            lda, 
+            tau, 
+            d_work_f, 
+            work_size, 
+            devInfo
+        )
+    );
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL( cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost) );
+    if(info_gpu != 0)
+    {
+        throw std::runtime_error("cusolver_wrap::orgqr_perform.orgqr: info_gpu = " + std::to_string(info_gpu) );
+    }
+}
+
+template<> inline
+void cusolver_wrap::ormqr_size(char operation_, char side_, size_t m, size_t n, size_t k, const double *A, size_t lda, const double *tau, const double* C, size_t ldc)
+{    
+    int lwork_2 = 0;
+    
+    cublasSideMode_t side = CUBLAS_SIDE_LEFT;
+    if((side_ == 'r')||(side_ == 'R'))
+    {
+        side = CUBLAS_SIDE_RIGHT;
+    }
+    cublasOperation_t trans = CUBLAS_OP_N;
+    if((operation_ == 't')||(operation_ == 'T')) 
+    {
+        trans = CUBLAS_OP_T;
+    }
+
+    CUSOLVER_SAFE_CALL
+    (    
+        cusolverDnDormqr_bufferSize
+        (
+            handle,
+            side,
+            trans,
+            (int)m,
+            (int)n,
+            (int)k,
+            A,
+            (int)lda,
+            tau,
+            C,
+            (int)ldc,
+            &lwork_2
+        )
+    );
+
+    int lwork = lwork_2;
+    set_d_work_double(lwork);
+}
+
+template<> inline
+void cusolver_wrap::ormqr_size(char operation_, char side_, size_t m, size_t n, size_t k, const float *A, size_t lda, const float *tau, const float* C, size_t ldc)
+{    
+    int lwork_2 = 0;
+    
+    cublasSideMode_t side = CUBLAS_SIDE_LEFT;
+    if((side_ == 'r')||(side_ == 'R'))
+    {
+        side = CUBLAS_SIDE_RIGHT;
+    }
+    cublasOperation_t trans = CUBLAS_OP_N;
+    if((operation_ == 't')||(operation_ == 'T')) 
+    {
+        trans = CUBLAS_OP_T;
+    }
+
+    CUSOLVER_SAFE_CALL
+    (    
+        cusolverDnSormqr_bufferSize
+        (
+            handle,
+            side,
+            trans,
+            (int)m,
+            (int)n,
+            (int)k,
+            A,
+            (int)lda,
+            tau,
+            C,
+            (int)ldc,
+            &lwork_2
+        )
+    );
+
+    int lwork = lwork_2;
+    set_d_work_float(lwork);
+}
+
+template<> inline
+void cusolver_wrap::ormqr_perform(char operation_, char side_, size_t m, size_t n, size_t k, const double *A, size_t lda, const double *tau, double* C, size_t ldc)
+{    
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
+    int info_gpu;
+    
+    cublasSideMode_t side = CUBLAS_SIDE_LEFT;
+    if((side_ == 'r')||(side_ == 'R'))
+    {
+        side = CUBLAS_SIDE_RIGHT;
+    }
+    cublasOperation_t trans = CUBLAS_OP_N;
+    if((operation_ == 't')||(operation_ == 'T')) 
+    {
+        trans = CUBLAS_OP_T;
+    }
+
+    CUSOLVER_SAFE_CALL
+    (    
+        cusolverDnDormqr
+        (
+            handle,
+            side,
+            trans,
+            (int)m,
+            (int)n,
+            (int)k,
+            A,
+            (int)lda,
+            tau,
+            C,
+            (int)ldc,
+            d_work_d,
+            work_size,
+            devInfo
+        )
+    );
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL( cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost) );
+    if(info_gpu != 0)
+    {
+        throw std::runtime_error("cusolver_wrap::ormqr_perform.ormqr: info_gpu = " + std::to_string(info_gpu) );
+    } 
+}
+
+template<> inline
+void cusolver_wrap::ormqr_perform(char operation_, char side_, size_t m, size_t n, size_t k, const float *A, size_t lda, const float *tau, float* C, size_t ldc)
+{    
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
+    int info_gpu;
+    
+    cublasSideMode_t side = CUBLAS_SIDE_LEFT;
+    if((side_ == 'r')||(side_ == 'R'))
+    {
+        side = CUBLAS_SIDE_RIGHT;
+    }
+    cublasOperation_t trans = CUBLAS_OP_N;
+    if((operation_ == 't')||(operation_ == 'T')) 
+    {
+        trans = CUBLAS_OP_T;
+    }
+
+    CUSOLVER_SAFE_CALL
+    (    
+        cusolverDnSormqr
+        (
+            handle,
+            side,
+            trans,
+            (int)m,
+            (int)n,
+            (int)k,
+            A,
+            (int)lda,
+            tau,
+            C,
+            (int)ldc,
+            d_work_f,
+            work_size,
+            devInfo
+        )
+    );
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL( cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost) );
+    if(info_gpu != 0)
+    {
+        throw std::runtime_error("cusolver_wrap::ormqr_perform.ormqr: info_gpu = " + std::to_string(info_gpu) );
+    } 
+}
 
 template<> inline
 void cusolver_wrap::eig(size_t rows_cols, double* A, double* lambda)
@@ -646,8 +1150,8 @@ void cusolver_wrap::eig(size_t rows_cols, double* A, double* lambda)
     int lda = m;
     int lwork = 0;
     
-    int *devInfo = nullptr;
-    CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
     int info_gpu;
 
     CUSOLVER_SAFE_CALL
@@ -699,8 +1203,8 @@ void cusolver_wrap::eig(size_t rows_cols, float* A, float* lambda)
     int lda = m;
     int lwork = 0;
     
-    int *devInfo = nullptr;
-    CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
+    thrust::device_vector<int> devInfo_dv(1);
+    int *devInfo = thrust::raw_pointer_cast(&devInfo_dv[0]);
     int info_gpu;
 
     CUSOLVER_SAFE_CALL
