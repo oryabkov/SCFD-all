@@ -22,6 +22,7 @@
 #include <thrust/complex.h>
 #include <scfd/utils/cublas_safe_call.h>
 #include <stdexcept>
+#include "manual_init_singleton.h"
 
 /*
 
@@ -114,7 +115,7 @@ namespace cublas_real_types
     };    
 }
 
-class cublas_wrap
+class cublas_wrap : public manual_init_singleton<cublas_wrap>
 {
 public:
 
@@ -139,6 +140,22 @@ public:
             handle_created=true;
         }
         set_pointer_location_device(false);
+    }
+
+    cublas_wrap(const cublas_wrap&) = delete;
+    cublas_wrap(cublas_wrap&& w)
+    {
+        operator=(std::move(w));
+    }
+
+    cublas_wrap &operator=(const cublas_wrap &) = delete;
+    cublas_wrap &operator=(cublas_wrap && w)
+    {
+        handle_created = w.handle_created;
+        handle = w.handle;        
+        w.handle_created = false;
+
+        return *this;
     }
 
 

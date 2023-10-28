@@ -20,16 +20,19 @@
 #include <iostream>
 #include <cuda_runtime.h>
 #include <cusolverDn.h>
+#include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 // #include <thrust/complex.h>
 #include <scfd/external_libraries/cublas_wrap.h>
 #include <scfd/utils/cusolver_safe_call.h>
 #include <scfd/utils/cuda_safe_call.h>
 #include <stdexcept>
+#include "manual_init_singleton.h"
 
 namespace scfd
 {
 
-class cusolver_wrap
+class cusolver_wrap : public manual_init_singleton<cusolver_wrap>
 {
     
 //  used for the solution of the linear system
@@ -101,11 +104,45 @@ public:
         }
     }
 
+    cusolver_wrap(const cusolver_wrap&) = delete;
+    cusolver_wrap(cusolver_wrap&& w)
+    {
+        operator=(std::move(w));
+    }
+
+    cusolver_wrap &operator=(const cusolver_wrap &) = delete;
+    cusolver_wrap &operator=(cusolver_wrap && w)
+    {
+        handle_created = w.handle_created;
+        handle = w.handle;        
+        w.handle_created = false;
+
+        d_work_d = w.d_work_d;
+        w.d_work_d = nullptr;
+        d_work_f = w.d_work_f;
+        w.d_work_f = nullptr;
+        work_size = w.work_size;
+        w.work_size = 0;
+
+        cublas = w.cublas;
+        cublas_set = w.cublas_set;
+
+        tau_f = w.tau_f;
+        w.tau_f = nullptr;
+        tau_d = w.tau_d;
+        w.tau_d = nullptr;
+        tau_size = w.tau_size;
+        w.tau_size = 0;
+
+        return *this;
+    }
 
     ~cusolver_wrap()
     {
         free_d_work_double();
         free_d_work_float();
+        free_tau_d();
+        free_tau_f();
         if(handle_created)
         {
             cusolver_destroy();
