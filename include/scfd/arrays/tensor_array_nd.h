@@ -88,6 +88,19 @@ public:
     __DEVICE_TAG__                  tensor_array_nd(const tensor_array_nd &);
     __DEVICE_TAG__                  tensor_array_nd(tensor_array_nd &&t);
 
+    template<class... Args,
+             #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+             class = typename std::enable_if<(sizeof...(Args) >= arranger_type::dynamic_dims_num)&&
+                                             (sizeof...(Args) <= arranger_type::dynamic_dims_num*2)>::type,
+             #else
+             class = typename std::enable_if<sizeof...(Args)==arranger_type::dynamic_dims_num>::type,
+             #endif             
+             class = typename std::enable_if<detail::check_all_are_true< std::is_integral<Args>::value... >::value>::type>
+    tensor_array_nd(Args ...args)
+    {
+        init(args...);
+    }
+
     __DEVICE_TAG__ tensor_array_nd  &operator=(const tensor_array_nd &t);
     __DEVICE_TAG__ tensor_array_nd  &operator=(tensor_array_nd &&t);
 
