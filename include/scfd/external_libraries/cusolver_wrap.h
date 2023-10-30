@@ -76,21 +76,20 @@ class cusolver_wrap : public manual_init_singleton<cusolver_wrap>
 
 public:
     
-    cusolver_wrap(): handle_created(false)
+    cusolver_wrap(bool do_set_inst = false): manual_init_singleton(this,do_set_inst),handle_created(false)
     {
         cusolver_create();
         handle_created=true;
     }
     
-    cusolver_wrap(blas_t* cublas_): 
-    handle_created(false)
+    cusolver_wrap(blas_t* cublas_,bool do_set_inst = false): manual_init_singleton(this,do_set_inst),handle_created(false)
     {
         cusolver_create();
         set_cublas(cublas_);
         handle_created=true;
     }
 
-    cusolver_wrap(bool plot_info): handle_created(false)
+    cusolver_wrap(bool plot_info,bool do_set_inst = false): manual_init_singleton(this,do_set_inst),handle_created(false)
     {
         if(plot_info)
         {
@@ -172,9 +171,9 @@ public:
         // printf("set_cublas: address of cublas is %p\n", (void *)cublas ); 
     }
 
-//  WARNING!
-//  1. matrix A WILL BE OVERWRITTEN
-//  2. matrix must be Column-major order: A_{j,k} = data[rows*k+j];
+    ///  WARNING!
+    ///  1. matrix A WILL BE OVERWRITTEN
+    ///  2. matrix must be Column-major order: A_{j,k} = data[rows*k+j];
     template<typename T>
     void gesv(const size_t rows_cols, T* A, T* b_x)
     {

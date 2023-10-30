@@ -120,14 +120,14 @@ class cublas_wrap : public manual_init_singleton<cublas_wrap>
 public:
 
 
-    cublas_wrap(): handle_created(false)
+    cublas_wrap(bool do_set_inst = false): manual_init_singleton(this,do_set_inst),handle_created(false)
     {
         cublas_create();
         handle_created=true;
         set_pointer_location_device(false);
     }
 
-    cublas_wrap(bool plot_info): handle_created(false)
+    cublas_wrap(bool plot_info,bool do_set_inst): manual_init_singleton(this,do_set_inst),handle_created(false)
     {
         if(plot_info)
         {
@@ -348,7 +348,7 @@ public:
     //   op = 'N' for CUBLAS_OP_N, op = 'T' for CUBLAS_OP_T, op = 'H' for CUBLAS_OP_H
     //LDimA is the leading dimension of A, for C arrays LDimA = RowA.
     template<typename T>
-    void gemv(const char op, size_t RowA, const T *A, size_t ColA, size_t LDimA, const T alpha, const T *x, const T beta, T *y);
+    void gemv(const char op, size_t RowA, const T *A, size_t ColA, size_t LDimA, T alpha, const T *x, T beta, T *y);
 
 
     //===cuBLAS Level-3 Functions=== see: https://docs.nvidia.com/cuda/cublas/index.html#cublas-level-3-function-reference
@@ -712,7 +712,7 @@ void cublas_wrap::normalize(size_t vector_size, float *x, float *norm, int incx)
     else
     {
         float inorm=float(1.0)/norm[0];
-        scale<float>(vector_size, (const float) inorm, x, incx);    
+        scale<float>(vector_size, inorm, x, incx);    
     }
     
 }
@@ -727,7 +727,7 @@ void cublas_wrap::normalize(size_t vector_size, double *x, double *norm, int inc
     else
     {
         double inorm=float(1.0)/norm[0];
-        scale<double>(vector_size, (const double) inorm, x, incx);    
+        scale<double>(vector_size, inorm, x, incx);    
     }        
 }
 template<> inline
@@ -741,7 +741,7 @@ void cublas_wrap::normalize(size_t vector_size, cuComplex *x, typename cublas_re
     else
     {
         float inorm=float(1.0)/norm[0];
-        scale<cuComplex>(vector_size, (const float) inorm, x, incx);    
+        scale<cuComplex>(vector_size, inorm, x, incx);    
     }
 }
 template<> inline
@@ -755,7 +755,7 @@ void cublas_wrap::normalize(size_t vector_size, cuDoubleComplex *x, typename cub
     else
     {
         double inorm=double(1.0)/norm[0];
-        scale<cuDoubleComplex>(vector_size, (const double) inorm, x, incx);    
+        scale<cuDoubleComplex>(vector_size, inorm, x, incx);    
     }        
 }
 template<> inline
@@ -769,7 +769,7 @@ void cublas_wrap::normalize(size_t vector_size, thrust::complex<float> *x, typen
     else
     {
         float inorm=float(1.0)/norm[0];
-        scale< thrust::complex<float> >(vector_size, (const float) inorm, x, incx);
+        scale< thrust::complex<float> >(vector_size, inorm, x, incx);
     }         
 
 }
@@ -784,7 +784,7 @@ void cublas_wrap::normalize(size_t vector_size, thrust::complex<double> *x, type
     else
     {
         double inorm=double(1.0)/norm[0];
-        scale< thrust::complex<double> >(vector_size, (const double) inorm, x, incx);
+        scale< thrust::complex<double> >(vector_size, inorm, x, incx);
     }
 }
 
@@ -792,7 +792,7 @@ void cublas_wrap::normalize(size_t vector_size, thrust::complex<double> *x, type
 //level 2 BLAS specializations:
 
 template<> inline
-void cublas_wrap::gemv(const char op, size_t RowA, const float *A, size_t ColA, size_t LDimA, const float alpha, const float *x, const float beta, float *y)
+void cublas_wrap::gemv(const char op, size_t RowA, const float *A, size_t ColA, size_t LDimA, float alpha, const float *x, float beta, float *y)
 {
 
 /*
@@ -814,21 +814,21 @@ cublasStatus_t cublasSgemv(cublasHandle_t handle,
 }
 
 template<> inline
-void cublas_wrap::gemv(const char op, size_t RowA, const double *A, size_t ColA, size_t LDimA, const double alpha, const double *x, const double beta, double *y)
+void cublas_wrap::gemv(const char op, size_t RowA, const double *A, size_t ColA, size_t LDimA, double alpha, const double *x, double beta, double *y)
 {
 
     CUBLAS_SAFE_CALL( cublasDgemv(handle, switch_operation_real(op), RowA, ColA, &alpha, A, LDimA, x, 1, &beta, y, 1) );
 
 }
 template<> inline
-void cublas_wrap::gemv(const char op, size_t RowA, const thrust::complex<float> *A, size_t ColA, size_t LDimA, const thrust::complex<float> alpha, const thrust::complex<float> *x, const thrust::complex<float> beta, thrust::complex<float> *y)
+void cublas_wrap::gemv(const char op, size_t RowA, const thrust::complex<float> *A, size_t ColA, size_t LDimA, thrust::complex<float> alpha, const thrust::complex<float> *x, thrust::complex<float> beta, thrust::complex<float> *y)
 {
 
     CUBLAS_SAFE_CALL( cublasCgemv(handle, switch_operation_complex(op), RowA, ColA, (const cuComplex*) &alpha, (const cuComplex*) A, LDimA, (const cuComplex*)x, 1, (const cuComplex*) &beta, (cuComplex*)y, 1) );
 
 }
 template<> inline
-void cublas_wrap::gemv(const char op, size_t RowA, const thrust::complex<double> *A, size_t ColA, size_t LDimA, const thrust::complex<double> alpha, const thrust::complex<double> *x, const thrust::complex<double> beta, thrust::complex<double> *y)
+void cublas_wrap::gemv(const char op, size_t RowA, const thrust::complex<double> *A, size_t ColA, size_t LDimA, thrust::complex<double> alpha, const thrust::complex<double> *x, thrust::complex<double> beta, thrust::complex<double> *y)
 {
 
     CUBLAS_SAFE_CALL( cublasZgemv(handle, switch_operation_complex(op), RowA, ColA, (const cuDoubleComplex*) &alpha, (const cuDoubleComplex*) A, LDimA, (const cuDoubleComplex*) x, 1, (const cuDoubleComplex*) &beta, (cuDoubleComplex*) y, 1) );

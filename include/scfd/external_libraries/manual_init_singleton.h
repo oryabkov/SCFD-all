@@ -10,6 +10,15 @@ template<class DerivedClass>
 class manual_init_singleton
 {
 public:
+    manual_init_singleton() = default;
+    manual_init_singleton(DerivedClass *inst, bool do_set_inst = false)
+    {
+        if (do_set_inst)
+        {
+            set_inst(inst);
+        }
+    }
+
     static void set_inst(DerivedClass *inst)
     {
         inst_ = inst;

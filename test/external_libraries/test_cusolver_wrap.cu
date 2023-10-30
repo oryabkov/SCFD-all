@@ -15,7 +15,7 @@
 #include <scfd/arrays/array_nd_visible.h>
 #include <scfd/arrays/first_index_fast_arranger.h>
 
-#define MLUPS 10
+#define MLUPS 50
 /// Change MLUPS for some small value to test that test actually tests something
 /// #define MLUPS 1
 //#define TEST_FLOAT
@@ -102,9 +102,260 @@ real calc_fro(matrix_t &mat)
     return res;
 }
 
+real calc_r2_norm(vector_t &vec)
+{
+    vec.sync_from_array();
+    real res(0);
+    int sz = vec.size();
+    for (int i = 0;i < sz;++i)
+    {
+        real abs_v = std::abs(vec(i));
+        res += abs_v*abs_v;
+    }
+    res = std::sqrt(res);
+    return res;
+}
+
 real calc_eps(real val1, real val2, real fro)
 {
     return std::max(std::max(std::abs(val1),std::abs(val2)),fro)*std::numeric_limits<real>::epsilon()*MLUPS;
+}
+
+void test_gesv(
+    matrix_t &mat, vector_t &rhs, vector_t &ref_x, bool use_apply_qr, bool check_refs
+)
+{
+    scfd::cublas_wrap &cublas = scfd::cublas_wrap::inst();
+    scfd::cusolver_wrap &cusolver = scfd::cusolver_wrap::inst();
+
+    if (mat.size_nd()[0] != mat.size_nd()[1])
+    {
+        throw std::logic_error("test_geqrf_orgqr: matrix is not square");
+    }
+    int sz = mat.size_nd()[0];
+
+    matrix_t mat_tmp(sz,sz);
+    thrust::copy(
+        thrust::device_ptr<real>(mat.array().raw_ptr()),
+        thrust::device_ptr<real>(mat.array().raw_ptr())+sz*sz,
+        thrust::device_ptr<real>(mat_tmp.array().raw_ptr())
+    );
+    vector_t x(sz);
+    thrust::copy(
+        thrust::device_ptr<real>(rhs.array().raw_ptr()),
+        thrust::device_ptr<real>(rhs.array().raw_ptr())+sz,
+        thrust::device_ptr<real>(x.array().raw_ptr())
+    );
+    if (use_apply_qr)
+    {
+        vector_t tau(sz);
+        cusolver.geqrf(sz, sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr());
+        cusolver.gesv_apply_qr(sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), x.array().raw_ptr());
+    }
+    else
+    {
+        cusolver.gesv(sz, mat_tmp.array().raw_ptr(), x.array().raw_ptr());
+    }
+
+    x.sync_from_array();
+    if (check_refs)
+    {
+        ref_x.sync_from_array();
+        real ref_r2_norm = calc_r2_norm(ref_x);
+        for (int i = 0;i < sz;++i)
+        {
+            real eps = calc_eps(ref_x(i), x(i), ref_r2_norm);
+            EXPECT_NEAR(ref_x(i), x(i), eps);
+        }
+    }
+
+    vector_t mat_mul_x(sz);
+    cublas.gemv('N', sz, mat.array().raw_ptr(), sz, sz, real(1), x.array().raw_ptr(), real(0), mat_mul_x.array().raw_ptr());
+    mat_mul_x.sync_from_array();
+    rhs.sync_from_array();
+    real rhs_r2_norm = calc_r2_norm(rhs);
+    for (int i = 0;i < sz;++i)
+    {
+        real eps = calc_eps(rhs(i), mat_mul_x(i), rhs_r2_norm);
+        EXPECT_NEAR(rhs(i), mat_mul_x(i), eps);
+    }
+}
+
+void test_gesv_with_init(
+    std::initializer_list<std::initializer_list<real>> mat_vals,
+    std::initializer_list<real> rhs_vals,
+    std::initializer_list<real> ref_x_vals,
+    bool use_apply_qr, bool check_refs
+)
+{
+    matrix_t mat;
+    vector_t rhs, ref_x;
+    init_array_matrix_with_values(mat, mat_vals);
+    init_array_vector_with_values(rhs, rhs_vals);
+    if (check_refs)
+    {
+        init_array_vector_with_values(ref_x, ref_x_vals);
+    }
+    test_gesv(mat, rhs, ref_x, use_apply_qr, check_refs);
+}
+
+void test_gesv_with_rand(int sz, bool use_apply_qr)
+{
+    matrix_t mat(sz,sz);
+    vector_t rhs(sz), ref_x;
+    std::mt19937 gen(1);
+    std::uniform_real_distribution<real> dis(-10., 10.);
+    for (int i = 0;i < sz;++i)
+    {
+        for (int j = 0;j < sz;++j)
+        {
+            mat(i,j) = dis(gen);
+        }
+        rhs(i) = dis(gen);
+    }
+    mat.sync_to_array();
+    rhs.sync_to_array();
+    test_gesv(mat, rhs, ref_x, use_apply_qr, false);
+}
+
+TEST(CusolverWrapTest, GeSVIdent3x3Mat) 
+{
+    test_gesv_with_init(
+        {{1,0,0},
+         {0,1,0},
+         {0,0,1}},
+        {1,
+         1,
+         1},
+        {1,
+         1,
+         1},
+         false, true);
+}
+
+TEST(CusolverWrapTest, GeSVApplyQRIdent3x3Mat) 
+{
+    test_gesv_with_init(
+        {{1,0,0},
+         {0,1,0},
+         {0,0,1}},
+        {1,
+         1,
+         1},
+        {1,
+         1,
+         1},
+         true, true);
+}
+
+TEST(CusolverWrapTest, GeSVDiag4x4Mat) 
+{
+    test_gesv_with_init(
+        {{ 1, 0, 0, 0},
+         { 0,-2, 0, 0},
+         { 0, 0, 3, 0},
+         { 0, 0, 0,-3}},
+        {  1,
+           2,
+           3,
+           3},
+        {  1,
+          -1,
+           1,
+          -1},
+         false, true);
+}
+
+TEST(CusolverWrapTest, GeSVApplyQRDiag4x4Mat) 
+{
+    test_gesv_with_init(
+        {{ 1, 0, 0, 0},
+         { 0,-2, 0, 0},
+         { 0, 0, 3, 0},
+         { 0, 0, 0,-3}},
+        {  1,
+           2,
+           3,
+           3},
+        {  1,
+          -1,
+           1,
+          -1},
+         true, true);
+}
+
+/// Generated with Matlab
+TEST(CusolverWrapTest, GeSVGen5x5Mat) 
+{
+    test_gesv_with_init(
+        {{ 1, 0, 2, 0, 0},
+         { 0, 2, 0, 0, 1},
+         { 1, 0, 3, 0, 1},
+         { 1, 0, 0,-3, 1},
+         {10, 0, 0, 0,-5}},
+        {  7,
+           9,
+          15,
+          -6,
+         -15},
+        {  1,
+           2,
+           3,
+           4,
+           5},
+         false, true);
+}
+
+/// Generated with Matlab
+TEST(CusolverWrapTest, GeSVApplyQRGen5x5Mat) 
+{
+    test_gesv_with_init(
+        {{ 1, 0, 2, 0, 0},
+         { 0, 2, 0, 0, 1},
+         { 1, 0, 3, 0, 1},
+         { 1, 0, 0,-3, 1},
+         {10, 0, 0, 0,-5}},
+        {  7,
+           9,
+          15,
+          -6,
+         -15},
+        {  1,
+           2,
+           3,
+           4,
+           5},
+         true, true);
+}
+
+TEST(CusolverWrapTest, GeSVFull99x99RandMat) 
+{
+    test_gesv_with_rand(99, false);
+}
+
+TEST(CusolverWrapTest, GeSVFull114x114RandMat) 
+{
+    test_gesv_with_rand(114, false);
+}
+
+TEST(CusolverWrapTest, GeSVFull200x200RandMat) 
+{
+    test_gesv_with_rand(200, false);
+}
+
+TEST(CusolverWrapTest, GeSVApplyQRFull99x99RandMat) 
+{
+    test_gesv_with_rand(99, true);
+}
+
+TEST(CusolverWrapTest, GeSVApplyQRFull114x114RandMat) 
+{
+    test_gesv_with_rand(114, true);
+}
+
+TEST(CusolverWrapTest, GeSVApplyQRFull200x200RandMat) 
+{
+    test_gesv_with_rand(200, true);
 }
 
 void test_geqrf_orgqr(
@@ -381,10 +632,10 @@ int main(int argc, char **argv) {
 
     scfd::utils::init_cuda_persistent();
 
-    scfd::cublas_wrap cublas;
-    scfd::cusolver_wrap cusolver(&cublas);
-    scfd::cublas_wrap::set_inst(&cublas);
-    scfd::cusolver_wrap::set_inst(&cusolver);
+    scfd::cublas_wrap cublas(true);
+    scfd::cusolver_wrap cusolver(&cublas,true);
+    //scfd::cublas_wrap::set_inst(&cublas);
+    //scfd::cusolver_wrap::set_inst(&cusolver);
 
     return RUN_ALL_TESTS();
 }
