@@ -2,6 +2,8 @@
 #include <iostream>
 #include <random>
 #include <scfd/utils/init_cuda.h>
+#include <scfd/utils/cuda_timer_event.h>
+#include <scfd/utils/system_timer_event.h>
 #include <scfd/external_libraries/cublas_wrap.h>
 #include <scfd/external_libraries/cusolver_wrap.h>
 #include <scfd/external_libraries/regularize_qr_of_defect_matrix_cuda.h>
@@ -22,8 +24,13 @@ using real = double;
 using mem_t = scfd::memory::cuda_device;
 template<scfd::arrays::ordinal_type... Dims>
 using col_major_arranger_t = scfd::arrays::first_index_fast_arranger<Dims...>;
-using matrix_t = scfd::arrays::array_nd_visible<real,2,mem_t>;
+template<scfd::arrays::ordinal_type... Dims>
+using row_major_arranger_t = scfd::arrays::last_index_fast_arranger<Dims...>;
+using matrix_t = scfd::arrays::array_nd_visible<real,2,mem_t,col_major_arranger_t>;
+using row_major_matrix_t = scfd::arrays::array_nd_visible<real,2,mem_t,row_major_arranger_t>;
 using vector_t = scfd::arrays::array_nd_visible<real,1,mem_t>;
+using ptr_vector_t = scfd::arrays::array_nd_visible<real*,1,mem_t>;
+using int_vector_t = scfd::arrays::array_nd_visible<int,1,mem_t>;
 
 void init_array_matrix_with_values(matrix_t &mat, std::initializer_list<std::initializer_list<real>> vals)
 {
@@ -74,7 +81,84 @@ void init_array_vector_with_values(vector_t &vec, std::initializer_list<real> va
     vec.sync_to_array();
 }
 
-void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int defect)
+///NOTE Only! copies only host image of the matrix to host image of another matrix
+template<class MatFrom, class MatTo>
+void copy_to_another_layout(MatFrom &mat, MatTo &new_mat)
+{
+    int sz = mat.size_nd()[0];
+    for (int i = 0;i < sz;++i)
+    {
+        for (int j = 0;j < sz;++j)
+        {
+            new_mat(i,j) = mat(i,j);
+        }
+    }
+}
+
+template<class T>
+__global__ void ker_r_inv_matrix_set_ident(
+    int n, T *r_inv_mat
+)
+{
+    int ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if (!(ind < n*n)) return;
+    int i = ind%n,
+        j = ind/n;
+    r_inv_mat[i+j*n] = (i == j? real(1) : real(0));
+}
+
+template<class T>
+__global__ void ker_precalc_invert_r_diag(
+    int n, T *mat_tmp, T *r_diag_inv
+)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (!(i < n)) return;
+    r_diag_inv[i] = real(1)/mat_tmp[i*n+i];
+}
+
+template<class T>
+__global__ void ker_invert_r_diag(
+    int n, const T *r_diag_inv, T *mat_tmp, T *r_inv_mat
+)
+{
+    int ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if (!(ind < n*n)) return;
+    int i = ind%n,
+        j = ind/n;
+    mat_tmp[i+j*n] *= r_diag_inv[i];
+    if (i == j)
+    {
+        r_inv_mat[i+j*n] *= r_diag_inv[i];
+    }
+}
+
+template<class T>
+__global__ void ker_copy_mat_tmp_col_i(
+    int n, int i, const T *mat_tmp, T *mat_tmp_col_i
+)
+{
+    int i1 = blockIdx.x * blockDim.x + threadIdx.x;
+    if (!(i1 < i)) return;
+    mat_tmp_col_i[i1] = mat_tmp[i1+i*n];
+}
+
+template<class T>
+__global__ void ker_back_elimination(
+    int n, int i, const T *mat_tmp_col_i, T *r_inv_mat
+)
+{
+    int ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if (!(ind < (n-i)*i)) return;
+    int i1 = ind%i,
+        j = i + ind/i;
+
+    //make mat_tmp(i1,i) to be 0
+    real mul = mat_tmp_col_i[i1];
+    r_inv_mat[i1+j*n] -= r_inv_mat[i+j*n]*mul;
+}
+
+void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int defect, int solve_algo)
 {
     scfd::cublas_wrap cublas;
     scfd::cusolver_wrap cusolver(&cublas);
@@ -86,7 +170,7 @@ void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int
 
     int sz = mat.size_nd()[0];
 
-    matrix_t mat_tmp(sz,sz);
+    matrix_t mat_tmp(sz,sz), q_mat(sz,sz), r_inv_mat(sz,sz);
     thrust::copy(
         thrust::device_ptr<real>(mat.array().raw_ptr()),
         thrust::device_ptr<real>(mat.array().raw_ptr())+sz*sz,
@@ -98,10 +182,211 @@ void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int
         thrust::device_ptr<real>(b_x.array().raw_ptr())
     );
 
+    scfd::utils::cuda_timer_event  t1_refactor,t2_refactor;
+    t1_refactor.record();
     vector_t tau(sz);
     cusolver.geqrf(sz, sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr());
     scfd::regularize_qr_of_defect_matrix_cuda(sz, mat_tmp.array().raw_ptr(), defect);
-    cusolver.gesv_apply_qr(sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), b_x.array().raw_ptr());
+    t2_refactor.record();
+    std::cout << "common refactor time: " << t2_refactor.elapsed_time(t1_refactor) << "ms" << std::endl;
+
+    scfd::utils::cuda_timer_event  t1,t2;
+    //VERSION0: using gesv by QR geqrf representation
+    if (solve_algo == 0)
+    {
+        t1.record();
+        cusolver.gesv_apply_qr(sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), b_x.array().raw_ptr());
+        t2.record();
+        std::cout << "solve time: " << t2.elapsed_time(t1) << "ms" << std::endl;
+    }
+    
+    //VERSION1: get explicit Q, explicit R inversion, then apply using cublas
+    if (solve_algo == 1) 
+    {
+        //get Q matrix explicitly
+        cusolver.orgqr(sz, sz, sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), q_mat.array().raw_ptr());
+        mat_tmp.sync_from_array();
+        /// Init r_inv with ident matrix
+        scfd::utils::system_timer_event host_t1,host_t2;
+        host_t1.record();
+        for (int i = 0;i < sz;++i)
+        {
+            for (int j = 0;j < sz;++j)
+            {
+                r_inv_mat(i,j) = (i == j? real(1) : real(0));
+            }
+        }
+        //row_major_matrix_t mat_tmp_row_major(sz,sz), r_inv_mat_row_major(sz,sz);
+        // copy_to_another_layout(mat_tmp, mat_tmp_row_major);
+        // copy_to_another_layout(r_inv_mat, r_inv_mat_row_major);
+        // for (int i = 0;i < sz;++i)
+        // {
+        //     //make mat_tmp(i,i) to be 1
+        //     real diag = mat_tmp_row_major(i,i);
+        //     #pragma omp parallel for shared(mat_tmp_row_major,r_inv_mat_row_major)
+        //     for (int j = 0;j < sz;++j)
+        //     {
+        //         mat_tmp_row_major(i,j) /= diag;
+        //         r_inv_mat_row_major(i,j) /= diag;
+        //     }
+        //     for (int i1 = 0;i1 < i;++i1)
+        //     {
+        //         //make mat_tmp(i1,i) to be 0
+        //         real mul = mat_tmp_row_major(i1,i);
+        //         #pragma omp parallel for shared(mat_tmp_row_major,r_inv_mat_row_major)
+        //         for (int j = 0;j < sz;++j)
+        //         {
+        //             mat_tmp_row_major(i1,j) -= mat_tmp_row_major(i,j)*mul;
+        //             r_inv_mat_row_major(i1,j) -= r_inv_mat_row_major(i,j)*mul;
+        //         }
+        //     }
+        // }
+        // copy_to_another_layout(mat_tmp_row_major, mat_tmp);
+        // copy_to_another_layout(r_inv_mat_row_major, r_inv_mat);
+        //make mat_tmp(i,i) to be 1
+        //std::cout << "here1" << std::endl;
+        real r_diag_inv[sz];
+        for (int i = 0;i < sz;++i)
+        {
+            r_diag_inv[i] = real(1)/mat_tmp(i,i);
+        }
+        //std::cout << "here2" << std::endl;
+        for (int j = 0;j < sz;++j)
+        {
+            for (int i = 0;i <= j;++i)
+            {
+                mat_tmp(i,j) *= r_diag_inv[i];
+            }
+            r_inv_mat(j,j) *= r_diag_inv[j];
+        }
+        //std::cout << "here3" << std::endl;
+        for (int i = sz-1;i >= 0;--i)
+        {
+            real mat_tmp_col_i[i];
+            for (int i1 = 0;i1 < i;++i1)
+            {
+                mat_tmp_col_i[i1] = mat_tmp(i1,i);
+            }
+            //std::cout << "here4: i = " << i << std::endl;
+            #pragma omp parallel for
+            for (int j = i;j < sz;++j)
+            {
+                for (int i1 = 0;i1 < i;++i1)
+                {
+                    //make mat_tmp(i1,i) to be 0
+                    real mul = mat_tmp_col_i[i1];
+                    //mat_tmp(i1,j) -= mat_tmp(i,j)*mul;
+                    r_inv_mat(i1,j) -= r_inv_mat(i,j)*mul;
+                }
+            }
+            /*std::cout << "i = " << i << std::endl;
+            for (int ii = 0;ii < i;++ii)
+            {
+                std::cout << mat_tmp_col_i[ii] << std::endl;
+            }*/
+            /*for (int ii = 0;ii < sz;++ii)
+            {
+                for (int jj = 0;jj < sz;++jj)
+                {
+                    std::cout << r_inv_mat(ii,jj) << " ";
+                }
+                std::cout << std::endl;
+            }*/
+        }
+        //mat_tmp.sync_to_array();
+        r_inv_mat.sync_to_array();
+        host_t2.record();
+        std::cout << "invert time: " << host_t2.elapsed_time(host_t1) << "ms" << std::endl;
+        vector_t tmp(sz);
+        t1.record();
+        cublas.gemv('T', sz, q_mat.array().raw_ptr(), sz, sz, real(1), b_x.array().raw_ptr(), real(0), tmp.array().raw_ptr());
+        cublas.gemv('N', sz, r_inv_mat.array().raw_ptr(), sz, sz, real(1), tmp.array().raw_ptr(), real(0), b_x.array().raw_ptr());    
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        t2.record();
+        std::cout << "solve time: " << t2.elapsed_time(t1) << "ms" << std::endl;
+    }
+
+    //VERSION2: get explicit Q, explicit R inversion using cublas, then apply using cublas
+    if (solve_algo == 2)
+    {
+        //get Q matrix explicitly
+        cusolver.orgqr(sz, sz, sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), q_mat.array().raw_ptr());
+        scfd::utils::cuda_timer_event t1_1,t2_1;
+        t1_1.record();
+        ptr_vector_t a_array(1), c_array(1);
+        /// Vanish lower part of matrix mat_tmp so that mat_tmp contains clean r part of QR matrix factorization
+        mat_tmp.sync_from_array();
+        for (int i = 0;i < sz;++i)
+        {
+            for (int j = 0;j < sz;++j)
+            {
+                if (j >= i) continue;
+                mat_tmp(i,j) = real(0);
+            }
+        }
+        mat_tmp.sync_to_array();
+        a_array(0) = mat_tmp.array().raw_ptr();
+        a_array.sync_to_array();
+        c_array(0) = r_inv_mat.array().raw_ptr();
+        c_array.sync_to_array();
+        int_vector_t info_array(1);
+        CUBLAS_SAFE_CALL( cublasDgetriBatched(*cublas.get_handle(), sz, a_array.array().raw_ptr(), sz, nullptr, c_array.array().raw_ptr(), sz, info_array.array().raw_ptr(), 1) );
+        t2_1.record();
+        std::cout << "invert time: " << t2_1.elapsed_time(t1_1) << "ms" << std::endl;
+        vector_t tmp(sz);
+        t1.record();
+        cublas.gemv('T', sz, q_mat.array().raw_ptr(), sz, sz, real(1), b_x.array().raw_ptr(), real(0), tmp.array().raw_ptr());
+        cublas.gemv('N', sz, r_inv_mat.array().raw_ptr(), sz, sz, real(1), tmp.array().raw_ptr(), real(0), b_x.array().raw_ptr());    
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        t2.record();
+        std::cout << "solve time: " << t2.elapsed_time(t1) << "ms" << std::endl;
+    }
+
+    if (solve_algo == 3) 
+    {
+        //get Q matrix explicitly
+        cusolver.orgqr(sz, sz, sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), q_mat.array().raw_ptr());
+        //mat_tmp.sync_from_array();
+        /// Init r_inv with ident matrix
+        scfd::utils::system_timer_event t1_1,t2_1;
+        t1_1.record();
+        ker_r_inv_matrix_set_ident<<<((sz*sz)/256)+1,256>>>(sz, r_inv_mat.array().raw_ptr());
+        vector_t r_diag_inv(sz);
+        ker_precalc_invert_r_diag<<<(sz/256)+1,256>>>(sz, mat_tmp.array().raw_ptr(), r_diag_inv.array().raw_ptr());
+        ker_invert_r_diag<<<((sz*sz)/256)+1,256>>>(sz, r_diag_inv.array().raw_ptr(), mat_tmp.array().raw_ptr(), r_inv_mat.array().raw_ptr());
+
+        vector_t mat_tmp_col_i(sz);
+        for (int i = sz-1;i >= 0;--i)
+        {
+            ker_copy_mat_tmp_col_i<<<(i/256)+1,256>>>(sz, i, mat_tmp.array().raw_ptr(), mat_tmp_col_i.array().raw_ptr());
+            ///sz([i,sz)x[0,i]) = (sz-i)*i
+            ker_back_elimination<<<(((sz-i)*i)/256)+1,256>>>(sz, i, mat_tmp_col_i.array().raw_ptr(), r_inv_mat.array().raw_ptr());
+            /*std::cout << "i = " << i << std::endl;
+            mat_tmp_col_i.sync_from_array();
+            for (int ii = 0;ii < i;++ii)
+            {
+                std::cout << mat_tmp_col_i(ii) << std::endl;
+            }*/
+            /*r_inv_mat.sync_from_array();
+            for (int ii = 0;ii < sz;++ii)
+            {
+                for (int jj = 0;jj < sz;++jj)
+                {
+                    std::cout << r_inv_mat(ii,jj) << " ";
+                }
+                std::cout << std::endl;
+            }*/
+        }
+        t2_1.record();
+        std::cout << "invert time: " << t2_1.elapsed_time(t1_1) << "ms" << std::endl;
+        vector_t tmp(sz);
+        t1.record();
+        cublas.gemv('T', sz, q_mat.array().raw_ptr(), sz, sz, real(1), b_x.array().raw_ptr(), real(0), tmp.array().raw_ptr());
+        cublas.gemv('N', sz, r_inv_mat.array().raw_ptr(), sz, sz, real(1), tmp.array().raw_ptr(), real(0), b_x.array().raw_ptr());    
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        t2.record();
+        std::cout << "solve time: " << t2.elapsed_time(t1) << "ms" << std::endl;
+    }
 
     /*b_x.sync_from_array();
     for (int i = 0;i < sz;++i)
@@ -136,17 +421,17 @@ void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int
 void test_gesv_with_defect_matrix_with_init(
     std::initializer_list<std::initializer_list<real>> mat_vals,
     std::initializer_list<real> rhs_vals,
-    int defect)
+    int defect, int solve_algo)
 {
     matrix_t mat;
     init_array_matrix_with_values(mat, mat_vals);
     vector_t b,x(rhs_vals.size());
     init_array_vector_with_values(b, rhs_vals);
 
-    test_gesv_with_defect_matrix(mat, b, x, defect);
+    test_gesv_with_defect_matrix(mat, b, x, defect, solve_algo);
 }
 
-void test_gesv_with_defect_matrix_with_1d_poisson(int sz)
+void test_gesv_with_defect_matrix_with_1d_poisson(int sz, int solve_algo)
 {
     matrix_t mat(sz,sz);
     vector_t b(sz), x(sz);
@@ -186,7 +471,7 @@ void test_gesv_with_defect_matrix_with_1d_poisson(int sz)
     }
     b.sync_to_array();
 
-    test_gesv_with_defect_matrix(mat, b, x, 0);
+    test_gesv_with_defect_matrix(mat, b, x, 1, solve_algo);
 
     x.sync_from_array();
     real sum_x(0);
@@ -199,6 +484,16 @@ void test_gesv_with_defect_matrix_with_1d_poisson(int sz)
 
 int main(int argc, char const *args[])
 {
+    int sz = 1000, solve_algo = 0;
+    if (argc >= 2)
+    {
+        sz = std::stoi(args[1]);
+    }
+    if (argc >= 3)
+    {
+        solve_algo = std::stoi(args[2]);
+    }
+
     scfd::utils::init_cuda_persistent();
 
     std::cout << "test zero 4x4 matrix with zero rhs" << std::endl;
@@ -211,7 +506,7 @@ int main(int argc, char const *args[])
            0,
            0,
            0 },
-        4  
+        4, solve_algo
     );
 
     std::cout << "test deg 4x4 matrix with rank=2 and rhs in image" << std::endl;
@@ -224,11 +519,11 @@ int main(int argc, char const *args[])
            70,
           110,
           150 },
-        2  
+        2, solve_algo  
     );
 
-    std::cout << "test deg 1000x1000 posiion 1d matrix with defect=1 and rhs in image" << std::endl;
-    test_gesv_with_defect_matrix_with_1d_poisson(2000);
+    std::cout << "test degenerate " << sz << "x" << sz << " poisson 1d matrix with defect=1 and rhs in image" << std::endl;
+    test_gesv_with_defect_matrix_with_1d_poisson(sz,solve_algo);
 
     return 0;
 }
