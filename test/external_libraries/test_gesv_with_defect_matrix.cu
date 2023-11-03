@@ -8,6 +8,9 @@
 #include <scfd/external_libraries/cusolver_wrap.h>
 #include <scfd/external_libraries/regularize_qr_of_defect_matrix_cuda.h>
 #include <scfd/external_libraries/regularize_qr_of_defect_matrix_cuda_impl.cuh>
+#include <scfd/external_libraries/invert_upper_triangular_dense_matrix_host.h>
+#include <scfd/external_libraries/invert_upper_triangular_dense_matrix_cuda.h>
+#include <scfd/external_libraries/invert_upper_triangular_dense_matrix_cuda_impl.cuh>
 #include <scfd/memory/cuda.h>
 #include <scfd/arrays/array_nd.h>
 #include <scfd/arrays/array_nd_visible.h>
@@ -95,69 +98,6 @@ void copy_to_another_layout(MatFrom &mat, MatTo &new_mat)
     }
 }
 
-template<class T>
-__global__ void ker_r_inv_matrix_set_ident(
-    int n, T *r_inv_mat
-)
-{
-    int ind = blockIdx.x * blockDim.x + threadIdx.x;
-    if (!(ind < n*n)) return;
-    int i = ind%n,
-        j = ind/n;
-    r_inv_mat[i+j*n] = (i == j? real(1) : real(0));
-}
-
-template<class T>
-__global__ void ker_precalc_invert_r_diag(
-    int n, T *mat_tmp, T *r_diag_inv
-)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (!(i < n)) return;
-    r_diag_inv[i] = real(1)/mat_tmp[i*n+i];
-}
-
-template<class T>
-__global__ void ker_invert_r_diag(
-    int n, const T *r_diag_inv, T *mat_tmp, T *r_inv_mat
-)
-{
-    int ind = blockIdx.x * blockDim.x + threadIdx.x;
-    if (!(ind < n*n)) return;
-    int i = ind%n,
-        j = ind/n;
-    mat_tmp[i+j*n] *= r_diag_inv[i];
-    if (i == j)
-    {
-        r_inv_mat[i+j*n] *= r_diag_inv[i];
-    }
-}
-
-template<class T>
-__global__ void ker_copy_mat_tmp_col_i(
-    int n, int i, const T *mat_tmp, T *mat_tmp_col_i
-)
-{
-    int i1 = blockIdx.x * blockDim.x + threadIdx.x;
-    if (!(i1 < i)) return;
-    mat_tmp_col_i[i1] = mat_tmp[i1+i*n];
-}
-
-template<class T>
-__global__ void ker_back_elimination(
-    int n, int i, const T *mat_tmp_col_i, T *r_inv_mat
-)
-{
-    int ind = blockIdx.x * blockDim.x + threadIdx.x;
-    if (!(ind < (n-i)*i)) return;
-    int i1 = ind%i,
-        j = i + ind/i;
-
-    //make mat_tmp(i1,i) to be 0
-    real mul = mat_tmp_col_i[i1];
-    r_inv_mat[i1+j*n] -= r_inv_mat[i+j*n]*mul;
-}
-
 void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int defect, int solve_algo)
 {
     scfd::cublas_wrap cublas;
@@ -209,13 +149,6 @@ void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int
         /// Init r_inv with ident matrix
         scfd::utils::system_timer_event host_t1,host_t2;
         host_t1.record();
-        for (int i = 0;i < sz;++i)
-        {
-            for (int j = 0;j < sz;++j)
-            {
-                r_inv_mat(i,j) = (i == j? real(1) : real(0));
-            }
-        }
         //row_major_matrix_t mat_tmp_row_major(sz,sz), r_inv_mat_row_major(sz,sz);
         // copy_to_another_layout(mat_tmp, mat_tmp_row_major);
         // copy_to_another_layout(r_inv_mat, r_inv_mat_row_major);
@@ -246,53 +179,8 @@ void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int
         //make mat_tmp(i,i) to be 1
         //std::cout << "here1" << std::endl;
         real r_diag_inv[sz];
-        for (int i = 0;i < sz;++i)
-        {
-            r_diag_inv[i] = real(1)/mat_tmp(i,i);
-        }
-        //std::cout << "here2" << std::endl;
-        for (int j = 0;j < sz;++j)
-        {
-            for (int i = 0;i <= j;++i)
-            {
-                mat_tmp(i,j) *= r_diag_inv[i];
-            }
-            r_inv_mat(j,j) *= r_diag_inv[j];
-        }
-        //std::cout << "here3" << std::endl;
-        for (int i = sz-1;i >= 0;--i)
-        {
-            real mat_tmp_col_i[i];
-            for (int i1 = 0;i1 < i;++i1)
-            {
-                mat_tmp_col_i[i1] = mat_tmp(i1,i);
-            }
-            //std::cout << "here4: i = " << i << std::endl;
-            #pragma omp parallel for
-            for (int j = i;j < sz;++j)
-            {
-                for (int i1 = 0;i1 < i;++i1)
-                {
-                    //make mat_tmp(i1,i) to be 0
-                    real mul = mat_tmp_col_i[i1];
-                    //mat_tmp(i1,j) -= mat_tmp(i,j)*mul;
-                    r_inv_mat(i1,j) -= r_inv_mat(i,j)*mul;
-                }
-            }
-            /*std::cout << "i = " << i << std::endl;
-            for (int ii = 0;ii < i;++ii)
-            {
-                std::cout << mat_tmp_col_i[ii] << std::endl;
-            }*/
-            /*for (int ii = 0;ii < sz;++ii)
-            {
-                for (int jj = 0;jj < sz;++jj)
-                {
-                    std::cout << r_inv_mat(ii,jj) << " ";
-                }
-                std::cout << std::endl;
-            }*/
-        }
+        real mat_tmp_col_i[sz];
+        scfd::invert_upper_triangular_dense_matrix_host(sz, mat_tmp.raw_ptr(), r_diag_inv, mat_tmp_col_i, r_inv_mat.raw_ptr());
         //mat_tmp.sync_to_array();
         r_inv_mat.sync_to_array();
         host_t2.record();
@@ -347,36 +235,10 @@ void test_gesv_with_defect_matrix(matrix_t &mat, vector_t &b, vector_t &b_x, int
         //get Q matrix explicitly
         cusolver.orgqr(sz, sz, sz, mat_tmp.array().raw_ptr(), tau.array().raw_ptr(), q_mat.array().raw_ptr());
         //mat_tmp.sync_from_array();
-        /// Init r_inv with ident matrix
         scfd::utils::system_timer_event t1_1,t2_1;
         t1_1.record();
-        ker_r_inv_matrix_set_ident<<<((sz*sz)/256)+1,256>>>(sz, r_inv_mat.array().raw_ptr());
-        vector_t r_diag_inv(sz);
-        ker_precalc_invert_r_diag<<<(sz/256)+1,256>>>(sz, mat_tmp.array().raw_ptr(), r_diag_inv.array().raw_ptr());
-        ker_invert_r_diag<<<((sz*sz)/256)+1,256>>>(sz, r_diag_inv.array().raw_ptr(), mat_tmp.array().raw_ptr(), r_inv_mat.array().raw_ptr());
-
-        vector_t mat_tmp_col_i(sz);
-        for (int i = sz-1;i >= 0;--i)
-        {
-            ker_copy_mat_tmp_col_i<<<(i/256)+1,256>>>(sz, i, mat_tmp.array().raw_ptr(), mat_tmp_col_i.array().raw_ptr());
-            ///sz([i,sz)x[0,i]) = (sz-i)*i
-            ker_back_elimination<<<(((sz-i)*i)/256)+1,256>>>(sz, i, mat_tmp_col_i.array().raw_ptr(), r_inv_mat.array().raw_ptr());
-            /*std::cout << "i = " << i << std::endl;
-            mat_tmp_col_i.sync_from_array();
-            for (int ii = 0;ii < i;++ii)
-            {
-                std::cout << mat_tmp_col_i(ii) << std::endl;
-            }*/
-            /*r_inv_mat.sync_from_array();
-            for (int ii = 0;ii < sz;++ii)
-            {
-                for (int jj = 0;jj < sz;++jj)
-                {
-                    std::cout << r_inv_mat(ii,jj) << " ";
-                }
-                std::cout << std::endl;
-            }*/
-        }
+        vector_t r_diag_inv(sz),mat_tmp_col_i(sz);
+        scfd::invert_upper_triangular_dense_matrix_cuda(sz, mat_tmp.array().raw_ptr(), r_diag_inv.array().raw_ptr(), mat_tmp_col_i.array().raw_ptr(), r_inv_mat.array().raw_ptr());
         t2_1.record();
         std::cout << "invert time: " << t2_1.elapsed_time(t1_1) << "ms" << std::endl;
         vector_t tmp(sz);

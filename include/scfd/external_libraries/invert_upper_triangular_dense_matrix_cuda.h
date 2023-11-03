@@ -14,21 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_REGULARIZE_QR_OF_DEFECT_MATRIX_CUDA_H__
-#define __SCFD_REGULARIZE_QR_OF_DEFECT_MATRIX_CUDA_H__
-
-#include <thrust/device_vector.h>
-#include <thrust/pair.h>
-#include <thrust/sort.h>
-#include <scfd/external_libraries/cublas_wrap.h>
-#include <scfd/external_libraries/cusolver_wrap.h>
+#ifndef __SCFD_INVERT_UPPER_TRIANGULAR_DENSE_MATRIX_CUDA_H__
+#define __SCFD_INVERT_UPPER_TRIANGULAR_DENSE_MATRIX_CUDA_H__
 
 namespace scfd
 {
 
-/// A must be results of cusolver.geqrf call with square A passed as system matrix
+/// r_mat is upper triangular dense square szXsz matrix in col-major format 
+/// which will be rewritten by temporal data.
+/// r_mat lower part is irrelevant and also would be ruined
+/// r_inv_mat is matrix of the same size that will contain inv(r_mat)
+/// r_diag_inv, mat_tmp_col_i are temporal buffers for vectors of size sz
 template<class T>
-void regularize_qr_of_defect_matrix_cuda(int sz, T* A, int defect);
+void invert_upper_triangular_dense_matrix_cuda(int sz, T* r_mat, T* r_diag_inv, T *mat_tmp_col_i, T* r_inv_mat);
 
 } // namespace scfd
 
