@@ -193,8 +193,8 @@ int main(int argc, char const *argv[])
 
     std::size_t total_size = 3*N;
 
-    //scfd::utils::init_cuda_persistent();
-    scfd::utils::init_cuda(-1, -1);
+    scfd::utils::init_cuda_persistent();
+    //scfd::utils::init_cuda(-1, -1);
     int device_id;
     CUDA_SAFE_CALL(cudaGetDevice(&device_id));
 

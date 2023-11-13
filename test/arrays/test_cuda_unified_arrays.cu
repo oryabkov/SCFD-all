@@ -13,6 +13,7 @@
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 
+///TODO make a real test, for example, run USE_PTR together with ARRAY variant and compare results
 
 template<class T, class V>
 inline __device__ void calc(int i, int j, int k, V M, int Nx, int Ny, int Nz)
@@ -71,7 +72,8 @@ int main(int argc, char const *argv[])
     int Nx = 10, Ny = 20, Nz = 30;
     int NR = Nx*Ny*Nz;
 
-    scfd::utils::init_cuda(-1, -1);
+    scfd::utils::init_cuda_persistent();
+    //scfd::utils::init_cuda(-1, -1);
 
     {
         #ifndef USE_PTR
