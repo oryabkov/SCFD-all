@@ -12,6 +12,6 @@ target_compile_options(test_omp_cu.bin PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcom
 target_link_libraries(test_omp_cu.bin PRIVATE OpenMP::OpenMP_CXX gtest_main)
 
 
-add_test(NAME test_tensor_array_3d_cross_product COMMAND test_tensor_array_3d_cross_product.bin)
+add_test(NAME test_tensor_array_3d_cross_product COMMAND test_tensor_array_3d_cross_product.bin 100000 100 a)
 
 

@@ -813,7 +813,7 @@ int main(int argc, char **args)
     if (argc < 4) {
         printf("USAGE: %s <size1> <size2> <reps_num>\n", args[0]);
         //printf("standart test 100x100\n");
-        return 0;
+        return 1;
     } else {
         sz1 = std::stoi(args[1]);
         sz2 = std::stoi(args[2]);
@@ -892,7 +892,7 @@ int main(int argc, char **args)
     } catch(std::exception& e) {
 
     printf("exception caught: %s\n", e.what());
-    return 1;
+    return 3;
 
     }
 }
