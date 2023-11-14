@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_REGULARIZE_QR_OF_DEFECT_MATRIX_CUDA_H__
-#define __SCFD_REGULARIZE_QR_OF_DEFECT_MATRIX_CUDA_H__
-
-#include <thrust/device_vector.h>
-#include <thrust/pair.h>
-#include <thrust/sort.h>
-#include <scfd/external_libraries/cublas_wrap.h>
-#include <scfd/external_libraries/cusolver_wrap.h>
+#ifndef __SCFD_REGULARIZE_QR_R_SYSTEM_RHS_OF_DEFECT_MATRIX_SYSTEM_CUDA_H__
+#define __SCFD_REGULARIZE_QR_R_SYSTEM_RHS_OF_DEFECT_MATRIX_SYSTEM_CUDA_H__
 
 namespace scfd
 {
 
-/// A must be results of cusolver.geqrf call with square A passed as system matrix
+/// diag_degenerate_flags must be results of regularize_qr_of_defect_matrix_cuda call.
+/// r_rhs is intermediate RHS of R part of QR matrix decomposition;
+/// it emerges after Q^T matrix application for the RHS of initial linear problem
 template<class T>
-void regularize_qr_of_defect_matrix_cuda(int sz, T* A, bool *diag_degenerate_flags, int defect);
+void regularize_qr_r_system_rhs_of_defect_matrix_system_cuda(int sz, const bool *diag_degenerate_flags, T* r_rhs);
 
 } // namespace scfd
 
