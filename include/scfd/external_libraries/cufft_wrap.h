@@ -20,7 +20,7 @@
 #include <cufft.h>
 #include <thrust/complex.h>
 #include <scfd/utils/cufft_safe_call.h>
-#include "manual_init_singleton.h"
+#include <scfd/utils/manual_init_singleton.h>
 
 //TODO make add move semantics
 //TODO why class itself is templated on type? seems cufft plan doesnot depent on specific float type
@@ -59,7 +59,7 @@ class cufft_wrap_C2C
 
 
 template <>
-class cufft_wrap_C2C<double> : public manual_init_singleton<cufft_wrap_C2C<double>>
+class cufft_wrap_C2C<double> : public utils::manual_init_singleton<cufft_wrap_C2C<double>>
 {
 public:
 
@@ -122,7 +122,7 @@ private:
 };
 
 template <>
-class cufft_wrap_C2C<float> : public manual_init_singleton<cufft_wrap_C2C<float>>
+class cufft_wrap_C2C<float> : public utils::manual_init_singleton<cufft_wrap_C2C<float>>
 {
 
 public:
@@ -193,7 +193,7 @@ class cufft_wrap_R2C
 
 
 template <>
-class cufft_wrap_R2C<double> : public manual_init_singleton<cufft_wrap_R2C<double>>
+class cufft_wrap_R2C<double> : public utils::manual_init_singleton<cufft_wrap_R2C<double>>
 {
 public:
 
@@ -277,7 +277,7 @@ private:
 };
 
 template <>
-class cufft_wrap_R2C<float> : public manual_init_singleton<cufft_wrap_R2C<float>>
+class cufft_wrap_R2C<float> : public utils::manual_init_singleton<cufft_wrap_R2C<float>>
 {
 public:
 

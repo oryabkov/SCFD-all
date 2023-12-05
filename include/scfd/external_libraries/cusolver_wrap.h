@@ -27,12 +27,12 @@
 #include <scfd/utils/cusolver_safe_call.h>
 #include <scfd/utils/cuda_safe_call.h>
 #include <stdexcept>
-#include "manual_init_singleton.h"
+#include <scfd/utils/manual_init_singleton.h>
 
 namespace scfd
 {
 
-class cusolver_wrap : public manual_init_singleton<cusolver_wrap>
+class cusolver_wrap : public utils::manual_init_singleton<cusolver_wrap>
 {
     
 //  used for the solution of the linear system

@@ -21,8 +21,8 @@
 #include <cublas_v2.h>
 #include <thrust/complex.h>
 #include <scfd/utils/cublas_safe_call.h>
+#include <scfd/utils/manual_init_singleton.h>
 #include <stdexcept>
-#include "manual_init_singleton.h"
 
 /*
 
@@ -115,7 +115,7 @@ namespace cublas_real_types
     };    
 }
 
-class cublas_wrap : public manual_init_singleton<cublas_wrap>
+class cublas_wrap : public utils::manual_init_singleton<cublas_wrap>
 {
 public:
 

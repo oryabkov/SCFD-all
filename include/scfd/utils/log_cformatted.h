@@ -20,6 +20,8 @@
 #include <cstdarg>
 #include <cstdio>
 
+#include "manual_init_singleton.h"
+
 /**
 * SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE macro set manages
 * whether mutexes are used in log* classes to garantee
@@ -42,7 +44,7 @@ namespace utils
 */ 
 
 template<class LogBasic, std::size_t BufSize = 512>
-class log_cformatted : public LogBasic
+class log_cformatted : public LogBasic, public manual_init_singleton<log_cformatted<LogBasic,BufSize>>
 {
 public:
     using LogBasic::LogBasic;

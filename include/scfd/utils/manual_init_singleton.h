@@ -1,9 +1,11 @@
-#ifndef __SCFD_MANUAL_INIT_SINGLETON_H__
-#define __SCFD_MANUAL_INIT_SINGLETON_H__
+#ifndef __SCFD_UTILS_MANUAL_INIT_SINGLETON_H__
+#define __SCFD_UTILS_MANUAL_INIT_SINGLETON_H__
 
 #include <stdexcept>
 
 namespace scfd
+{
+namespace utils
 {
 
 template<class DerivedClass>
@@ -33,6 +35,7 @@ protected:
     static DerivedClass *inst_;
 };
 
+}
 }
 
 #endif

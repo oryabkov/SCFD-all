@@ -7,7 +7,7 @@ namespace scfd
 {
 
 template<>
-cusolver_wrap *manual_init_singleton<cusolver_wrap>::inst_ = nullptr;
+cusolver_wrap *utils::manual_init_singleton<cusolver_wrap>::inst_ = nullptr;
 
 }
 

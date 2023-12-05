@@ -25,3 +25,5 @@ test_log_std_thread_safety_cuda.bin: test_log_std_thread_safety.cu
 	nvcc -std=c++11 -I$(SCFD_INCLUDE) -DSCFD_UTILS_LOG_GARANTEE_THREAD_SAFE=1 test_log_std_thread_safety.cu -lpthread -o test_log_std_thread_safety_cuda.bin
 test_log_mpi_cuda.bin: test_log_mpi_cuda.cu
 	nvcc -std=c++11 -I$(SCFD_INCLUDE) -I$(MPI_INCLUDE_DIR) -L$(MPI_LIB_DIR) test_log_mpi_cuda.cu -lmpi -o test_log_mpi_cuda.bin
+test_log_std_singleton.bin: test_log_std_singleton.cpp
+	g++ -std=c++11 -I$(SCFD_INCLUDE) test_log_std_singleton.cpp -o test_log_std_singleton.bin
