@@ -34,6 +34,11 @@ struct timer_event
 
     virtual void    record() = 0;
     virtual double  elapsed_time(const timer_event &e0)const = 0;
+
+    static std::string units()
+    {
+        return std::string("ms");
+    }
 };
 
 }
