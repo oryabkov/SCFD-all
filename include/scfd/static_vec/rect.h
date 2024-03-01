@@ -29,33 +29,53 @@ namespace static_vec
 template<class T,int Dim>
 struct rect
 {
-    vec<T,Dim>  i1, i2;
-    __DEVICE_TAG__ rect() { }
-    __DEVICE_TAG__ rect(const vec<T,Dim> &_i1, const vec<T,Dim> &_i2) : i1(_i1), i2(_i2) { }
+    using vec_type = vec<T,Dim>;
 
-    __DEVICE_TAG__ bool is_own(const vec<T,Dim> &p)const
+    vec_type  i1, i2;
+    __DEVICE_TAG__ rect() { }
+    __DEVICE_TAG__ rect(const vec_type &_i1, const vec_type &_i2) : i1(_i1), i2(_i2) { }
+
+    __DEVICE_TAG__ bool is_own(const vec_type &p)const
     {
         for (int j = 0;j < Dim;++j)
             if (!((i1[j]<=p[j])&&(p[j]<i2[j]))) return false;
         return true;
     }
     __DEVICE_TAG__ vec<T,Dim>  calc_size()const { return i2-i1; }
-    __DEVICE_TAG__ T                 calc_area()const 
+    __DEVICE_TAG__ T           calc_area()const 
     { 
         T   res(1);
         for (int j = 0;j < Dim;++j)
             res *= (i2[j] - i1[j]);
         return res;
     }
-    __DEVICE_TAG__ rect<T,Dim> intersect(const rect<T,Dim> &r)
+    static __DEVICE_TAG__ rect make_empty()
     {
-        //TODO
+        return rect<T,Dim>(vec_type::make_zero(),vec_type::make_zero());
+    }
+    __DEVICE_TAG__ rect        intersect(const rect &r)
+    {
+        rect res;
+        bool is_empty = false;
+        for (int j = 0;j < Dim;++j)
+        {
+            //TODO correct min/max functions (need traits)
+            res.i1[j] = max(i1[j],r.i1[j]);
+            res.i2[j] = min(i2[j],r.i2[j]);
+            if (res.i1[j] >= res.i2[j]) is_empty = true;
+        }
+        if (is_empty) res = make_empty();
+        return res;
     }
 
     __DEVICE_TAG__ bool         is_empty()const
     {
-        //TODO
-        return true;
+        bool is_empty = false;
+        for (int j = 0;j < Dim;++j)
+        {
+            if (i1[j] >= i2[j]) is_empty = true;
+        }
+        return is_empty;
     }
 
     __DEVICE_TAG__ bool         bypass_start(vec<T, Dim> &idx)const

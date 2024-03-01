@@ -2,7 +2,7 @@
 #define __SCFD_MPI_COMMUNICATOR_H__
 
 #include <mpi.h>
-#include <mpi_communicator_info.h>
+#include "mpi_communicator_info.h"
 
 namespace scfd
 {
@@ -23,9 +23,9 @@ struct mpi_communicator
         {
             std::cout << "WARNING: mpi_communicator: provided != MPI_THREAD_FUNNELED" << std::endl;
         }*/
-        data.comm = hypre_MPI_COMM_WORLD;
-        MPI_Comm_size(hypre_MPI_COMM_WORLD, &data.num_procs );
-        MPI_Comm_rank(hypre_MPI_COMM_WORLD, &data.myid );   
+        data.comm = MPI_COMM_WORLD;
+        MPI_Comm_size(MPI_COMM_WORLD, &data.num_procs );
+        MPI_Comm_rank(MPI_COMM_WORLD, &data.myid );   
     }
     ~mpi_communicator()
     {

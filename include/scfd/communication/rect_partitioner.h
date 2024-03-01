@@ -12,7 +12,7 @@ namespace scfd
 namespace communication
 {
 
-template<class Ord,class BigOrd,int Dim>
+template<int Dim,class Ord,class BigOrd>
 struct rect_partitioner
 {
     typedef     static_vec::vec<BigOrd,Dim>          big_ord_vec_t;
