@@ -81,8 +81,11 @@ struct mpi_rect_distributor
             if (!pack.buckets.empty())
             {
                 packets_in_.emplace_back(std::move(pack));
-                packets_in_by_rank_[sender_proc_id] = &packets_in_.back();
             }
+        }
+        for (auto &pkg : packets_in_)
+        {
+            packets_in_by_rank_[pkg.proc_id] = &pkg;
         }
         irecv_requests_.resize(calc_buckets_num(packets_in_));
         /// init packets_out
@@ -112,6 +115,7 @@ struct mpi_rect_distributor
             irecv_requests_count = 0;
 
         //isend all
+        //std::cout << "isend all " << std::endl;
         for (Ord pkg_i = 0;pkg_i < packets_out_.size();++pkg_i)
         {
             auto &pkg = packets_out_[pkg_i];
@@ -131,6 +135,7 @@ struct mpi_rect_distributor
             }
         }
         //irecv all
+        //std::cout << "irecv all " << std::endl;
         for (Ord pkg_i = 0;pkg_i < packets_in_.size();++pkg_i)
         {
             auto &pkg = packets_in_[pkg_i];
@@ -150,19 +155,27 @@ struct mpi_rect_distributor
             }
         }
         //wait all irecv
+        //std::cout << "wait all irecv" << std::endl;
         for (Ord ireq = 0;ireq < irecv_requests_count;++ireq) 
         {
+            //std::cout << "ireq = " << ireq << std::endl;
             int             ireq_idx;
             MPI_Status      status;
             auto mpi_res = MPI_Waitany( irecv_requests_count, irecv_requests_.data(), &ireq_idx, &status);
             if (mpi_res != MPI_SUCCESS) 
                 throw std::runtime_error("mpi_rect_distributor::sync:MPI_Waitany failed");
+            //std::cout << "after wait any ireq = " << ireq << " status.MPI_SOURCE = " << status.MPI_SOURCE << " status.MPI_TAG = " << status.MPI_TAG << std::endl;
+            //std::cout << "packets_in_by_rank_[status.MPI_SOURCE] = " << packets_in_by_rank_[status.MPI_SOURCE] << std::endl;
             auto &pkg = *(packets_in_by_rank_[status.MPI_SOURCE]);
+            //std::cout << "pkg.buckets.size() = " << pkg.buckets.size() << std::endl;
             auto &bucket = pkg.buckets[status.MPI_TAG];
             //TODO check for an error MPI_ERROR?
+            //std::cout << "before sync_to_array" << std::endl;
             bucket.sync_to_array(for_each, array);
+            //std::cout << "after sync_to_array" << std::endl;
         }
         //wait all isend
+        //std::cout << "wait all isend" << std::endl;
         if (MPI_Waitall( isend_requests_count, isend_requests_.data(), MPI_STATUS_IGNORE) != MPI_SUCCESS) 
             throw std::runtime_error("mpi_rect_distributor::sync:MPI_Waitall failed");
     }
@@ -197,6 +210,14 @@ private:
         }
         void        sync_to_array(const ForEach &for_each, const array_type &array)
         {
+            //std::cout << "sync_to_array" << std::endl;
+            //auto i1 = loc_rect.i1,i2 = loc_rect.i2;
+            //ord_vec_t i1,i2;
+            auto array_sz = array.size_nd(), array_i1 = array.indexes0_nd();
+            //std::cout << "array: sz = " << array_sz[0] << "," << array_sz[1] << "," << array_sz[2] << std::endl;
+            //std::cout << "array: i1 = " << array_i1[0] << "," << array_i1[1] << "," << array_i1[2] << std::endl;
+            //std::cout << "loc_rect: i1 = " << i1[0] << "," << i1[1] << "," << i1[2] << std::endl;
+            //std::cout << "loc_rect: i2 = " << i2[0] << "," << i2[1] << "," << i2[2] << std::endl;
             detail::copy_array_nd_rect(
                 for_each, *data_buf, loc_rect, array
             );
@@ -210,6 +231,7 @@ private:
 
     mpi_communicator_info<Ord>      comm_info_;
     std::vector<packet>             packets_in_, packets_out_;
+    //TODO use indexes here instead of pointers
     std::vector<packet*>            packets_in_by_rank_;
     std::vector<MPI_Request>        isend_requests_, irecv_requests_;
 
