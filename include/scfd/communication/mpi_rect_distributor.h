@@ -183,7 +183,7 @@ private:
 
         char        *buf()const
         {
-            return data_buf->raw_ptr();
+            return (char*)data_buf->raw_ptr();
         }
         std::size_t buf_size()const
         {
