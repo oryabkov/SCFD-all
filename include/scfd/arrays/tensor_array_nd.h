@@ -21,6 +21,7 @@
 #include <utility>
 #include <scfd/utils/device_tag.h>
 #include <scfd/static_vec/vec.h>
+#include <scfd/static_vec/rect.h>
 #include "tensor_base.h"
 #include "detail/index_sequence.h"
 #include "detail/tensor_base_nd_gen.h"
@@ -33,6 +34,7 @@ namespace arrays
 {
 
 using static_vec::vec;
+using static_vec::rect;
 
 template<class T, ordinal_type ND, class Memory, 
          template <ordinal_type... Dims> class Arranger, 
@@ -100,6 +102,20 @@ public:
     {
         init(args...);
     }
+    #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+    template<class... Args,
+             class = typename std::enable_if<
+                                  (sizeof...(Args) >= (arranger_type::dynamic_dims_num-ND))&&
+                                  (sizeof...(Args) <= (arranger_type::dynamic_dims_num-ND)*2)
+                              >::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< std::is_integral<Args>::value... >::value
+                              >::type>
+    tensor_array_nd(const rect<ordinal_type,ND> &nd_shape, Args... args)
+    {
+        init(nd_shape,args...);
+    }
+    #endif
 
     __DEVICE_TAG__ tensor_array_nd  &operator=(const tensor_array_nd &t);
     __DEVICE_TAG__ tensor_array_nd  &operator=(tensor_array_nd &&t);
@@ -127,7 +143,7 @@ public:
         }
         parent_t::init1_(dims_vec);
     }
-#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+    #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
     template<class SizeVec, class... Args,
              class = typename std::enable_if<
                                   detail::has_subscript_operator<SizeVec,ordinal_type>::value
@@ -157,7 +173,19 @@ public:
         parent_t::init1_(dims_vec);
         arranger_type::set_dyn_indexes0(indexes0_vec);
     }
-#endif
+    template<class... Args,
+             class = typename std::enable_if<
+                                  (sizeof...(Args) >= (arranger_type::dynamic_dims_num-ND))&&
+                                  (sizeof...(Args) <= (arranger_type::dynamic_dims_num-ND)*2)
+                              >::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< std::is_integral<Args>::value... >::value
+                              >::type>
+    void                            init(const rect<ordinal_type,ND> &nd_shape, Args... args)
+    {
+        init(nd_shape.i2-nd_shape.i1,nd_shape.i1,args...);
+    }
+    #endif
 
     __DEVICE_TAG__ ordinal_type             size()const 
     {
