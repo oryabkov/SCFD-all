@@ -61,7 +61,11 @@ struct rect_partitioner
         //TODO add some trivial decomposition initialization
     }
     
-    Ord     get_own_rank()const { return comm_info.myid; }
+    Ord             get_own_rank()const { return comm_info.myid; }
+    big_ord_rect_t  get_own_rect()const
+    {
+        return proc_rects[comm_info.myid];
+    }
 };
 
 } // namespace communication
