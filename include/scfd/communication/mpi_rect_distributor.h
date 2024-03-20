@@ -270,18 +270,27 @@ private:
                     stencil_rect.i1[j] = stencil_rect.i2[j];
                     stencil_rect.i2[j] = stencil_rect.i2[j]+stencil_size;
                 }
-                big_ord_rect_t  common_rect = stencil_rect.intersect(send_rect);
+                big_ord_rect_t  common_rect_from_recv = stencil_rect.intersect(send_rect),
+                                common_rect_from_send = common_rect_from_recv;
                 /// Try periodic case if not
-                if (common_rect.is_empty() && periodic_flags[j])
+                if (common_rect_from_recv.is_empty() && periodic_flags[j])
                 {
                     BigOrd periodic_shift = (-sign)*partitioner.dom_size[j];
                     stencil_rect.i1[j] += periodic_shift;
                     stencil_rect.i2[j] += periodic_shift;
-                    common_rect = stencil_rect.intersect(send_rect);
+                    common_rect_from_send = stencil_rect.intersect(send_rect);
+                    common_rect_from_recv = common_rect_from_send;
+                    if (!common_rect_from_recv.is_empty())
+                    {
+                        common_rect_from_recv.i1[j] -= periodic_shift;
+                        common_rect_from_recv.i2[j] -= periodic_shift;
+                    }
                 }
                 /// TODO how to check or proove that only one of these cases is met at once
-                if (common_rect.is_empty()) continue;
-                big_ord_rect_t  common_rect_loc = common_rect;
+                if (common_rect_from_recv.is_empty() != common_rect_from_send.is_empty()) 
+                    throw std::logic_error("mpi_rect_distributor::init_packet: common_rect send recv is_empty differs");
+                if (common_rect_from_recv.is_empty()) continue;
+                big_ord_rect_t  common_rect_loc = (is_in_pkg?common_rect_from_recv:common_rect_from_send);
                 common_rect_loc.i1 -= my_i1;
                 common_rect_loc.i2 -= my_i1;
                 pack.buckets.emplace_back(ord_rect_t(common_rect_loc.i1,common_rect_loc.i2));
