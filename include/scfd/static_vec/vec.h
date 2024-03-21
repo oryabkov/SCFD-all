@@ -162,6 +162,13 @@ public:
         for (int j = 0;j < dim;++j) d[j] /= mul;
         return *this;
     }
+    __DEVICE_TAG__ T                     components_prod()const
+    {
+        T res(1);
+        #pragma unroll
+        for (int j = 0;j < dim;++j) res *= d[j];
+        return res;
+    }
 };
 
 template<class T,int Dim>
