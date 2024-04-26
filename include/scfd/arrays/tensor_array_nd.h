@@ -103,15 +103,16 @@ public:
         init(args...);
     }
     #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-    template<class... Args,
+    template<class RectOrd, class... Args,
              class = typename std::enable_if<
                                   (sizeof...(Args) >= (arranger_type::dynamic_dims_num-ND))&&
                                   (sizeof...(Args) <= (arranger_type::dynamic_dims_num-ND)*2)
                               >::type,
              class = typename std::enable_if<
                                   detail::check_all_are_true< std::is_integral<Args>::value... >::value
-                              >::type>
-    tensor_array_nd(const rect<ordinal_type,ND> &nd_shape, Args... args)
+                              >::type,
+             class = typename std::enable_if<std::is_integral<RectOrd>::value>::type>
+    tensor_array_nd(const rect<RectOrd,ND> &nd_shape, Args... args)
     {
         init(nd_shape,args...);
     }
@@ -173,15 +174,16 @@ public:
         parent_t::init1_(dims_vec);
         arranger_type::set_dyn_indexes0(indexes0_vec);
     }
-    template<class... Args,
+    template<class RectOrd, class... Args,
              class = typename std::enable_if<
                                   (sizeof...(Args) >= (arranger_type::dynamic_dims_num-ND))&&
                                   (sizeof...(Args) <= (arranger_type::dynamic_dims_num-ND)*2)
                               >::type,
              class = typename std::enable_if<
                                   detail::check_all_are_true< std::is_integral<Args>::value... >::value
-                              >::type>
-    void                            init(const rect<ordinal_type,ND> &nd_shape, Args... args)
+                              >::type,
+             class = typename std::enable_if<std::is_integral<RectOrd>::value>::type>
+    void                            init(const rect<RectOrd,ND> &nd_shape, Args... args)
     {
         init(nd_shape.i2-nd_shape.i1,nd_shape.i1,args...);
     }
