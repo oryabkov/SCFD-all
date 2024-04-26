@@ -211,6 +211,17 @@ public:
         for (ordinal_type i1 = 0;i1 < ND;++i1) res[i1] = arranger_type::dyn_indexes0_[i1];
         return res;
     }
+    __DEVICE_TAG__ rect<ordinal_type,ND>    rect_nd()const 
+    {
+        rect<ordinal_type,ND>    res;
+        #pragma unroll
+        for (ordinal_type i1 = 0;i1 < ND;++i1) 
+        {
+            res.i1[i1] = arranger_type::dyn_indexes0_[i1];
+            res.i2[i1] = arranger_type::dyn_indexes0_[i1]+arranger_type::dyn_dims_[i1];
+        }
+        return res;
+    }
 #endif
 
     pointer_type                    raw_ptr()const { return this->d_; }
