@@ -18,7 +18,7 @@ struct rect_partitioner
     typedef     static_vec::vec<BigOrd,Dim>          big_ord_vec_t;
     typedef     static_vec::rect<BigOrd,Dim>         big_ord_rect_t;
 
-    mpi_communicator_info<Ord>      comm_info;
+    mpi_communicator_info<int>      comm_info;
     //proc_rects is of size comm_size
     //proc_rects[i] contains indexes rect owned by i-th process
     big_ord_vec_t                   dom_size;
@@ -56,15 +56,32 @@ struct rect_partitioner
 
     rect_partitioner() = default;
     rect_partitioner(const mpi_communicator_info<Ord> &comm_info_p, const big_ord_vec_t &dom_size_p) : 
-      comm_info(comm_info_p), dom_size(dom_size_p)
+      comm_info(comm_info_p), dom_size(dom_size_p), proc_rects(comm_info.num_procs)
     {
-        //TODO add some trivial decomposition initialization
+        std::vector<BigOrd>  lin_sizes(comm_info.num_procs,dom_size[0]/comm_info.num_procs);
+        BigOrd rem_size = dom_size[0]%comm_info.num_procs;
+        for (BigOrd i = 0;i < rem_size;++i)
+        {
+            lin_sizes[i]++;
+        }
+        BigOrd curr_lin_idx = 0;
+        for (Ord ip = 0;ip < comm_info.num_procs;++ip)
+        {
+            proc_rects[ip] = big_ord_rect_t(dom_size);
+            proc_rects[ip].i1[0] = curr_lin_idx;
+            curr_lin_idx += lin_sizes[ip];
+            proc_rects[ip].i2[0] = curr_lin_idx;
+        }
     }
     
     Ord             get_own_rank()const { return comm_info.myid; }
     big_ord_rect_t  get_own_rect()const
     {
         return proc_rects[comm_info.myid];
+    }
+    big_ord_rect_t  get_dom_rect()const
+    {
+        return big_ord_rect_t(big_ord_vec_t::make_zero(),dom_size);
     }
 };
 
