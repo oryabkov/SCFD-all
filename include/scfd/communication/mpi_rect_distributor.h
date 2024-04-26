@@ -104,9 +104,13 @@ struct mpi_rect_distributor
         isend_requests_.resize(calc_buckets_num(packets_out_));
     }
     
+    const mpi_communicator_info<Ord>  &comm_info()const
+    {
+        return comm_info_;
+    }
     Ord     get_own_rank()const { return comm_info_.myid; }
 
-    void    sync(const array_type &array)
+    void    sync(const array_type &array)const
     {
         /// For now just create with default params
         ForEach for_each;
@@ -202,13 +206,13 @@ private:
         {
             return data_buf->total_size()*sizeof(T);
         }
-        void        sync_from_array(const ForEach &for_each, const array_type &array)
+        void        sync_from_array(const ForEach &for_each, const array_type &array)const
         {
             detail::copy_array_nd_rect(
                 for_each, array, loc_rect, *data_buf
             );
         }
-        void        sync_to_array(const ForEach &for_each, const array_type &array)
+        void        sync_to_array(const ForEach &for_each, const array_type &array)const
         {
             //std::cout << "sync_to_array" << std::endl;
             //auto i1 = loc_rect.i1,i2 = loc_rect.i2;
@@ -229,11 +233,11 @@ private:
         std::vector<packet_bucket>  buckets;
     };
 
-    mpi_communicator_info<Ord>      comm_info_;
-    std::vector<packet>             packets_in_, packets_out_;
+    mpi_communicator_info<Ord>          comm_info_;
+    std::vector<packet>                 packets_in_, packets_out_;
     //TODO use indexes here instead of pointers
-    std::vector<packet*>            packets_in_by_rank_;
-    std::vector<MPI_Request>        isend_requests_, irecv_requests_;
+    std::vector<packet*>                packets_in_by_rank_;
+    mutable std::vector<MPI_Request>    isend_requests_, irecv_requests_;
 
     void init_packet(
         const rect_partitioner_t &partitioner,
