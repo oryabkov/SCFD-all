@@ -34,6 +34,10 @@ struct rect
     vec_type  i1, i2;
     __DEVICE_TAG__ rect() { }
     __DEVICE_TAG__ rect(const vec_type &_i1, const vec_type &_i2) : i1(_i1), i2(_i2) { }
+    explicit __DEVICE_TAG__ rect(const vec_type &_i2) : i1(vec_type::make_zero()), i2(_i2) { }
+    /// ISSUE implicit ok?
+    template<class T2>
+    __DEVICE_TAG__ rect(const rect<T2,Dim> &r) : i1(r.i1), i2(r.i2) { }
 
     __DEVICE_TAG__ bool is_own(const vec_type &p)const
     {
@@ -53,6 +57,7 @@ struct rect
     {
         return rect<T,Dim>(vec_type::make_zero(),vec_type::make_zero());
     }
+    /// TODO better to rename it into intersection (intersect is a verb)
     __DEVICE_TAG__ rect        intersect(const rect &r)
     {
         rect res;
@@ -65,6 +70,25 @@ struct rect
             if (res.i1[j] >= res.i2[j]) is_empty = true;
         }
         if (is_empty) res = make_empty();
+        return res;
+    }
+    /// Returns uniformly in all directions enlarged rect
+    /// TODO what about initially empty rect?
+    __DEVICE_TAG__ rect        enlarged(const T &pad_size)const
+    {
+        rect res = *this;
+        for (int j = 0;j < Dim;++j)
+        {
+            res.i1[j] -= pad_size;
+            res.i2[j] += pad_size;
+        }
+        return res;
+    }
+    __DEVICE_TAG__ rect        shifted(const vec<T, Dim> &idx_shift)const
+    {
+        rect res = *this;
+        res.i1 += idx_shift;
+        res.i2 += idx_shift;
         return res;
     }
 
