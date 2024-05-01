@@ -65,6 +65,11 @@ struct host
         //TODO error handling (how?)
         std::memcpy( dst, src, size );
     }
+    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    {
+        //TODO error handling (how?)
+        std::memcpy( dst, src, size );
+    }
 };
 
 }

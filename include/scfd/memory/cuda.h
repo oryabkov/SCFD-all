@@ -58,6 +58,10 @@ struct cuda_device
     {
         CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice) );
     }
+    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    {
+        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice) );
+    }
 };
 
 struct cuda_host
@@ -94,6 +98,10 @@ struct cuda_host
         CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToHost) );
     }
     static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
+    {
+        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToHost) );
+    }
+    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
     {
         CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToHost) );
     }

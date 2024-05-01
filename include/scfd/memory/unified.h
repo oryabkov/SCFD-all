@@ -63,6 +63,11 @@ struct unified
     {
         CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice) );
     }
+    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    {
+        /// ISSUE is it a best way to copy unified memory using DeviceToDevice?
+        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice) );
+    }
 };
 
 
