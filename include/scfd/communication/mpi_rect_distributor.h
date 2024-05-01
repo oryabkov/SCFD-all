@@ -7,6 +7,9 @@
 #include <scfd/static_vec/vec.h>
 #include <scfd/static_vec/rect.h>
 #include <scfd/arrays/array_nd.h>
+#ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
+#include <scfd/arrays/array_nd_visible.h>
+#endif
 #include <scfd/for_each/for_each_func_macro.h>
 #include "mpi_communicator_info.h"
 #include "rect_partitioner.h"
@@ -54,13 +57,16 @@ void copy_array_nd_rect(
 template<class T,int Dim,class Memory,class ForEach,class Ord,class BigOrd>
 struct mpi_rect_distributor
 {
-    typedef     arrays::array_nd<T,Dim,Memory>      array_type;
-    typedef     static_vec::vec<bool,Dim>           bool_vec_t;
-    typedef     static_vec::vec<Ord,Dim>            ord_vec_t;
-    typedef     static_vec::rect<Ord,Dim>           ord_rect_t;
-    typedef     static_vec::vec<BigOrd,Dim>         big_ord_vec_t;
-    typedef     static_vec::rect<BigOrd,Dim>        big_ord_rect_t;
-    typedef     rect_partitioner<Dim,Ord,BigOrd>    rect_partitioner_t;
+    typedef     arrays::array_nd<T,Dim,Memory>          array_type;
+    #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
+    typedef     arrays::array_nd_visible<T,Dim,Memory>  vis_array_type;
+    #endif
+    typedef     static_vec::vec<bool,Dim>               bool_vec_t;
+    typedef     static_vec::vec<Ord,Dim>                ord_vec_t;
+    typedef     static_vec::rect<Ord,Dim>               ord_rect_t;
+    typedef     static_vec::vec<BigOrd,Dim>             big_ord_vec_t;
+    typedef     static_vec::rect<BigOrd,Dim>            big_ord_rect_t;
+    typedef     rect_partitioner<Dim,Ord,BigOrd>        rect_partitioner_t;
 
     mpi_rect_distributor() = default;
     void init(
@@ -187,17 +193,33 @@ private:
     /// packet_bucket and packet works both for send and recv
     struct packet_bucket
     {
-        ord_rect_t                   loc_rect;
+        #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
+        using buf_array_type = vis_array_type;
+        #else
+        using buf_array_type = array_type;
+        #endif
+        ord_rect_t                       loc_rect;
         /// TODO Would be nice to have unique_array's
-        std::unique_ptr<array_type>  data_buf;
+        std::unique_ptr<buf_array_type>  data_buf;
 
         packet_bucket(const ord_rect_t &loc_rect_p) : 
           loc_rect(loc_rect_p),
-          data_buf(std::make_unique<array_type>())
+          data_buf(std::make_unique<buf_array_type>())
         {
             data_buf->init(loc_rect.i2-loc_rect.i1,loc_rect.i1);
         }
 
+        #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
+        array_type  buf_array_device()const
+        {
+            return data_buf->array();
+        }
+        #else
+        array_type  buf_array_device()const
+        {
+            return *data_buf;
+        }
+        #endif
         char        *buf()const
         {
             return (char*)data_buf->raw_ptr();
@@ -209,11 +231,17 @@ private:
         void        sync_from_array(const ForEach &for_each, const array_type &array)const
         {
             detail::copy_array_nd_rect(
-                for_each, array, loc_rect, *data_buf
+                for_each, array, loc_rect, buf_array_device()
             );
+            #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
+            data_buf->sync_from_array();
+            #endif
         }
         void        sync_to_array(const ForEach &for_each, const array_type &array)const
         {
+            #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
+            data_buf->sync_to_array();
+            #endif
             //std::cout << "sync_to_array" << std::endl;
             //auto i1 = loc_rect.i1,i2 = loc_rect.i2;
             //ord_vec_t i1,i2;
@@ -223,7 +251,7 @@ private:
             //std::cout << "loc_rect: i1 = " << i1[0] << "," << i1[1] << "," << i1[2] << std::endl;
             //std::cout << "loc_rect: i2 = " << i2[0] << "," << i2[1] << "," << i2[2] << std::endl;
             detail::copy_array_nd_rect(
-                for_each, *data_buf, loc_rect, array
+                for_each, buf_array_device(), loc_rect, array
             );
         }
     };
