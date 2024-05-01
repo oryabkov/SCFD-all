@@ -102,6 +102,18 @@ public:
     {
         init(args...);
     }
+    template<class... Args,
+             #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+             class = typename std::enable_if<(sizeof...(Args) >= arranger_type::dynamic_dims_num)&&
+                                             (sizeof...(Args) <= arranger_type::dynamic_dims_num*2)>::type,
+             #else
+             class = typename std::enable_if<sizeof...(Args)==arranger_type::dynamic_dims_num>::type,
+             #endif             
+             class = typename std::enable_if<detail::check_all_are_true< std::is_integral<Args>::value... >::value>::type>
+    tensor_array_nd(pointer_type raw_data_ptr, Args ...args)
+    {
+        parent_t::init_by_raw_data(raw_data_ptr, args...);
+    }
     #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
     template<class RectOrd, class... Args,
              class = typename std::enable_if<
