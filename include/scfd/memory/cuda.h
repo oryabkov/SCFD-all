@@ -111,4 +111,7 @@ struct cuda_host
 
 }
 
+/// ISSUE is it ok? (alternative is to add some predefine in the following header or simply move this specialization here)
+#include "thrust_ptr_cuda.h"
+
 #endif
