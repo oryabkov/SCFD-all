@@ -1,13 +1,28 @@
-#ifndef __ARRAY_THRUST_POINTER_CAST_H__
-#define __ARRAY_THRUST_POINTER_CAST_H__
+// Copyright © 2016-2020 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
-/// TODO make separate file for cuda specialization
-#include <scfd/memory/host.h>
-#include <scfd/memory/cuda.h>
-#if defined(STOKES_PORUS_3D_PLATFORM_CUDA_UNIFIED)
-#include <scfd/memory/unified.h>
-#endif
+// This file is part of SCFD.
+
+// SCFD is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 2 only of the License.
+
+// SCFD is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef __SCFD_ARRAYS_ARRAY_THRUST_CAST_H__
+#define __SCFD_ARRAYS_ARRAY_THRUST_CAST_H__
+
 #include <scfd/memory/thrust_ptr.h>
+
+namespace scfd
+{
+namespace arrays
+{
 
 namespace detail {
 
@@ -25,21 +40,24 @@ public:
     }
 };
 
+} /// namespace detail
+
 template<class Array>
 typename array_thrust_ptr<Array>::type
-array_thrust_begin(const Array array)
+array_thrust_begin(const Array &array)
 {
     return array_thrust_ptr<Array>::cast(array.raw_ptr());
 }
 
 template<class Array>
 typename array_thrust_ptr<Array>::type
-array_thrust_end(const Array array)
+array_thrust_end(const Array &array)
 {
     return array_thrust_ptr<Array>::cast(array.raw_ptr()) + array.total_size();
 }
 
-} /// namespace detail
+} /// namespace arrays
+} /// namespace scfd
 
 #endif
 
