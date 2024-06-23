@@ -169,6 +169,20 @@ public:
         for (int j = 0;j < dim;++j) res *= d[j];
         return res;
     }
+    __DEVICE_TAG__ bool operator==(const vec &x)const
+    {
+        bool res = true;
+        #pragma unroll
+        for (int j = 0;j < dim;++j) 
+        {
+            if (d[j] != x.d[j]) res = false;
+        }
+        return res;
+    }
+    __DEVICE_TAG__ bool operator!=(const vec &x)const
+    {
+        return !(*this == x);
+    }
 };
 
 template<class T,int Dim>
