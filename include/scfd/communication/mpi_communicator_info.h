@@ -1,7 +1,11 @@
 #ifndef __SCFD_MPI_COMMUNICATOR_INFO_H__
 #define __SCFD_MPI_COMMUNICATOR_INFO_H__
 
+#include <stdexcept>
 #include <mpi.h>
+
+#define __STR_HELPER(x) #x
+#define __STR(x) __STR_HELPER(x)
 
 #define SCFD_MPI_SAFE_CALL(X) \
     do {                                                                                                                                                                                        \
