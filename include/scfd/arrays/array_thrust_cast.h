@@ -43,17 +43,17 @@ public:
 } /// namespace detail
 
 template<class Array>
-typename array_thrust_ptr<Array>::type
+typename detail::array_thrust_ptr<Array>::type
 array_thrust_begin(const Array &array)
 {
-    return array_thrust_ptr<Array>::cast(array.raw_ptr());
+    return detail::array_thrust_ptr<Array>::cast(array.raw_ptr());
 }
 
 template<class Array>
-typename array_thrust_ptr<Array>::type
+typename detail::array_thrust_ptr<Array>::type
 array_thrust_end(const Array &array)
 {
-    return array_thrust_ptr<Array>::cast(array.raw_ptr()) + array.total_size();
+    return detail::array_thrust_ptr<Array>::cast(array.raw_ptr()) + array.total_size();
 }
 
 } /// namespace arrays

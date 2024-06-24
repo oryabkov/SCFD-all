@@ -17,7 +17,7 @@
 #ifndef __SCFD_UTILS_TRASH_CUDA_MEMORY_H__
 #define __SCFD_UTILS_TRASH_CUDA_MEMORY_H__
 
-#include <cuda_runtime.h>˰
+#include <cuda_runtime.h>
 #include "cuda_safe_call.h"
 
 namespace scfd
