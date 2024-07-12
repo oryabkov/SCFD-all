@@ -11,7 +11,7 @@
 #include <scfd/arrays/array_nd_visible.h>
 #endif
 #include <scfd/for_each/for_each_func_macro.h>
-#include "mpi_communicator_info.h"
+#include "mpi_comm_info.h"
 #include "rect_partitioner.h"
 
 namespace scfd
@@ -110,7 +110,7 @@ struct mpi_rect_distributor
         isend_requests_.resize(calc_buckets_num(packets_out_));
     }
     
-    const mpi_communicator_info<Ord>  &comm_info()const
+    const mpi_comm_info  &comm_info()const
     {
         return comm_info_;
     }
@@ -261,7 +261,7 @@ private:
         std::vector<packet_bucket>  buckets;
     };
 
-    mpi_communicator_info<Ord>          comm_info_;
+    mpi_comm_info                       comm_info_;
     std::vector<packet>                 packets_in_, packets_out_;
     //TODO use indexes here instead of pointers
     std::vector<packet*>                packets_in_by_rank_;

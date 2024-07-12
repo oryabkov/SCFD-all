@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <scfd/static_vec/vec.h>
 #include <scfd/static_vec/rect.h>
-#include "mpi_communicator_info.h"
+#include "mpi_comm_info.h"
 
 namespace scfd
 {
@@ -18,7 +18,7 @@ struct rect_partitioner
     typedef     static_vec::vec<BigOrd,Dim>          big_ord_vec_t;
     typedef     static_vec::rect<BigOrd,Dim>         big_ord_rect_t;
 
-    mpi_communicator_info<int>      comm_info;
+    mpi_comm_info                   comm_info;
     //proc_rects is of size comm_size
     //proc_rects[i] contains indexes rect owned by i-th process
     big_ord_vec_t                   dom_size;
@@ -55,7 +55,7 @@ struct rect_partitioner
     }*/
 
     rect_partitioner() = default;
-    rect_partitioner(const mpi_communicator_info<Ord> &comm_info_p, const big_ord_vec_t &dom_size_p) : 
+    rect_partitioner(const mpi_comm_info &comm_info_p, const big_ord_vec_t &dom_size_p) : 
       comm_info(comm_info_p), dom_size(dom_size_p), proc_rects(comm_info.num_procs)
     {
         std::vector<BigOrd>  lin_sizes(comm_info.num_procs,dom_size[0]/comm_info.num_procs);

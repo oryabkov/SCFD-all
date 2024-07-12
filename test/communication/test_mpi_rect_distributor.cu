@@ -7,7 +7,7 @@
 #include <scfd/arrays/array_nd.h>
 #include <scfd/for_each/serial_cpu_nd.h>
 #include <scfd/for_each/cuda_nd.h>
-#include <scfd/communication/mpi_communicator.h>
+#include <scfd/communication/mpi_wrap.h>
 #include <scfd/communication/rect_partitioner.h>
 #include <scfd/communication/mpi_rect_distributor.h>
 
@@ -19,7 +19,7 @@ using ordinal = int;
 using big_ordinal = long int;
 using value_t = unsigned int;
 static const int dim = 3;
-using comm_t = communication::mpi_communicator<ordinal>;
+using comm_t = communication::mpi_wrap;
 using part_t = communication::rect_partitioner<dim,ordinal,big_ordinal>;
 using idx_t = static_vec::vec<ordinal,dim>;
 using periodic_flags_t = static_vec::vec<bool,dim>;
