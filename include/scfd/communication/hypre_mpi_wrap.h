@@ -2,7 +2,7 @@
 #define __SCFD_HYPRE_MPI_WRAP_H__
 
 #include "_hypre_utilities.h"
-#include <mpi_comm_info.h>
+#include "mpi_comm_info.h"
 
 namespace scfd
 {

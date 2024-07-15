@@ -215,8 +215,8 @@ struct mpi_comm_info
 {
 
     MPI_Comm comm;
-    Ord num_procs;
-    Ord myid;
+    int num_procs;
+    int myid;
 
     void barrier()const
     {
