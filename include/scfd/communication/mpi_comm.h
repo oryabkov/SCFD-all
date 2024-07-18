@@ -59,8 +59,8 @@ struct mpi_comm
     }
 
     MPI_Comm comm()const { return comm_; }
-    Ord num_procs()const { return num_procs_; }
-    Ord myid()const { return myid_; }
+    int num_procs()const { return num_procs_; }
+    int myid()const { return myid_; }
     mpi_comm_info info()const
     {
         ///ISSUE leave info as plain struct or make it to be class??
@@ -69,8 +69,8 @@ struct mpi_comm
 
 private:
     MPI_Comm comm_;
-    Ord num_procs_;
-    Ord myid_;
+    int num_procs_;
+    int myid_;
 };
 
 mpi_comm mpi_comm_info::split(int color, int key)const
