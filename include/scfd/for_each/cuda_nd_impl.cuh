@@ -28,9 +28,9 @@ namespace for_each
 {
 
 template<class FUNC_T, int dim, class T>
-__global__ void ker_for_each(FUNC_T f, rect<T, dim> range, int total_sz)
+__global__ void ker_for_each(FUNC_T f, rect<T, dim> range, T total_sz)
 {
-    int i = blockIdx.x*blockDim.x + threadIdx.x;
+    T i = blockIdx.x*blockDim.x + threadIdx.x;
     if (!((i >= 0)&&(i < total_sz))) return;
     vec<T, dim> idx;
     for (int j = 0;j < dim;++j) {
@@ -44,7 +44,7 @@ template<int dim, class T>
 template<class FUNC_T>
 void cuda_nd<dim,T>::operator()(const FUNC_T &f, const rect<T, dim> &range)const
 {
-    int total_sz = 1;
+    T total_sz = 1;
     for (int j = 0;j < dim;++j) total_sz *= (range.i2[j]-range.i1[j]);
     
     ker_for_each<FUNC_T,dim,T><<<(total_sz/block_size)+1,block_size>>>(f, range, total_sz);

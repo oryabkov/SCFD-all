@@ -32,17 +32,17 @@ template<int dim, class T>
 template<class FUNC_T>
 void openmp_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
 {
-    int total_sz = 1;
+    T total_sz = 1;
     for (int j = 0;j < dim;++j) total_sz *= (range.i2[j]-range.i1[j]);
     
     int real_threads_num = threads_num; //NOLINT
     if (threads_num < 0) real_threads_num = omp_get_max_threads();
 
     #pragma omp parallel for num_threads(real_threads_num)
-    for (int i = 0;i < total_sz;++i) {
+    for (T i = 0;i < total_sz;++i) {
         //printf("%d %d \n", omp_get_thread_num(), omp_get_thread_num());
         vec<T, dim> idx;
-        int       i_tmp = i;
+        T       i_tmp = i;
         for (int j = dim-1;j >= 0;--j) {
             idx[j] = range.i1[j] + i_tmp%(range.i2[j]-range.i1[j]);
             i_tmp /= (range.i2[j]-range.i1[j]);
