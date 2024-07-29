@@ -38,7 +38,7 @@ inline int init_cuda_mpi(Log &log, const scfd::communication::mpi_comm_info& com
     int number_of_devices_on_node = 0;
     int device_id = 0;
 
-    auto comm_split = comm.split(MPI_COMM_TYPE_SHARED);
+    auto comm_split = comm.split(MPI_COMM_TYPE_SHARED, comm.myid);
     node_size = comm_split.num_procs();
     my_id = comm_split.myid();
     comm_split.free();
