@@ -284,6 +284,9 @@ struct mpi_comm_info
 
     mpi_comm split(int color, int key)const;
     mpi_comm split(int color)const;
+    mpi_comm split_type(int color, int key)const;
+    mpi_comm split_type(int color)const;
+
 };
 
 } // namespace communication

@@ -80,9 +80,21 @@ mpi_comm mpi_comm_info::split(int color, int key)const
     return mpi_comm(newcomm);
 }
 
+mpi_comm mpi_comm_info::split_type(int type, int key)const
+{
+    MPI_Comm newcomm;
+    SCFD_MPI_SAFE_CALL( MPI_Comm_split_type(comm, type, key, MPI_INFO_NULL, &newcomm) );
+    return mpi_comm(newcomm);
+}
+
 mpi_comm mpi_comm_info::split(int color)const
 {
     return split(color, myid);
+}
+
+mpi_comm mpi_comm_info::split_type(int type)const
+{
+    return split(type, myid);
 }
 
 } // namespace communication
