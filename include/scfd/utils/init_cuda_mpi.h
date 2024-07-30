@@ -38,21 +38,25 @@ inline int init_cuda_mpi(Log &log, const scfd::communication::mpi_comm_info& com
     int number_of_devices_on_node = 0;
     int device_id = 0;
 
-    auto comm_split = comm.split_type(MPI_COMM_TYPE_SHARED);
-    node_size = comm_split.num_procs();
-    my_id = comm_split.myid();
-    comm_split.free();
-
     char node_name[255];
     int node_name_size = 0;
     SCFD_MPI_SAFE_CALL( MPI_Get_processor_name( node_name, &node_name_size ) );
+    int char_hash = 0;
+    for(int j=0;j<node_name_size;j++)
+    {
+        char_hash = char_hash + static_cast<int>(node_name[j]);
+    }    
+    auto comm_split = comm.split(char_hash);
+    node_size = comm_split.num_procs();
+    my_id = comm_split.myid(); 
+    comm_split.free();   
     CUDA_SAFE_CALL( cudaGetDeviceCount(&number_of_devices_on_node) );
     if(number_of_devices_on_node<node_size)
     {
-        throw std::runtime_error("init_cuda_mpi: node name " + std::string(node_name) + "\n number of nproc = " + std::to_string(node_size) + ", number of GPUs = " + std::to_string(number_of_devices_on_node) + "\n numproc per node <= numGPUs per node!" );
+        throw std::runtime_error("init_cuda_mpi: node name " + std::string(node_name) + "\n number of nproc = " + std::to_string(node_size) + ", number of GPUs = " + std::to_string(number_of_devices_on_node) + "\n numproc per node > numGPUs per node!" );
     }
     device_id = (my_id + shift_index) % number_of_devices_on_node;
-    log.info_f("init_cuda_mpi: node_name = %s, node_size = %i, device_id = %i, my_id = %i", node_name, node_size, device_id, my_id);
+    log.info_f("init_cuda_mpi split_color: node_name = %s, node_color = %i, global_size = %i, global_id = %i, node_size = %i, devices_on_node = %i, node_device_id = %i, node_my_id = %i", node_name, char_hash, comm.num_procs, comm.myid, node_size, number_of_devices_on_node, device_id, my_id); 
     return scfd::utils::init_cuda(-2, device_id);
 }
 
