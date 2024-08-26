@@ -127,6 +127,13 @@ public:
         for (int j = 0;j < dim;++j) res.d[j] = value_type(0.);
         return res;
     }
+    static __DEVICE_TAG__ vec            make_ones()
+    {
+        vec res;
+        #pragma unroll
+        for (int j = 0;j < dim;++j) res.d[j] = value_type(1);
+        return res;
+    }
     
     __DEVICE_TAG__ vec                   &operator=(const vec &v);
     template<class Vec, 

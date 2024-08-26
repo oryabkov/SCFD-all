@@ -74,6 +74,14 @@ struct mpi_rect_distributor
         const bool_vec_t &periodic_flags, Ord stencil_size
     )
     {
+        ord_vec_t stencil_sizes = ord_vec_t::make_ones()*stencil_size;
+        init(partitioner, periodic_flags, stencil_sizes);
+    }
+    void init(
+        const rect_partitioner_t &partitioner,
+        const bool_vec_t &periodic_flags, ord_vec_t stencil_sizes
+    )
+    {
         comm_info_ = partitioner.comm_info;
         packets_in_by_rank_.resize(comm_info_.num_procs, nullptr);
         /// init packets_in
@@ -81,7 +89,7 @@ struct mpi_rect_distributor
         {
             packet pack;
             init_packet(
-                partitioner, periodic_flags, stencil_size, 
+                partitioner, periodic_flags, stencil_sizes, 
                 true, get_own_rank(), sender_proc_id, pack
             );
             if (!pack.buckets.empty())
@@ -99,7 +107,7 @@ struct mpi_rect_distributor
         {
             packet pack;
             init_packet(
-                partitioner, periodic_flags, stencil_size, 
+                partitioner, periodic_flags, stencil_sizes, 
                 false, reciever_proc_id, get_own_rank(), pack
             );
             if (!pack.buckets.empty())
@@ -269,7 +277,7 @@ private:
 
     void init_packet(
         const rect_partitioner_t &partitioner,
-        const bool_vec_t &periodic_flags, Ord stencil_size, 
+        const bool_vec_t &periodic_flags, ord_vec_t stencil_sizes, 
         bool is_in_pkg, Ord reciever_proc_id, Ord sender_proc_id, packet &pack
     )
     {
@@ -295,12 +303,12 @@ private:
                 if (sign == -1)
                 {
                     stencil_rect.i2[j] = stencil_rect.i1[j];
-                    stencil_rect.i1[j] = stencil_rect.i1[j]-stencil_size;
+                    stencil_rect.i1[j] = stencil_rect.i1[j]-stencil_sizes[j];
                 }
                 else
                 {
                     stencil_rect.i1[j] = stencil_rect.i2[j];
-                    stencil_rect.i2[j] = stencil_rect.i2[j]+stencil_size;
+                    stencil_rect.i2[j] = stencil_rect.i2[j]+stencil_sizes[j];
                 }
                 big_ord_rect_t  common_rect_from_recv = stencil_rect.intersect(send_rect),
                                 common_rect_from_send = common_rect_from_recv;

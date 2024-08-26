@@ -84,6 +84,13 @@ struct rect
         }
         return res;
     }
+    __DEVICE_TAG__ rect        enlarged_one_dim(int dir, const T &pad_size)const
+    {
+        rect res = *this;
+        res.i1[dir] -= pad_size;
+        res.i2[dir] += pad_size;
+        return res;
+    }
     __DEVICE_TAG__ rect        shifted(const vec<T, Dim> &idx_shift)const
     {
         rect res = *this;
