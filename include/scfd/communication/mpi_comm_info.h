@@ -226,7 +226,7 @@ struct mpi_comm_info
     template<class T>
     void all_gather(
         const T *sendbuf, int sendcount, T *recvbuf, int recvcount
-    )
+    )const
     {
         detail::all_gather(sendbuf, sendcount, recvbuf, recvcount, comm);
     }

@@ -15,6 +15,8 @@ namespace communication
 template<int Dim,class Ord,class BigOrd>
 struct rect_partitioner
 {
+    typedef     static_vec::vec<Ord,Dim>             ord_vec_t;
+    typedef     static_vec::rect<Ord,Dim>            ord_rect_t;
     typedef     static_vec::vec<BigOrd,Dim>          big_ord_vec_t;
     typedef     static_vec::rect<BigOrd,Dim>         big_ord_rect_t;
 
@@ -78,6 +80,11 @@ struct rect_partitioner
     big_ord_rect_t  get_own_rect()const
     {
         return proc_rects[comm_info.myid];
+    }
+    ord_rect_t      get_own_loc_rect()const
+    {
+        auto my_glob_rect = get_own_rect();
+        return my_glob_rect.shifted(-my_glob_rect.i1);
     }
     big_ord_rect_t  get_dom_rect()const
     {
