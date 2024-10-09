@@ -9,8 +9,11 @@
  ```
  To build separate target:
  ```
- make poisson_jacobi_<TARGET_NAME>.bin
+ make poisson_jacobi_<IMPL>_<TARGET_NAME>.bin
  ```
+ where ```<IMPL>``` is one of the following:
+ * ```func``` for implementation with good old functors for kernels
+ * ```lambda``` for implementation with fancy new lambdas for kernels
  where ```<TARGET_NAME>``` is one of the following:
  * ```cpu``` for serial only host version
  * ```omp``` for openmp host version
@@ -18,19 +21,19 @@
 
  ## Run
 
- To run 100x100x100 mesh with maximum 10000 iterations and target tolerance 1e-3 on serial version:
+ To run 100x100x100 mesh with maximum 10000 iterations and target tolerance 1e-3 on serial version with lambdas:
  ```
- time ./poisson_jacobi_cpu.bin 100 100 100 10000 1e-3
- ```
-
- To run with the same parameters on host with 6 openmp threads:
- ```
- time OMP_NUM_THREADS=6 ./poisson_jacobi_omp.bin 100 100 100 10000 1e-3
+ time ./poisson_jacobi_lambda_cpu.bin 100 100 100 10000 1e-3
  ```
 
- To run with the same parameters on cuda device (chooses first in list, TODO add choise):
+ To run with the same parameters on host with 6 openmp threads with functors:
  ```
- time ./poisson_jacobi_cuda.bin 100 100 100 10000 1e-3
+ time OMP_NUM_THREADS=6 ./poisson_jacobi_func_omp.bin 100 100 100 10000 1e-3
+ ```
+
+ To run with the same parameters on cuda device (chooses first in list, TODO add choise) with lambdas:
+ ```
+ time ./poisson_jacobi_lambda_cuda.bin 100 100 100 10000 1e-3
  ```
 
  ## Notes on realization

@@ -105,33 +105,6 @@ public:
 
     /// Just as example rhs: sin(2*pi*wave_numbers[0]*x[0]/dom_sz[0])*sin...
     void init_rhs(idx_nd_type wave_numbers);
-    /*{
-        struct rhs_init_func
-        {
-            mesh_type mesh;
-            idx_nd_type wave_numbers;
-            array_type rhs,x_ref;
-            __DEVICE_TAG__ void operator()(idx_nd_type idx)const
-            {
-                real rhs_val = real(1);
-                #pragma unroll
-                for (int j = 0;j < dim;++j)
-                {
-                    rhs_val *= st::sin(real(2)*st::pi()*wave_numbers[j]*mesh.coord(j,idx[j])/mesh.dom_sz()[j]);
-                }
-                rhs(idx) = rhs_val;
-
-                real ref_mul = real(0);
-                #pragma unroll
-                for (int j = 0;j < dim;++j)
-                {
-                    ref_mul += real(1)/st::sqr(real(2)*st::pi()*wave_numbers[j]/mesh.dom_sz()[j]);
-                }
-                x_ref(idx) = rhs_val/ref_mul;
-            }
-        };
-        for_each_nd_(rhs_init_func{mesh_,wave_numbers,rhs_,x_ref_},mesh_.size());
-    }*/
     bool solve(real eps, int max_iters)
     {
         /// We need to vanish x_buf_ because of bc
@@ -160,52 +133,15 @@ private:
     mesh_type mesh_;
     array_type rhs_, x_, x_residual_, x_buf_, x_ref_, tmp_;
 
-private:
+///WARNING this public is only because of lambda functions usage in CUDA
+//private:
+public:
     void fill_zero(array_type a);
     T    calc_sum(array_type a);
     T    calc_norm(array_type a);
-    /*{
-        struct vanish_func
-        {
-            array_type a;
-            __DEVICE_TAG__ void operator()(idx_nd_type idx)const
-            {
-                a(idx) = real(0);
-            }
-        };
-        for_each_nd_(vanish_func{a},mesh_.size());
-    }*/
     /// takes x_ as input calculates next iteration and puts it into x_buf_ 
     /// as byproduct calculates residual for x_ and returns its norm-2
     T   perform_iter();
-    /*{
-        struct iter_func
-        {
-            mesh_type mesh;
-            array_type rhs,x,x_new;
-            __DEVICE_TAG__ void operator()(idx_nd_type idx)const
-            {
-                if (mesh.check_is_on_border(idx)) return;
-
-                real num = rhs(idx), den = real(0);
-                #pragma unroll
-                for (int j = 0;j < dim;++j)
-                {
-                    real hj = mesh.step_sz()[j];
-                    for (int sign = -1;sign <= 1;sign+=2)
-                    {
-                        idx_nd_type idx_nb = idx;
-                        idx_nb[j] += sign;
-                        num += x(idx_nb)/(hj*hj);
-                        den += real(1)/(hj*hj);
-                    }
-                }
-                x_new(idx) = num/den;
-            }
-        };
-        for_each_nd_(iter_func{mesh_,rhs_,x_,x_buf_},mesh_.size());
-        std::swap(x_,x_buf_);
-    }*/
 
 };
 

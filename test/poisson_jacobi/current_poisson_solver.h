@@ -10,7 +10,11 @@
 #include <scfd/for_each/serial_cpu_nd.h>
 #include <scfd/reduce/serial_cpu.h>
 ///NOTE for serial implementation no separate intantiation is needed
+#ifdef POISSON_SOLVER_USE_LAMBDA
+#include "poisson_solver_lambda_impl.h"
+#else
 #include "poisson_solver_impl.h"
+#endif
 
 using memory_t = scfd::memory::host;
 using for_each_t = scfd::for_each::serial_cpu_nd<current_dim>;
