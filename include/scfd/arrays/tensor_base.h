@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <type_traits>
+#include <stdexcept>
 #include <scfd/utils/device_tag.h>
 #include <scfd/static_vec/vec.h>
 #include "placeholder.h"

@@ -50,6 +50,8 @@ struct scalar_traits
     inline __DEVICE_TAG__ static T  max(const T &x,const T &y) { return std::max(x,y); }
     inline __DEVICE_TAG__ static T  min(const T &x,const T &y) { return std::min(x,y); }
     inline __DEVICE_TAG__ static T  atan2(const T &y,const T &x ) { return std::atan2(y,x); }
+    inline __DEVICE_TAG__ static T  sin(const T &x) { return std::sin(x); }
+    inline __DEVICE_TAG__ static T  cos(const T &x) { return std::cos(x); }
     inline static std::string       name() { return scalar_traits_err<T>::not_defined(); }
 };
 
@@ -112,6 +114,22 @@ struct scalar_traits<float>
         return ::atan2f(y,x);
         #endif
     }
+    inline __DEVICE_TAG__ static float  sin(const float &x) 
+    { 
+        #ifndef __CUDA_ARCH__
+        return std::sin(x); 
+        #else
+        return ::sinf(x);
+        #endif
+    }
+    inline __DEVICE_TAG__ static float  cos(const float &x) 
+    { 
+        #ifndef __CUDA_ARCH__
+        return std::cos(x); 
+        #else
+        return ::cosf(x);
+        #endif
+    }
     //inline static std::string       name() { return scalar_traits_err<float>::not_defined(); }
 };
 
@@ -172,6 +190,22 @@ struct scalar_traits<double>
         return std::atan2(y,x); 
         #else
         return ::atan2(y,x);
+        #endif
+    }
+    inline __DEVICE_TAG__ static double  sin(const double &x) 
+    { 
+        #ifndef __CUDA_ARCH__
+        return std::sin(x); 
+        #else
+        return ::sin(x);
+        #endif
+    }
+    inline __DEVICE_TAG__ static double  cos(const double &x) 
+    { 
+        #ifndef __CUDA_ARCH__
+        return std::cos(x); 
+        #else
+        return ::cos(x);
         #endif
     }
     //inline static std::string       name() { return scalar_traits_err<double>::not_defined(); }

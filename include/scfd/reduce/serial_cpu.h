@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_REDUCE_SERIAL_CPU_H__
-#define __SCFD_REDUCE_SERIAL_CPU_H__
+#ifndef __SCFD_SERIAL_CPU_REDUCE_H__
+#define __SCFD_SERIAL_CPU_REDUCE_H__
 
 ///TODO this is PLUS only operation reduce
 
@@ -23,11 +23,9 @@
 
 namespace scfd
 {
-namespace reduce
-{
 
 template<class Ord = int>
-struct serial_cpu
+struct serial_cpu_reduce
 {
     /*void set_max_size(Ord max_size)
     {
@@ -51,7 +49,6 @@ struct serial_cpu
     Ord     max_size_;
 };
 
-}
 }
 
 #endif

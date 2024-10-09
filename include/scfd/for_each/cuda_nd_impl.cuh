@@ -20,6 +20,7 @@
 //for_each_nd implementation for CUDA case
 
 #include "for_each_config.h"
+#include <scfd/utils/cuda_safe_call.h>
 #include "cuda_nd.h"
 
 namespace scfd

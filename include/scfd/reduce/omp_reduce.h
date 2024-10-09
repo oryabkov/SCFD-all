@@ -14,31 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_REDUCE_THRUST_H__
-#define __SCFD_REDUCE_THRUST_H__
+#ifndef __SCFD_OMP_REDUCE_H__
+#define __SCFD_OMP_REDUCE_H__
 
 #include "reduce_config.h"
-#include <thrust/device_ptr.h>
-#include <thrust/reduce.h>
-
-/// TODO how to specify memory type in thrust?
 
 ///TODO this is PLUS only operation reduce
-///TODO now it's in cpp code also because for simple types we can call thrust from cpp, later - move to _impl
 
 namespace scfd
 {
 
 template<class Ord = int>
-struct thrust_reduce
+struct omp_reduce
 {
     template<class T>
-    T operator()(Ord size, const T *input, T init_val)const
-    {
-        ::thrust::device_ptr<const T>   input_begin  = ::thrust::device_pointer_cast(input),
-                                        input_end = input_begin+size;
-        return ::thrust::reduce(input_begin, input_end, init_val);
-    }
+    T operator()(Ord size, const T *input, T init_val)const;
     void    wait()const
     {
     }

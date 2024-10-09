@@ -114,6 +114,20 @@ public:
     {
         parent_t::init_by_raw_data(raw_data_ptr, args...);
     }
+    template<class SizeVec, class... Args,
+             class = typename std::enable_if<
+                                  detail::has_subscript_operator<SizeVec,ordinal_type>::value
+                              >::type,
+             class = typename std::enable_if<
+                                  sizeof...(Args)+ND==arranger_type::dynamic_dims_num
+                              >::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< std::is_integral<Args>::value... >::value
+                              >::type>
+    tensor_array_nd(const SizeVec &sz, Args ...args)
+    {
+        init(sz,args...);
+    }
     #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
     template<class RectOrd, class... Args,
              class = typename std::enable_if<
