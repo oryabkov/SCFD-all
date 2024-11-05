@@ -1,17 +1,39 @@
 cmake_minimum_required(VERSION 3.14)
-project(SCFD LANGUAGES C CXX CUDA)
+project(SCFD LANGUAGES C CXX)
+
+include(CheckLanguage)
+
+option(ENABLE_CUDA "Turns on CUDA tests build" ON)
+
+if(ENABLE_CUDA)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    set(CUDA_ENABLED 1)
+  else()
+    #TODO error instead?
+    message(STATUS "WARNING No CUDA found! - CUDA tests whould be ommited")
+    set(CUDA_ENABLED "")
+  endif()
+else()
+  message(STATUS "ENABLE_CUDA is turned off - CUDA tests whould be ommited")
+endif()
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_STANDARD 11)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+if(CUDA_ENABLED)
+  set(CMAKE_CUDA_STANDARD 11)
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+endif()
 
 find_package(OpenMP REQUIRED)
 
 include_directories(include)
 
-#TODO use per target
-include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+if(CUDA_ENABLED)
+  #TODO use per target
+  include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+endif()
 
 # Following is direct copy from 
 # https://github.com/google/googletest/blob/master/googletest/README.md

@@ -1,4 +1,6 @@
 SCFD_INCLUDE=../../include
+#TODO !WARNING this is temporal solution for stokes solver only!
+NLOHMANN_JSON_INCLUDE=../../../json
 MPI_INCLUDE_DIR=/usr/local/mpi/include
 MPI_LIB_DIR=/usr/local/mpi/lib
 test_constant_data_cpp.bin: test_constant_data.cpp 
@@ -27,3 +29,5 @@ test_log_mpi_cuda.bin: test_log_mpi_cuda.cu
 	nvcc -std=c++11 -I$(SCFD_INCLUDE) -I$(MPI_INCLUDE_DIR) -L$(MPI_LIB_DIR) test_log_mpi_cuda.cu -lmpi -o test_log_mpi_cuda.bin
 test_log_std_singleton.bin: test_log_std_singleton.cpp
 	g++ -std=c++11 -I$(SCFD_INCLUDE) test_log_std_singleton.cpp -o test_log_std_singleton.bin
+test_format_json.bin: test_format_json.cpp
+	g++ -std=c++11 -I$(SCFD_INCLUDE) -I$(NLOHMANN_JSON_INCLUDE) test_format_json.cpp -o test_format_json.bin
