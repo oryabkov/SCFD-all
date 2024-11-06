@@ -18,7 +18,7 @@
 #define __SCFD_MEMORY_SYCL_H__
 
 #include <stdexcept>
-#include <sycl/sycl.h>
+#include <sycl/sycl.hpp>
 #include <scfd/utils/init_sycl.h>
 
 namespace scfd
@@ -39,7 +39,7 @@ struct sycl_device
 
     static void    malloc(pointer_type* p, size_t size)
     {
-        *p = sycl::malloc_device<void>(size, sycl_device_queue);
+        *p = sycl::malloc_device<char>(size, sycl_device_queue);
     }
     static void    free(pointer_type p)
     {
@@ -70,7 +70,7 @@ struct sycl_host
 
     static void    malloc(pointer_type* p, size_t size)
     {
-        *p = sycl::malloc_host<void>(size, sycl_device_queue);
+        *p = sycl::malloc_host<char>(size, sycl_device_queue);
     }
     static void    free(pointer_type p)
     {
@@ -95,6 +95,6 @@ struct sycl_host
 }
 
 /// ISSUE is it ok? (alternative is to add some predefine in the following header or simply move this specialization here)
-#include "thrust_ptr_cuda.h"
+// #include "thrust_ptr_cuda.h"
 
 #endif

@@ -30,27 +30,27 @@ namespace for_each
 
 template<class T>
 template<class FUNC_T>
-void sycl<T>::operator()(FUNC_T f, T i1, T i2)const
+void sycl_impl<T>::operator()(FUNC_T f, T i1, T i2)const
 {
-    T const size   = i2 - i1;
-    T const offset =      i1;
-    
+    std::size_t const size   = i2 - i1;
+    T           const offset =      i1;
+
     sycl_device_queue.parallel_for(sycl::range{size}, [=](sycl::id<1> idx)
     {
         T i =  idx[0];
-        f(i + offset); 
+        f(i + offset);
     }).wait(); // assumes iterative execution model
 }
 
 template<class T>
 template<class FUNC_T>
-void sycl<T>::operator()(FUNC_T f, T size)const
+void sycl_impl<T>::operator()(FUNC_T f, T size)const
 {
     this->operator()(f, 0, size);
 }
 
 template<class T>
-void sycl<T>::wait()const
+void sycl_impl<T>::wait()const
 {
 }
 

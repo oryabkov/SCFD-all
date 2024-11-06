@@ -15,14 +15,14 @@
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef __SCFD_FOR_EACH_SYCL_H_
-#define __SCFD_FOR_EACH_SYCL_H__
+#define __SCFD_FOR_EACH_SYCL_H_
 
 //for_each implementation for SYCL case
 
 #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
 #include <boost/property_tree/ptree.hpp>
 #endif
-#include "scfd/utils/init_sycl.hpp"
+#include "scfd/utils/init_sycl.h"
 #include "for_each_config.h"
 #include <sycl/sycl.hpp>
 
@@ -32,9 +32,9 @@ namespace for_each
 {
 
 template<class T = int>
-struct sycl 
+struct sycl_impl
 {
-    sycl() : threads_num(-1) {}
+    sycl_impl() : threads_num(-1) {}
     int threads_num;
 
     template<class FUNC_T>

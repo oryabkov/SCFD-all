@@ -73,7 +73,11 @@ if(CUDA_ENABLED)
   add_test( NAME test_for_each_nd_unified_omp.bin COMMAND ./test_for_each_nd_unified_omp.bin)
 endif()
 
-#
+#SYCL test
+if(SYCL_ENABLED)
+    add_executable( test_for_each_sycl.bin test_for_each_sycl.cpp )
+    target_compile_options( test_for_each_sycl.bin PUBLIC -fsycl)
+endif()
 
 add_executable( test_for_each_func_macro.bin test_for_each_func_macro.cpp )
 
