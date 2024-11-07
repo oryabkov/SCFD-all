@@ -33,57 +33,31 @@
 using for_each_t = scfd::for_each::sycl_impl<>;
 using mem_t      = scfd::memory  ::sycl_device;
 
-typedef scfd::arrays::tensor0_array<int,mem_t>                t_field0;
-typedef scfd::arrays::tensor0_array_view<int,mem_t>           t_field0_view;
-typedef scfd::arrays::tensor1_array<int,mem_t,3>              t_field1;
-typedef scfd::arrays::tensor1_array_view<int,mem_t,3>         t_field1_view;
-typedef scfd::arrays::tensor2_array<int,mem_t,3,4>            t_field2;
-typedef scfd::arrays::tensor2_array_view<int,mem_t,3,4>       t_field2_view;
-
-struct func_test_field0
-{
-    func_test_field0(const t_field0 &f_) : f(f_) {}
-    mutable t_field0  f;
-    
-    void operator()(const int &idx) const
-    {
-        f(idx) += 1 - idx*idx;
-    }
-};
-
 bool    test_field0()
 {
-    t_field0   f;
-    f.init(SZ_X);
+    for_each_t for_each;
+    auto device_usm = sycl::malloc_device<int>(SZ_X, sycl_device_queue);
+    auto host_usm   = sycl::malloc_host  <int>(SZ_X, sycl_device_queue);
 
-    t_field0_view     view;
-    view.init(f, false);
-    for (int i = 0;i < SZ_X;++i)
-    {
-        view(i) = i;
-    }
-    view.release();
+    for_each([=](int idx){ device_usm[idx] = 1 - idx*idx; }, 0, SZ_X);
 
-    for_each_t             for_each;
-    for_each(func_test_field0(f), 0, SZ_X);
-    // do we need to wait?
+    sycl_device_queue.copy(device_usm, host_usm, SZ_X).wait();
+
     bool    result = true;
-
-    t_field0_view     view2;
-    view2.init(f, true);
     for (int i = 0;i < SZ_X;++i)
     {
-        if (view2(i) != i + 1 - i*i)
+        if (host_usm[i] != 1 - i*i)
         {
-            printf("test_field0: i = %d: %d != %d \n", i, view2(i), i + 1 - i*i);
+            printf("test_field0: i = %d: %d != %d \n", i, host_usm[i], 1 - i*i);
             result = false;
         }
         #ifdef DO_RESULTS_OUTPUT
-        printf("%d, %d, %d\n", i, view2(i));
+        printf("%d, %d, %d\n", i, host_usm[i]);
         #endif
     }
-    view2.release();
 
+    sycl::free(device_usm, sycl_device_queue);
+    sycl::free(host_usm,   sycl_device_queue);
     return result;
 }
 
@@ -91,9 +65,9 @@ bool    test_field0()
 int main()
 {
     try {
-    
+
     int err_code = 0;
-    
+
     if (test_field0())
     {
         printf("test_field0 seems to be OK\n");
