@@ -77,6 +77,7 @@ endif()
 if(SYCL_ENABLED)
     add_executable( test_for_each_sycl.bin test_for_each_sycl.cpp )
     target_link_libraries( test_for_each_sycl.bin sycl )
+    target_compile_definitions( test_for_each_sycl.bin PRIVATE __SYCL_ARCH__)
 endif()
 
 add_executable( test_for_each_func_macro.bin test_for_each_func_macro.cpp )
