@@ -14,41 +14,35 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_FOR_EACH_SYCL_H_
-#define __SCFD_FOR_EACH_SYCL_H_
+#ifndef __SCFD_FOR_EACH_SYCL_ND_H__
+#define __SCFD_FOR_EACH_SYCL_ND_H__
 
-//for_each implementation for SYCL case
-
-#ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-#include <boost/property_tree/ptree.hpp>
-#endif
+//for_each_nd implementation for OPENMP case
 #include "scfd/utils/init_sycl.h"
 #include "for_each_config.h"
 #include <sycl/sycl.hpp>
+#include <scfd/static_vec/vec.h>
+#include <scfd/static_vec/rect.h>
 
 namespace scfd
 {
-namespace for_each
+namespace for_each 
 {
 
-template<class T = int>
-struct sycl_
+using scfd::static_vec::vec;
+using scfd::static_vec::rect;
+
+template<int dim, class T = int>
+struct sycl_nd
 {
-    sycl_() : threads_num(-1) {}
+    sycl_nd() : threads_num(-1) {}
     int threads_num;
 
     template<class FUNC_T>
-    void operator()(FUNC_T f, T i1, T i2)const;
+    void operator()(FUNC_T f, const rect<T, dim> &range)const;
     template<class FUNC_T>
-    void operator()(FUNC_T f, T size)const;
+    void operator()(FUNC_T f, const vec<T, dim> &size)const;
     void wait()const;
-
-    #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-    void init(const boost::property_tree::ptree &cfg)
-    {
-        threads_num = cfg.get<int>("threads_num", -1);
-    }
-    #endif
 };
 
 }

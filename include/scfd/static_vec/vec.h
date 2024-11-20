@@ -38,8 +38,7 @@ public:
     typedef T                   value_type;
     static const int            dim = Dim;
 
-    //__DEVICE_TAG__                      vec() {}
-    __DEVICE_TAG__                      vec();
+    __DEVICE_TAG__                      vec() = default;
     /// ISSUE Still not sure about this static_cast here...
     template<typename... Args,
              class = typename std::enable_if<sizeof...(Args) == Dim>::type,
@@ -51,7 +50,7 @@ public:
     __DEVICE_TAG__                      vec(const Args&... args) : d{static_cast<T>(args)...}
     {
     }
-    __DEVICE_TAG__                      vec(const vec &v);
+    __DEVICE_TAG__                      vec(const vec &v) = default;
     template<class Vec, 
              class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
     __DEVICE_TAG__                      vec(const Vec &v)
@@ -135,7 +134,7 @@ public:
         return res;
     }
     
-    __DEVICE_TAG__ vec                   &operator=(const vec &v);
+    __DEVICE_TAG__ vec                   &operator=(const vec &v) = default;
     template<class Vec, 
              class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
     __DEVICE_TAG__ vec                   &operator=(const Vec &v)
@@ -191,15 +190,6 @@ public:
         return !(*this == x);
     }
 };
-
-template<class T,int Dim>
-vec<T,Dim>::vec() = default;
-
-template<class T,int Dim>
-vec<T,Dim>::vec(const vec &v) = default;
-
-template<class T,int Dim>
-vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
 
 template<class T,int Dim>
 __DEVICE_TAG__ vec<T,Dim>   operator*(T mul, const vec<T,Dim> &v)

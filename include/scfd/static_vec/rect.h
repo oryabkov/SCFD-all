@@ -35,10 +35,10 @@ struct rect
     __DEVICE_TAG__ rect() { }
     __DEVICE_TAG__ rect(const vec_type &_i1, const vec_type &_i2) : i1(_i1), i2(_i2) { }
     explicit __DEVICE_TAG__ rect(const vec_type &_i2) : i1(vec_type::make_zero()), i2(_i2) { }
+
     /// ISSUE implicit ok?
     template<class T2>
     __DEVICE_TAG__ rect(const rect<T2,Dim> &r) : i1(r.i1), i2(r.i2) { }
-
     __DEVICE_TAG__ bool is_own(const vec_type &p)const
     {
         for (int j = 0;j < Dim;++j)

@@ -30,11 +30,14 @@ namespace for_each
 
 template<class T>
 template<class FUNC_T>
-void sycl_impl<T>::operator()(FUNC_T f, T i1, T i2)const
+void sycl_<T>::operator()(FUNC_T f, T i1, T i2)const
 {
     std::size_t const size   = i2 - i1;
     T           const offset =      i1;
 
+    // FUNC_T must satisfy device copyable
+    // For more detail see spec, 3.13.1. Device copyable
+    // https://registry.khronos.org/SYCL/specs/sycl-2020/html/sycl-2020.html
     sycl_device_queue.parallel_for(sycl::range{size}, [=](sycl::id<1> idx)
     {
         T i =  idx[0];
@@ -44,13 +47,13 @@ void sycl_impl<T>::operator()(FUNC_T f, T i1, T i2)const
 
 template<class T>
 template<class FUNC_T>
-void sycl_impl<T>::operator()(FUNC_T f, T size)const
+void sycl_<T>::operator()(FUNC_T f, T size)const
 {
     this->operator()(f, 0, size);
 }
 
 template<class T>
-void sycl_impl<T>::wait()const
+void sycl_<T>::wait()const
 {
 }
 

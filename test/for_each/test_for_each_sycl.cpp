@@ -30,7 +30,7 @@
 
 #define SZ_X    100
 
-using for_each_t = scfd::for_each::sycl_impl<>;
+using for_each_t = scfd::for_each::sycl_<>;
 using mem_t      = scfd::memory  ::sycl_device;
 
 typedef scfd::arrays::tensor0_array<int,mem_t>                t_field0;
