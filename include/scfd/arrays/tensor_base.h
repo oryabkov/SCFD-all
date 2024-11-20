@@ -56,9 +56,7 @@ protected:
     pointer_type    d_;
     //own_ means whether we should free d_-pointed memory when this object dies
     //own_ has meaning if and only if array is not free (is_free() == false)
-#ifndef __SYCL_ARCH__
     bool            own_;
-#endif
 
 protected:
     void                            init1_(const vec<ordinal_type,arranger_type::dynamic_dims_num> &dyn_dims)
@@ -68,15 +66,11 @@ protected:
         try
         {
             memory_type::malloc((void**)&d_, sizeof(T)*arranger_type::total_size());
-#ifndef __SYCL_ARCH__
             own_ = true;
-#endif
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
             arranger_type::set_zero_dyn_indexes0();
 #endif
-#ifndef __SYCL_ARCH__
             assert((!is_free() || (arranger_type::total_size() == 0)) && own_);
-#endif
         }
         catch (...)
         {
@@ -93,15 +87,11 @@ protected:
             d_ = raw_data_ptr;
         else
             d_ = NULL;
-#ifndef __SYCL_ARCH__
         own_ = false;
-#endif
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
         arranger_type::set_zero_dyn_indexes0();
 #endif
-#ifndef __SYCL_ARCH__
         assert((!is_free() || (arranger_type::total_size() == 0)) && !own_);
-#endif
     }
 
     __DEVICE_TAG__ void             assign(const tensor_base &t)
@@ -109,22 +99,16 @@ protected:
         arranger_type::operator=(t);
         d_ = t.d_;
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-#ifndef __SYCL_ARCH__
         own_ = false;
-#endif
 #endif
     }
     __DEVICE_TAG__ void             move(tensor_base &&t)
     {
         arranger_type::operator=(t);
         d_ = t.d_;
-#ifndef __SYCL_ARCH__
         own_ = t.own_;
-#endif
         t.d_ = NULL;
-#ifndef __SYCL_ARCH__
         t.own_ = false;
-#endif
     }
 
     template<class... Indexes,
@@ -306,9 +290,7 @@ public:
     #endif
 
     __DEVICE_TAG__ bool             is_free()const { return d_ == NULL; }
-#ifndef __SYCL_ARCH__
     __DEVICE_TAG__ bool             is_own()const { return own_; }
-#endif
 
     template<class... Args,
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
@@ -367,22 +349,18 @@ public:
         assert(is_free());
         arranger_type::copy_dyn_shape(a);
         memory_type::malloc((void**)&d_, sizeof(T)*arranger_type::total_size());
-#ifndef __SYCL_ARCH__
         own_ = true;
-#endif
     }
     void                            free()
     {
         if (is_free()) return;
-#ifndef __SYCL_ARCH__
         assert(own_);
-#endif
         memory_type::free(d_);
         d_ = NULL;
     }
 
 #ifndef __CUDA_ARCH__
-#ifndef __SYCL_ARCH__
+#ifndef __SYCL_DEVICE_ONLY__
     ~tensor_base()
     {
         //TODO we must catch exceptions here

@@ -132,7 +132,7 @@ bool    test_field0()
     t_field0_view   view2(f, true);
     for (int i = 0;i < sz1;++i) {
         if (view2(i) != 1+i) {
-            printf("test_field1_ndim2: i = %d: %f != %f \n", i, view2(i), 1+i);
+            printf("test_field1_ndim2: i = %d: %f != %d \n", i, view2(i), 1+i);
             result = false;
         }
 #ifdef DO_RESULTS_OUTPUT

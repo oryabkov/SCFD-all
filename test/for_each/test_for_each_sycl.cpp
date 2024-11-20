@@ -39,13 +39,6 @@ typedef scfd::arrays::tensor0_array_view<int,mem_t>           t_field0_view;
 typedef scfd::arrays::tensor1_array<int,mem_t,3>              t_field1;
 typedef scfd::arrays::tensor1_array_view<int,mem_t,3>         t_field1_view;
 
-template<>
-struct sycl::is_device_copyable<t_field0> : std::true_type {};
-
-template<>
-struct sycl::is_device_copyable<t_field1> : std::true_type {};
-
-
 struct func_test_field0
 {
     func_test_field0(const t_field0 &f_) : f(f_) {}
@@ -91,7 +84,6 @@ bool test_field0()
         #endif
     }
     view2.release();
-    f.free();
     return result;
 }
 
@@ -154,7 +146,6 @@ bool test_field1()
         #endif
     }
     view2.release();
-    f.free();
     return result;
 }
 
