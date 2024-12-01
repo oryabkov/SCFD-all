@@ -19,6 +19,11 @@
 
 #include <sycl/sycl.hpp>
 
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+
+namespace dpl = oneapi::dpl;
+
 // TODO: singleton impl, gpu/cpu selection
 inline sycl::queue sycl_device_queue(sycl::cpu_selector_v);
 

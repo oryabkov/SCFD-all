@@ -20,11 +20,6 @@
 #include "sycl_reduce.h"
 #include "scfd/utils/init_sycl.h"
 
-#include <oneapi/dpl/execution>
-#include <oneapi/dpl/algorithm>
-
-namespace dpl = oneapi::dpl;
-
 namespace scfd
 {
 
