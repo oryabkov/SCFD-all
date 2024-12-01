@@ -97,18 +97,13 @@ protected:
     __DEVICE_TAG__ void             assign(const tensor_base &t)
     {
         arranger_type::operator=(t);
-        d_ = t.d_;
-#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        own_ = false;
-#endif
+        d_ = t.d_; own_ = false;
     }
     __DEVICE_TAG__ void             move(tensor_base &&t)
     {
         arranger_type::operator=(t);
-        d_ = t.d_;
-        own_ = t.own_;
-        t.d_ = NULL;
-        t.own_ = false;
+        d_ = t.d_; own_ = t.own_;
+        t.d_ = NULL; t.own_ = false;
     }
 
     template<class... Indexes,
@@ -359,14 +354,12 @@ public:
         d_ = NULL;
     }
 
-#ifndef __CUDA_ARCH__
-#ifndef __SYCL_DEVICE_ONLY__
+#if !defined(__CUDA_ARCH__) && !defined(__SYCL_DEVICE_ONLY__)
     ~tensor_base()
     {
         //TODO we must catch exceptions here
         if (!is_free() && own_) free();
     }
-#endif
 #endif
 
 };
