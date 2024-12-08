@@ -5,7 +5,7 @@
 #include <scfd/utils/device_tag.h>
 #include <scfd/utils/scalar_traits.h>
 #include <scfd/arrays/array_nd.h>
-#include <scfd/utils/init_sycl.h>
+
 namespace kernels
 {
 

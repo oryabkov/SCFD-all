@@ -28,7 +28,7 @@ template<class T>
 T sycl_reduce<Ord>::operator()(Ord size, const T *input, T init_val)const
 {
     auto policy = dpl::execution::make_device_policy(sycl_device_queue);
-    return dpl::reduce(policy, input, input+size, init_val, std::plus<int>{});
+    return dpl::reduce(policy, input, input+size, init_val, std::plus<T>{});
 }
 
 }
