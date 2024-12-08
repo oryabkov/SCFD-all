@@ -40,6 +40,17 @@ using memory_t = scfd::memory::cuda_device;
 using for_each_t = scfd::for_each::cuda_nd<current_dim>;
 using reduce_t = scfd::thrust_reduce<>;
 
+#elif defined(POISSON_SOLVER_SYCL)
+
+#include <scfd/memory/sycl.h>
+#include <scfd/for_each/sycl_nd.h>
+#include <scfd/reduce/sycl_reduce.h>
+#include <scfd/reduce/sycl_reduce_impl.h>
+
+using memory_t = scfd::memory::sycl_device;
+using for_each_t = scfd::for_each::sycl_nd<current_dim>;
+using reduce_t = scfd::sycl_reduce<>;
+
 #else
 
 #error "None of POISSON_SOLVER_ macro is defined!"
@@ -49,4 +60,19 @@ using reduce_t = scfd::thrust_reduce<>;
 using real = float;
 using poisson_solver_t = poisson_solver<real,for_each_t,reduce_t,memory_t,current_dim>;
 
+#endif
+
+#if defined(POISSON_SOLVER_SYCL)
+template<>
+struct sycl::is_device_copyable<typename poisson_solver_t::rhs_init_func_t>
+    : std::true_type {};
+template<>
+struct sycl::is_device_copyable<typename poisson_solver_t::vanish_func_t>
+    : std::true_type {};
+template<>
+struct sycl::is_device_copyable<typename poisson_solver_t::sqr_func_t>
+    : std::true_type {};
+template<>
+struct sycl::is_device_copyable<typename poisson_solver_t::iter_func_t>
+    : std::true_type {};
 #endif

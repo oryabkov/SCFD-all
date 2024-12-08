@@ -2,10 +2,7 @@
 #define __POISSON_SOLVER_H__
 
 #include <iostream>
-#include <scfd/static_vec/vec.h>
-#include <scfd/utils/device_tag.h>
-#include <scfd/utils/scalar_traits.h>
-#include <scfd/arrays/array_nd.h>
+#include "poisson_kernel.h"
 
 template<class T,int Dim = 3>
 struct mesh
@@ -84,8 +81,14 @@ public:
     using mesh_type = mesh<T,Dim>;
     using array_type = scfd::arrays::array_nd<T,dim,Memory>;
     using st = scfd::utils::scalar_traits<T>;
+
+    using rhs_init_func_t = kernels::rhs_init_func<mesh_type,idx_nd_type,array_type>;
+    using vanish_func_t   = kernels::vanish_func<idx_nd_type,array_type>;
+    using sqr_func_t      = kernels::sqr_func<idx_nd_type,array_type>;
+    using iter_func_t     = kernels::iter_func<mesh_type,idx_nd_type,array_type>;
+
 public:
-    poisson_solver(idx_nd_type size, vec_type dom_sz) : 
+    poisson_solver(idx_nd_type size, vec_type dom_sz) :
       mesh_(size, dom_sz),
       rhs_(size), x_(size), x_residual_(size), x_buf_(size), x_ref_(size), tmp_(size)
     {
@@ -117,13 +120,14 @@ public:
             std::cout << "poisson_solver::solve: performed " << i << " iterations" << std::endl;
             std::cout << "poisson_solver::solve: resudial_norm_2 = " << resudial_norm << std::endl;
             std::cout << "poisson_solver::solve: relative resudial norm = " << resudial_norm/rhs_norm << std::endl;
-            if (resudial_norm/rhs_norm <= eps) 
+            if (resudial_norm/rhs_norm <= eps)
             {
                 std::cout << "poisson_solver::solve: target relative resudial norm " << eps << " reached; stop iterations" << std::endl;
                 return true;
             }
             std::swap(x_,x_buf_);
         }
+
         return false;
     }
 
@@ -139,7 +143,7 @@ public:
     void fill_zero(array_type a);
     T    calc_sum(array_type a);
     T    calc_norm(array_type a);
-    /// takes x_ as input calculates next iteration and puts it into x_buf_ 
+    /// takes x_ as input calculates next iteration and puts it into x_buf_
     /// as byproduct calculates residual for x_ and returns its norm-2
     T   perform_iter();
 
