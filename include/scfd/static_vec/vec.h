@@ -38,7 +38,7 @@ public:
     typedef T                   value_type;
     static const int            dim = Dim;
 
-#ifdef(__INTEL_LLVM_COMPILER)
+#if defined(__INTEL_LLVM_COMPILER)
 //icpx only
     __DEVICE_TAG__                      vec()             = default;
     __DEVICE_TAG__                      vec(const vec &v) = default;
@@ -199,7 +199,7 @@ public:
     }
 };
 
-#ifndef(__INTEL_LLVM_COMPILER)
+#if !defined(__INTEL_LLVM_COMPILER)
 template<class T,int Dim>
 vec<T,Dim>::vec() = default;
 

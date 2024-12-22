@@ -79,7 +79,10 @@ public:
     using for_each_nd_type = ForEachND;
     using reduce_type = Reduce;
     using mesh_type = mesh<T,Dim>;
-    using array_type = scfd::arrays::array_nd<T,dim,Memory>;
+
+    template<scfd::arrays::ordinal_type... Dims>
+    using arranger_t = scfd::arrays::last_index_fast_arranger<Dims...>;
+    using array_type = scfd::arrays::array_nd<T,dim,Memory,arranger_t>;
     using st = scfd::utils::scalar_traits<T>;
 
     using rhs_init_func_t = kernels::rhs_init_func<mesh_type,idx_nd_type,array_type>;
