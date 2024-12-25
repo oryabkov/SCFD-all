@@ -93,7 +93,6 @@ void cross_prod_device(const std::size_t N, const Vec3& u, const Vec3& v, Vec3& 
 
 int main(int argc, char const *argv[])
 {
-
     if(argc != 3)
     {
         std::cout << "Usage: " << argv[0] << " N iters" << std::endl;
@@ -102,7 +101,6 @@ int main(int argc, char const *argv[])
     }
     std::size_t N = std::atoi(argv[1]);
     std::size_t number_of_iters = std::atoi(argv[2]);
-    char tests = argv[3][0];
 
     std::size_t total_size = 3*N;
 

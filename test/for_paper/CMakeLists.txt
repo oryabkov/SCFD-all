@@ -18,6 +18,8 @@ endif()
 if(SYCL_ENABLED)
   add_executable(test_sycl.bin test_sycl.cpp)
   target_link_libraries(test_sycl.bin PRIVATE gtest_main)
+  target_compile_definitions(test_sycl.bin PUBLIC
+      SCFD_ARRAYS_ORDINAL_TYPE=std::ptrdiff_t)
 endif()
 
 #TODO add calls to test_omp tests
