@@ -15,6 +15,11 @@ if(CUDA_ENABLED)
   target_link_libraries(test_omp_cu.bin PRIVATE OpenMP::OpenMP_CXX gtest_main)
 endif()
 
+if(SYCL_ENABLED)
+  add_executable(test_sycl.bin test_sycl.cpp)
+  target_link_libraries(test_sycl.bin PRIVATE gtest_main)
+endif()
+
 #TODO add calls to test_omp tests
 if(CUDA_ENABLED)
   add_test(NAME test_tensor_array_3d_cross_product COMMAND test_tensor_array_3d_cross_product.bin 100000 100 a)
