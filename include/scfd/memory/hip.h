@@ -14,79 +14,96 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_MEMORY_SYCL_H__
-#define __SCFD_MEMORY_SYCL_H__
+#ifndef __SCFD_MEMORY_HIP_H__
+#define __SCFD_MEMORY_HIP_H__
 
 #include <stdexcept>
-#include <sycl/sycl.hpp>
-#include <scfd/utils/init_sycl.h>
+#include <hip/hip_runtime.h>
+#include <scfd/utils/hip_safe_call.h>
 
 namespace scfd
 {
 namespace memory
 {
 
-struct sycl_host;
+struct hip_host;
 
-struct sycl_device
+struct hip_device
 {
-    typedef     sycl_host       host_memory_type;
+    typedef     hip_host        host_memory_type;
     typedef     void*           pointer_type;
     typedef     const void*     const_pointer_type;
 
     static const bool           is_host_visible = false;
     static const bool           prefer_array_of_structs = false;
 
+    /// NOTE: hipMalloc returns NULL for size==0 without error,
+    /// however it's not stated explicitly in documentation
     static void    malloc(pointer_type* p, size_t size)
     {
-        *p = sycl::malloc_device<char>(size, sycl_device_queue);
+        HIP_SAFE_CALL(hipMalloc(p, size));
     }
+    /// NOTE: hipFree returns no error when called with NULL,
+    /// however it's not stated explicitly in documentation
     static void    free(pointer_type p)
     {
-        sycl::free(p, sycl_device_queue);
+        HIP_SAFE_CALL(hipFree(p));
     }
+
     static void    copy_to_host(size_t size, const_pointer_type src, pointer_type dst)
     {
-        sycl_device_queue.memcpy( dst, src, size ).wait();
+        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyDeviceToHost) );
     }
     static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
     {
-        sycl_device_queue.memcpy( dst, src, size ).wait();
+        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToDevice) );
     }
     static void    copy(size_t size, const_pointer_type src, pointer_type dst)
     {
-        sycl_device_queue.memcpy( dst, src, size ).wait();
+        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) );
     }
 };
 
-struct sycl_host
+struct hip_host
 {
-    typedef     sycl_host       host_memory_type;
+    typedef     hip_host        host_memory_type;
     typedef     void*           pointer_type;
     typedef     const void*     const_pointer_type;
-    
     static const bool           is_host_visible = true;
-    static const bool           prefer_array_of_structs = true;
+    static const bool           prefer_array_of_structs = false;
 
+    /// NOTE: hipMallocHost DOES NOT returns NULL for size==0
+    /// (it does not change ptr without generating error),
+    /// and this behaviour is not stated explicitly in documentation
     static void    malloc(pointer_type* p, size_t size)
     {
-        *p = sycl::malloc_host<char>(size, sycl_device_queue);
+        if (size != 0)
+        {
+            HIP_SAFE_CALL(hipHostMalloc(p, size,0));
+        }
+        else
+        {
+            *p = NULL;
+        }
     }
+    /// NOTE: hipFreeHost returns no error when called with NULL,
+    /// however it's not stated explicitly in documentation
     static void    free(pointer_type p)
     {
-        sycl::free(p, sycl_device_queue);
+        HIP_SAFE_CALL(hipHostFree(p));
     }
+
     static void    copy_to_host(size_t size, const_pointer_type src, pointer_type dst)
     {
-        sycl_device_queue.memcpy( dst, src, size ).wait();
+        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToHost) );
     }
     static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
     {
-        sycl_device_queue.memcpy( dst, src, size ).wait();
+        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToHost) );
     }
     static void    copy(size_t size, const_pointer_type src, pointer_type dst)
     {
-        sycl_device_queue.memcpy( dst, src, size ).wait();
+        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToHost) );
     }
 };
 
@@ -94,7 +111,8 @@ struct sycl_host
 
 }
 
-/// ISSUE is it ok? (alternative is to add some predefine in the following header or simply move this specialization here)
-// #include "thrust_ptr_cuda.h"
+#if 0
+#include "thrust_ptr_hip.h" // TODO: add thrust support for hip
+#endif
 
 #endif

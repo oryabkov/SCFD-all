@@ -5,7 +5,7 @@ include(CheckLanguage)
 
 option(SCFD_WITH_CUDA   "Use CUDA"   OFF)
 option(SCFD_WITH_SYCL   "Use SYCL"   OFF)
-option(SCFD_WITH_HIP    "Use HIP"    OFF) #SOON
+option(SCFD_WITH_HIP    "Use HIP"    OFF)
 option(SCFD_WITH_TESTS  "Enable SCFD Tests Build" OFF)
 
 include_directories(include)

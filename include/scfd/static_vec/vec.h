@@ -201,13 +201,13 @@ public:
 
 #if !defined(__INTEL_LLVM_COMPILER)
 template<class T,int Dim>
-vec<T,Dim>::vec() = default;
+__DEVICE_TAG__ vec<T,Dim>::vec() = default;
 
 template<class T,int Dim>
-vec<T,Dim>::vec(const vec &v) = default;
+__DEVICE_TAG__ vec<T,Dim>::vec(const vec &v) = default;
 
 template<class T,int Dim>
-vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
+__DEVICE_TAG__ vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
 #endif
 
 template<class T,int Dim>

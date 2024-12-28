@@ -14,17 +14,38 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_INIT_SYCL_
-#define __SCFD_INIT_SYCL_
+#ifndef __SCFD_FOR_EACH_HIP_ND_H__
+#define __SCFD_FOR_EACH_HIP_ND_H__
 
-#include <sycl/sycl.hpp>
+//for_each_nd implementation for HIP case
 
-#include <oneapi/dpl/execution>
-#include <oneapi/dpl/algorithm>
+#include "for_each_config.h"
+#include <scfd/static_vec/vec.h>
+#include <scfd/static_vec/rect.h>
 
-namespace dpl = oneapi::dpl;
+namespace scfd
+{
+namespace for_each
+{
 
-// TODO: singleton impl, gpu/cpu selection
-inline sycl::queue sycl_device_queue(sycl::gpu_selector_v);
+using scfd::static_vec::vec;
+using scfd::static_vec::rect;
+
+template<int dim, class T = int>
+struct hip_nd
+{
+    int block_size;
+
+    hip_nd() : block_size(256) {}
+
+    template<class FUNC_T>
+    void operator()(const FUNC_T &f, const rect<T, dim> &range)const;
+    template<class FUNC_T>
+    void operator()(const FUNC_T &f, const vec<T, dim> &size)const;
+    void wait()const;
+};
+
+}
+}
 
 #endif

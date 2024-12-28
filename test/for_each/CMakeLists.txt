@@ -75,13 +75,17 @@ endif()
 
 #SYCL test
 if(SYCL_ENABLED)
-    add_executable( test_for_each_sycl.bin    test_for_each_sycl.cpp    )
-    target_link_libraries( test_for_each_sycl.bin    sycl )
+    add_executable( test_for_each_sycl.bin           test_for_each_sycl.cpp )
+    add_test( NAME  test_for_each_sycl.bin COMMAND ./test_for_each_sycl.bin )
+    add_executable( test_for_each_nd_sycl.bin           test_for_each_nd_sycl.cpp )
+    add_test( NAME  test_for_each_nd_sycl.bin COMMAND ./test_for_each_nd_sycl.bin )
+endif()
 
-    add_executable( test_for_each_nd_sycl.bin test_for_each_nd_sycl.cpp )
-    target_link_libraries( test_for_each_nd_sycl.bin sycl )
+#HIP test
+if(HIP_ENABLED)
+    add_executable( test_for_each_hip.bin           test_for_each_hip.cpp )
+    add_test( NAME  test_for_each_hip.bin COMMAND ./test_for_each_hip.bin )
 endif()
 
 add_executable( test_for_each_func_macro.bin test_for_each_func_macro.cpp )
-
 add_test( NAME test_for_each_func_macro.bin COMMAND ./test_for_each_func_macro.bin)

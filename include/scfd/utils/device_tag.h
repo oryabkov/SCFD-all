@@ -17,10 +17,10 @@
 #ifndef __SCFD_UTILS_DEVICE_TAG_H__
 #define __SCFD_UTILS_DEVICE_TAG_H__
 
-#ifndef __CUDACC__
-#define __DEVICE_TAG__
-#else
+#if defined(__CUDACC__) || defined(__HIPCC__)
 #define __DEVICE_TAG__ __device__ __host__
+#else
+#define __DEVICE_TAG__
 #endif
 
 /*#ifndef __CUDACC__

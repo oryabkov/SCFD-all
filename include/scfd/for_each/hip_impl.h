@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_FOR_EACH_CUDA_IMPL_CUH__
-#define __SCFD_FOR_EACH_CUDA_IMPL_CUH__
+#ifndef __SCFD_FOR_EACH_HIP_IMPL__
+#define __SCFD_FOR_EACH_HIP_IMPL__
 
-//for_each implementation for CUDA case
+//for_each implementation for HIP case
 
 #include "for_each_config.h"
-#include <scfd/utils/cuda_safe_call.h>
-#include "cuda.h"
+#include <scfd/utils/hip_safe_call.h>
+#include "hip.h"
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
 template<class FUNC_T, class T>
@@ -38,7 +38,7 @@ __global__ void ker_for_each(FUNC_T f, T i1, T i2)
 
 template<class T>
 template<class FUNC_T>
-void cuda<T>::operator()(FUNC_T f, T i1, T i2)const
+void hip<T>::operator()(FUNC_T f, T i1, T i2)const
 {
     T total_sz = i2-i1;
     ker_for_each<FUNC_T,T><<<(total_sz/block_size)+1,block_size>>>(f, i1, i2);
@@ -46,16 +46,16 @@ void cuda<T>::operator()(FUNC_T f, T i1, T i2)const
 
 template<class T>
 template<class FUNC_T>
-void cuda<T>::operator()(FUNC_T f, T size)const
+void hip<T>::operator()(FUNC_T f, T size)const
 {
     this->operator()(f, 0, size);
 }
 
 template<class T>
-void cuda<T>::wait()const
+void hip<T>::wait()const
 {
     //TODO error check?
-    CUDA_SAFE_CALL( cudaStreamSynchronize(0) );
+    HIP_SAFE_CALL( hipStreamSynchronize(0) );
 }
 
 }
