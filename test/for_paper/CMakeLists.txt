@@ -15,6 +15,11 @@ if(CUDA_ENABLED)
   target_link_libraries(test_omp_cu.bin PRIVATE OpenMP::OpenMP_CXX gtest_main)
 endif()
 
+if(HIP_ENABLED)
+  add_executable(test_hip.bin test_hip.cpp)
+  target_link_libraries(test_hip.bin PRIVATE OpenMP::OpenMP_CXX gtest_main)
+endif()
+
 if(SYCL_ENABLED)
   add_executable(test_sycl.bin test_sycl.cpp)
   target_link_libraries(test_sycl.bin PRIVATE gtest_main)

@@ -99,6 +99,10 @@ if(SCFD_WITH_HIP)
         set(CMAKE_CXX_COMPILER ${HIP_COMPILER})
         message(STATUS "SCFD with HIP support")
         message(STATUS "Found hip compiler at: ${HIP_COMPILER}")
+
+        add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fopenmp>")
+        add_link_options("-fopenmp")
+
         set(HIP_ENABLED 1)
     else()
         message(WARNING "No HIP compiler found!")
