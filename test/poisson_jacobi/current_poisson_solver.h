@@ -51,6 +51,16 @@ using memory_t = scfd::memory::sycl_device;
 using for_each_t = scfd::for_each::sycl_nd<current_dim>;
 using reduce_t = scfd::sycl_reduce<>;
 
+#elif defined(POISSON_SOLVER_HIP)
+
+#include <scfd/memory/hip.h>
+#include <scfd/for_each/hip_nd.h>
+#include <scfd/reduce/thrust.h>
+
+using memory_t = scfd::memory::hip_device;
+using for_each_t = scfd::for_each::hip_nd<current_dim>;
+using reduce_t = scfd::thrust_reduce<>;
+
 #else
 
 #error "None of POISSON_SOLVER_ macro is defined!"

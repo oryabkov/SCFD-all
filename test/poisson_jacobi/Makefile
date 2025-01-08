@@ -17,6 +17,8 @@ poisson_jacobi_func_cuda.bin: $(HEADERS) $(SOURCE) poisson_solver_cuda_inst.cu
 	nvcc $(COMPILE_FLAGS) $(INCLUDE_SCFD) -DPOISSON_SOLVER_CUDA $(SOURCE) poisson_solver_cuda_inst.cu -o poisson_jacobi_func_cuda.bin
 poisson_jacobi_func_sycl.bin: $(HEADERS) $(SOURCE) poisson_solver_sycl_inst.cpp
 	icpx $(COMPILE_FLAGS) $(INCLUDE_SCFD) -DPOISSON_SOLVER_SYCL $(SOURCE) poisson_solver_sycl_inst.cpp -o poisson_jacobi_func_sycl.bin
+poisson_jacobi_func_hip.bin: $(HEADERS) $(SOURCE) poisson_solver_hip_inst.hip
+	hipcc $(COMPILE_FLAGS) $(INCLUDE_SCFD) -DPOISSON_SOLVER_HIP $(SOURCE) poisson_solver_hip_inst.hip -o poisson_jacobi_func_hip.bin
 
 poisson_jacobi_lambda_cpu.bin: $(HEADERS) $(SOURCE)
 	g++ $(COMPILE_FLAGS_LAMBDA) $(INCLUDE_SCFD) -DPOISSON_SOLVER_SERIAL $(SOURCE) -o poisson_jacobi_lambda_cpu.bin
