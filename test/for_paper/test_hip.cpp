@@ -90,6 +90,7 @@ __global__ void cross_prod_kern(std::size_t N, const T* f1_, const T* f2_, T* f_
     f_out_[IC(idx, 0)] = f1_[IC(idx,1)]*f2_[IC(idx,2)]-f1_[IC(idx,2)]*f2_[IC(idx,1)];
     f_out_[IC(idx, 1)] = -( f1_[IC(idx,0)]*f2_[IC(idx,2)]-f1_[IC(idx,2)]*f2_[IC(idx,0)] );
     f_out_[IC(idx, 2)] = f1_[IC(idx,0)]*f2_[IC(idx,1)]-f1_[IC(idx,1)]*f2_[IC(idx,0)];
+    printf("Hi!");
 }
 
 template<class T>

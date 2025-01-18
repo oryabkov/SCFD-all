@@ -354,7 +354,10 @@ public:
         d_ = NULL;
     }
 
-#if !defined(__CUDA_ARCH__) && !defined(__SYCL_DEVICE_ONLY__)
+#if    !defined(__CUDA_ARCH__)          \
+    && !defined(__SYCL_DEVICE_ONLY__)   \
+    && !defined(__HIP_DEVICE_COMPILE__)
+    
     ~tensor_base()
     {
         //TODO we must catch exceptions here
