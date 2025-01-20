@@ -31,7 +31,7 @@
 #include <scfd/for_each/openmp.h>
 #include <scfd/for_each/openmp_impl.h>
 
-constexpr std::size_t K  = 5u; // matrix size K x K
+constexpr std::size_t K  = N_NUM; // matrix size K x K
 constexpr std::size_t K2 = K * K;
 
 using timer_event_device_t = scfd::utils::hip_timer_event;
@@ -365,6 +365,8 @@ int main(int argc, char const *argv[])
 
     if((tests == 'd')||(tests == 'a'))
     {
+        std::cout << "executing device tests ... " << std::endl;
+
         std::vector<double> gpu_tensor; gpu_tensor.reserve(number_of_iters);
 
         //WARM UP
@@ -478,16 +480,16 @@ int main(int argc, char const *argv[])
         /***************************************************************************************************************/
 
         std::string filename;
-        filename = "execution_times_array_3d_mat_mul_product_" + std::to_string(device_id) + ".csv";
+        filename = "mat_mul_hip_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
         std::fstream out_file{filename, out_file.out};
         if (!out_file.is_open())
             std::cout << "failed to open " << filename << '\n';
         else
         {
-            out_file << "tensor,ptr_func,ptr_bad,ptr_ok" << std::endl;
+            out_file << "tensor,ptr_bad,ptr_ok" << std::endl;
             for(int j = 0; j<number_of_iters; j++)
             {
-                out_file << gpu_tensor.at(j) << ", " << gpu_ptr_func.at(j) << "," << gpu_ptr.at(j) << "," << gpu_ptr_ok.at(j) << std::endl;
+                out_file << gpu_tensor.at(j) << "," << gpu_ptr.at(j) << "," << gpu_ptr_ok.at(j) << std::endl;
             }
             out_file.close();
         }
@@ -513,7 +515,7 @@ int main(int argc, char const *argv[])
 
         }
         host_e2.record();
-        std::cout << "host tensor time =  " <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
+        std::cout << "host tensor time = " <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
 
         /**********************************************************************************************************/
 
@@ -539,7 +541,7 @@ int main(int argc, char const *argv[])
 
         }
         host_e2.record();
-        std::cout << "host ptr_ok time =  " <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
+        std::cout << "host ptr_ok time = " <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
 
         /*********************************************************************************************************/
 
@@ -566,12 +568,12 @@ int main(int argc, char const *argv[])
 
         }
         host_e2.record();
-        std::cout << "host ptr time =" <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
+        std::cout << "host ptr time    = " <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
 
         /*******************************************************************************************************/
 
         std::string filename;
-        filename = "execution_times_array_3d_mat_mul_product_host.csv";
+        filename = "mat_mul_hip_host_" + std::to_string(K) + "x" + std::to_string(K) +  ".csv";
         std::fstream out_file_cpu{filename, out_file_cpu.out};
         if (!out_file_cpu.is_open())
             std::cout << "failed to open " << filename << '\n';
