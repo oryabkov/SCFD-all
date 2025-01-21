@@ -1,6 +1,11 @@
 #ifndef __COMMON_PARTS_H__SYMBOL
 #define __COMMON_PARTS_H__SYMBOL
 
+/**
+ * common parts of the test, repeated for CUDA and HIP
+ */
+
+
     if(argc != 4)
     {
         std::cout << "Usage: " << argv[0] << " N iters tests" << std::endl;
@@ -246,7 +251,7 @@
         }
 
         std::string filename;
-        filename = "mat_mul_device_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+        filename = "mat_mul_" + std::to_string(N) + "_device_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
         std::fstream out_file{filename, out_file.out};
         if (!out_file.is_open())
             std::cout << "failed to open " << filename << '\n';
@@ -339,7 +344,7 @@
         /*******************************************************************************************************/
 
         std::string filename;
-        filename = "mat_mul_device_host_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+        filename = "mat_mul_" + std::to_string(N) + "_device_host_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
         std::fstream out_file_cpu{filename, out_file_cpu.out};
         if (!out_file_cpu.is_open())
             std::cout << "failed to open " << filename << '\n';
