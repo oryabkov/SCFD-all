@@ -17,6 +17,7 @@ __global__ void mat_mul_kern(std::size_t N, T* f1_, T* f2_, T* f_out_)
     T buf1[K];
     T buf2[K];
     T buf3[K];
+    T val_l;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx>=N) return;
     for(std::size_t i = 0u; i < K; ++i)
@@ -29,13 +30,13 @@ __global__ void mat_mul_kern(std::size_t N, T* f1_, T* f2_, T* f_out_)
                 buf1[k] = f1_[IC(idx, i, k)];
                 buf2[k] = f2_[IC(idx, k, j)];
             }
-
-            buf3[j] = static_cast<T>(0.0);
+            val_l = static_cast<T>(0.0);
             #pragma unroll
             for(std::size_t k = 0u; k < K; ++k)
             {
-                 buf3[j] = fma(buf1[k], buf2[k], buf3[j]);
+                val_l = fma(buf1[k], buf2[k], val_l);
             }
+            buf3[j] = val_l;
         }
         #pragma unroll
         for(std::size_t k = 0u; k < K; ++k)
@@ -56,6 +57,7 @@ __global__ void mat_mul_kern_ok(std::size_t N, T* f1_, T* f2_, T* f_out_)
     T buf1[K];
     T buf2[K];
     T buf3[K];
+    T val_l;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx>=N) return;
     for(std::size_t i = 0u; i < K; ++i)
@@ -68,13 +70,13 @@ __global__ void mat_mul_kern_ok(std::size_t N, T* f1_, T* f2_, T* f_out_)
                 buf1[k] = f1_[IG(idx, i, k)];
                 buf2[k] = f2_[IG(idx, k, j)];
             }
-
-            buf3[j] = static_cast<T>(0.0);
+            val_l = static_cast<T>(0.0);
             #pragma unroll
             for(std::size_t k = 0u; k < K; ++k)
             {
-                 buf3[j] = fma(buf1[k], buf2[k], buf3[j]);
+                val_l = fma(buf1[k], buf2[k], val_l);
             }
+            buf3[j] = val_l;
         }
         #pragma unroll
         for(std::size_t k = 0u; k < K; ++k)
@@ -106,6 +108,7 @@ struct func_mat_mul
         T buf1[K];
         T buf2[K];
         T buf3[K];
+        T val_l;
         for(std::size_t i = 0u; i < K; ++i)
         {
             for(std::size_t j = 0u; j < K; ++j)
@@ -116,12 +119,13 @@ struct func_mat_mul
                     buf1[k] = f1_(idx, i, k);
                     buf2[k] = f2_(idx, k, j);
                 }
-                buf3[j] = static_cast<T>(0.0);
+                val_l = static_cast<T>(0.0);
                 #pragma unroll
                 for(std::size_t k = 0u; k < K; ++k)
                 {
-                     buf3[j] = fma(buf1[k], buf2[k], buf3[j]);
+                    val_l = fma(buf1[k], buf2[k], val_l);
                 }
+                buf3[j] = val_l;
             }
             #pragma unroll
             for(std::size_t k = 0u; k < K; ++k)
@@ -177,7 +181,8 @@ struct func_mat_mul_ptr
     {
         T buf1[K];
         T buf2[K];
-        T buf3[K];        
+        T buf3[K];   
+        T val_l;     
         for(std::size_t i = 0u; i < K; ++i)
         {
             for(std::size_t j = 0u; j < K; ++j)
@@ -188,13 +193,13 @@ struct func_mat_mul_ptr
                     buf1[k] = f1_[IG(idx, i, k)];
                     buf2[k] = f2_[IG(idx, k, j)];
                 }
-
-                buf3[j] = static_cast<T>(0.0);
+                val_l = static_cast<T>(0.0);
                 #pragma unroll
                 for(std::size_t k = 0u; k < K; ++k)
                 {
-                     buf3[j] = fma(buf1[k], buf2[k], buf3[j]);
+                    val_l = fma(buf1[k], buf2[k], val_l);
                 }
+                buf3[j] = val_l;
             }
             #pragma unroll
             for(std::size_t k = 0u; k < K; ++k)
