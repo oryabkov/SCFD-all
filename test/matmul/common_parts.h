@@ -222,6 +222,29 @@
 #else
         std::cout << "device ptr_ok time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
 #endif
+        std::vector<double> gpu_ptr_ok_mm; gpu_ptr_ok_mm.reserve(number_of_iters);
+        //WARM UP
+        for(int it_ = 0; it_ < 5; it_++)
+        {
+            mat_mul_kern_ok_mm<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
+        }
+        device_e1.record();
+        for(int it_ = 0; it_ < number_of_iters; it_++)
+        {
+            auto start = std::chrono::high_resolution_clock::now();
+            mat_mul_kern_ok_mm<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+            gpu_ptr_ok.push_back( elapsed_seconds.count() );
+        }
+
+        device_e2.record();
+#ifdef USE_CONST
+        std::cout << "device ptr_ok_mm_const time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+#else
+        std::cout << "device ptr_ok_mm time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+#endif        
         if(tests == 'a')
         {
         /***************************************************************************************************************/

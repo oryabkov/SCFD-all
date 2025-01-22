@@ -85,6 +85,60 @@ __global__ void mat_mul_kern_ok(std::size_t N, T* f1_, T* f2_, T* f_out_)
         }
     }
 }
+
+template<class T>
+#ifdef USE_CONST
+__global__ void mat_mul_kern_ok_mm(std::size_t N, const T* f1_, const T* f2_, T* f_out_)
+#else
+__global__ void mat_mul_kern_ok_mm(std::size_t N, T* f1_, T* f2_, T* f_out_)
+#endif
+{
+    T mat1[K][K];
+    T mat2[K][K];
+    T mat3[K][K];
+    T val_l;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx>=N) return;
+    
+    #pragma unroll
+    for(int i = 0; i < K; ++i)
+    {
+        #pragma unroll
+        for(int j = 0; j < K; ++j)
+        {
+            mat1[i][j] = f1_[IG(idx, i, j)];
+            mat2[i][j] = f2_[IG(idx, i, j)];
+        }
+    }
+
+    #pragma unroll
+    for(int i = 0; i < K; ++i)
+    {
+        #pragma unroll
+        for(int j = 0; j < K; ++j)
+        {
+            val_l = static_cast<T>(0.0);
+            #pragma unroll
+            for(int k = 0; k < K; ++k)
+            {
+                val_l = fma(mat1[i][k], mat2[k][j], val_l);
+            }
+            mat3[i][j] = val_l;
+        }
+    }
+    #pragma unroll
+    for(int i = 0; i < K; ++i)
+    {
+        #pragma unroll
+        for(int j = 0; j < K; ++j)
+        {
+            f_out_[IG(idx, i, j)] = mat3[i][j];
+        }
+    }
+
+}
+
+
 /******************************* END DEVICE KERNELS ***************************************/
 
 
