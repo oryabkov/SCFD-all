@@ -56,9 +56,7 @@
     mat_mul_ptr_ok_check      = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
     mat_mul_ptr_func_check    = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
 
-    array_device_t u_dev, v_dev, mat_mul_dev;
     array_host_t u_host, v_host, mat_mul_host;
-
     u_host.init(N); v_host.init(N); mat_mul_host.init(N);
     array_host_t u_host_view(u_host), v_host_view(v_host), mat_mul_host_view(mat_mul_host);
 
@@ -83,7 +81,7 @@
         u_ptr_ok_host[IG(n,i,j)] = u_;
         v_ptr_ok_host[IG(n,i,j)] = v_;
     }
-
+    #pragma omp parallel for
     for(std::size_t n=0u; n<N; ++n)
     for(std::size_t i=0u; i<K; ++i)
     for(std::size_t j=0u; j<K; ++j)
@@ -125,7 +123,7 @@
     {
 	    std::cout << "executing device tests ... " << std::endl;
         {
-            
+            array_device_t u_dev, v_dev, mat_mul_dev;
             u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
             array_device_view_t u_dev_view(u_dev), v_dev_view(v_dev), mat_mul_dev_view(mat_mul_dev);
             std::cout << "   cpy 2 device..." << std::endl;
@@ -160,6 +158,7 @@
             }
         }
         {
+            array_device_t u_dev, v_dev, mat_mul_dev;
             u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
             array_device_view_t u_dev_view(u_dev), v_dev_view(v_dev), mat_mul_dev_view(mat_mul_dev);
             std::cout << "   cpy 2 device..." << std::endl;
