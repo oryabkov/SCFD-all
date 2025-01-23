@@ -1,4 +1,4 @@
-#define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+#include "config_scfd.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -81,6 +81,7 @@ int main(int argc, char const *argv[])
     #define __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ cudaMemcpyDeviceToHost
     #define __COMMON_PARTS_DEVICE_SYNCRONIZE__ cudaDeviceSynchronize
     #define __COMMON_PARTS_DEVICE_FREE__ cudaFree
+    #define __COMMON_PARTS_MEM_GET_INFO__ cudaMemGetInfo
 
     #include "common_parts.h"
 

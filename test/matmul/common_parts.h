@@ -14,6 +14,18 @@
         return 1;
     }
     std::size_t N = std::atoi(argv[1]);
+    
+    if(N == 0) //select automatic size
+    {
+        int num_of_mallocs = 15;
+        double save_factor = 0.98;
+        std::size_t free_mem_l, total_mem_l;
+        __COMMON_PARTS_SAFE_CALL__(__COMMON_PARTS_MEM_GET_INFO__(&free_mem_l, &total_mem_l) );
+        std::size_t num_of_numbers = free_mem_l/sizeof(T);
+        std::size_t max_per_malloc = num_of_numbers/num_of_mallocs;
+        N = static_cast<std::size_t>(std::floor(max_per_malloc*save_factor) );
+        std::cout << "device free mem = " << free_mem_l << "bytes, N = " << N << std::endl;
+    }
     std::size_t number_of_iters = std::atoi(argv[2]);
     char tests = argv[3][0];
 
@@ -125,7 +137,29 @@
 
     if((tests == 'd')||(tests == 'a'))
     {
-	std::cout << "executing device tests ... " << std::endl;
+	    std::cout << "executing device tests ... " << std::endl;
+        std::vector<double> gpu_tensor_mm; gpu_tensor_mm.reserve(number_of_iters);
+
+        //WARM UP
+        for(int it_ = 0; it_ < 5; it_++)
+        {
+            mat_mul_device_mm_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+        }
+        device_e1.record();
+        for(int it_ = 0; it_ < number_of_iters; it_++)
+        {
+            auto start = std::chrono::high_resolution_clock::now();
+            mat_mul_device_mm_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+            gpu_tensor_mm.push_back( elapsed_seconds.count() );
+        }
+
+        device_e2.record();
+        std::cout << "device tensor mm time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+
+
         std::vector<double> gpu_tensor; gpu_tensor.reserve(number_of_iters);
 
         //WARM UP
