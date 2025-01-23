@@ -14,7 +14,10 @@
         return 1;
     }
     std::size_t N = std::atoi(argv[1]);
-    
+    char tests = argv[3][0];
+
+   __COMMON_PARTS_DEVICE_INIT__
+
     if(N == 0) //select automatic size
     {
         int num_of_mallocs = 15;
@@ -22,16 +25,13 @@
         std::size_t free_mem_l, total_mem_l;
         __COMMON_PARTS_SAFE_CALL__(__COMMON_PARTS_MEM_GET_INFO__(&free_mem_l, &total_mem_l) );
         std::size_t num_of_numbers = free_mem_l/sizeof(T);
-        std::size_t max_per_malloc = num_of_numbers/num_of_mallocs;
+        std::size_t max_per_malloc = num_of_numbers/(num_of_mallocs*K2);
         N = static_cast<std::size_t>(std::floor(max_per_malloc*save_factor) );
         std::cout << "device free mem = " << free_mem_l << "bytes, N = " << N << std::endl;
     }
-    std::size_t number_of_iters = std::atoi(argv[2]);
-    char tests = argv[3][0];
-
     std::size_t total_size = K2 * N;
 
-   __COMMON_PARTS_DEVICE_INIT__
+    std::size_t number_of_iters = std::atoi(argv[2]);
 
     T *u_ptr_host, *v_ptr_host, *mat_mul_ptr_host;
     T *u_ptr_ok_host, *v_ptr_ok_host, *mat_mul_ptr_ok_host;
