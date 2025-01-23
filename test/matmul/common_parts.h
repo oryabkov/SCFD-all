@@ -27,10 +27,9 @@
         std::size_t num_of_numbers = free_mem_l/sizeof(T);
         std::size_t max_per_malloc = num_of_numbers/(num_of_mallocs*K2);
         N = static_cast<std::size_t>(std::floor(max_per_malloc*save_factor) );
-        std::cout << "device free mem = " << free_mem_l << "bytes, N = " << N << std::endl;
+        std::cout << "device free mem = " << free_mem_l << " bytes, N = " << N << std::endl;
     }
     std::size_t total_size = K2 * N;
-
     std::size_t number_of_iters = std::atoi(argv[2]);
 
     T *u_ptr_host, *v_ptr_host, *mat_mul_ptr_host;
