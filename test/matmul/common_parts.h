@@ -20,7 +20,7 @@
 
     if(N == 0) //select automatic size
     {
-        int num_of_mallocs = 15;
+        int num_of_mallocs = 3;
         double save_factor = 0.98;
         std::size_t free_mem_l, total_mem_l;
         __COMMON_PARTS_SAFE_CALL__(__COMMON_PARTS_MEM_GET_INFO__(&free_mem_l, &total_mem_l) );
@@ -54,33 +54,12 @@
     mat_mul_ptr_check         = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
     mat_mul_ptr_ok_host       = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
     mat_mul_ptr_ok_check      = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
-
-
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_ok_dev       , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_ok_dev       , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_ok_dev , sizeof(T)*total_size ) );
-
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_dev        , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_dev        , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_dev  , sizeof(T)*total_size ) );
-
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_ok_dev       , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_ok_dev       , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_ok_dev , sizeof(T)*total_size ) );
-
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_func_dev       , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_func_dev       , sizeof(T)*total_size ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_func_dev , sizeof(T)*total_size ) );
-
     mat_mul_ptr_func_check    = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
-
 
     array_device_t u_dev, v_dev, mat_mul_dev;
     array_host_t u_host, v_host, mat_mul_host;
 
-    u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
     u_host.init(N); v_host.init(N); mat_mul_host.init(N);
-    array_device_view_t u_dev_view(u_dev), v_dev_view(v_dev), mat_mul_dev_view(mat_mul_dev);
     array_host_t u_host_view(u_host), v_host_view(v_host), mat_mul_host_view(mat_mul_host);
 
     timer_event_host_t host_e1, host_e2;
@@ -97,14 +76,9 @@
 
         u_ptr_host[IC(n,i,j)] = u_;
         v_ptr_host[IC(n,i,j)] = v_;
-
-        u_dev_view(n,i,j) = u_;
-        v_dev_view(n,i,j) = v_;
-
-        mat_mul_dev_view(n,i,j) = 0.0;
+        
         u_host_view(n,i,j)    = u_;
         v_host_view(n,i,j)    = v_;
-
         mat_mul_host_view(n,i,j) = 0.0;
         u_ptr_ok_host[IG(n,i,j)] = u_;
         v_ptr_ok_host[IG(n,i,j)] = v_;
@@ -123,187 +97,277 @@
             mat_mul_ptr_ok_host[IG(n,i,j)] += u_ptr_ok_host[IG(n,i,k)] * v_ptr_ok_host[IG(n,k,j)];
     }
 
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_dev,        (void*)u_ptr_host,         sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_dev,        (void*)v_ptr_host,         sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_ok_dev,     (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_ok_dev,     (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+    auto copy_2_device = [&](array_device_view_t& u, array_device_view_t& v, array_device_view_t& mm)
+    {
+        #pragma omp parallel for
+        for(std::size_t n=0u; n<N; ++n)
+        for(std::size_t i=0u; i<K; ++i)
+        for(std::size_t j=0u; j<K; ++j)
+        {
+            auto u_ = u_ptr_host[IC(n,i,j)];
+            auto v_ = v_ptr_host[IC(n,i,j)];
+            mm(n,i,j) = 0.0;
+            u(n,i,j)    = u_;
+            v(n,i,j)    = v_;            
+        }        
+    };
 
-    u_dev_view.release(true);
-    v_dev_view.release(true);
-    mat_mul_dev_view.release(true);
+
+    std::vector<double> gpu_tensor_mm, gpu_tensor, gpu_ptr_func, gpu_ptr, gpu_ptr_ok, gpu_ptr_ok_mm;
+    gpu_tensor_mm.reserve(number_of_iters);
+    gpu_tensor.reserve(number_of_iters);
+    gpu_ptr_func.reserve(number_of_iters);
+    gpu_ptr.reserve(number_of_iters);
+    gpu_ptr_ok.reserve(number_of_iters);
+    gpu_ptr_ok_mm.reserve(number_of_iters);
 
     if((tests == 'd')||(tests == 'a'))
     {
 	    std::cout << "executing device tests ... " << std::endl;
-        std::vector<double> gpu_tensor_mm; gpu_tensor_mm.reserve(number_of_iters);
-
-        //WARM UP
-        for(int it_ = 0; it_ < 5; it_++)
         {
-            mat_mul_device_mm_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+            
+            u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
+            array_device_view_t u_dev_view(u_dev), v_dev_view(v_dev), mat_mul_dev_view(mat_mul_dev);
+            std::cout << "   cpy 2 device..." << std::endl;
+            copy_2_device(u_dev_view, v_dev_view, mat_mul_dev_view);
+            u_dev_view.release(true);
+            v_dev_view.release(true);
+            mat_mul_dev_view.release(true);
+            std::cout << "   done." << std::endl;
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_device_mm_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_device_mm_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_tensor_mm.push_back( elapsed_seconds.count() );
+            }
+
+            device_e2.record();
+            std::cout << "device tensor mm time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+            if(tests == 'a')
+            {
+                mat_mul_dev_view.init(mat_mul_dev, true);
+                std::cout << "gpu tensor diff = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
+                mat_mul_dev_view.release(false);
+            }
         }
-        device_e1.record();
-        for(int it_ = 0; it_ < number_of_iters; it_++)
         {
-            auto start = std::chrono::high_resolution_clock::now();
-            mat_mul_device_mm_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-            gpu_tensor_mm.push_back( elapsed_seconds.count() );
+            u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
+            array_device_view_t u_dev_view(u_dev), v_dev_view(v_dev), mat_mul_dev_view(mat_mul_dev);
+            std::cout << "   cpy 2 device..." << std::endl;
+            copy_2_device(u_dev_view, v_dev_view, mat_mul_dev_view);
+            u_dev_view.release(true);
+            v_dev_view.release(true);
+            mat_mul_dev_view.release(true);
+            std::cout << "   done." << std::endl;           
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_device_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_device_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_tensor.push_back( elapsed_seconds.count() );
+            }
+
+            device_e2.record();
+            std::cout << "device tensor time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+            if(tests == 'a')
+            {
+                mat_mul_dev_view.init(mat_mul_dev, true);
+                std::cout << "gpu tensor diff = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
+                mat_mul_dev_view.release(false);
+            }            
         }
-
-        device_e2.record();
-        std::cout << "device tensor mm time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
-
-
-        std::vector<double> gpu_tensor; gpu_tensor.reserve(number_of_iters);
-
-        //WARM UP
-        for(int it_ = 0; it_ < 5; it_++)
-        {
-            mat_mul_device_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
-        }
-        device_e1.record();
-        for(int it_ = 0; it_ < number_of_iters; it_++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            mat_mul_device_f<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-            gpu_tensor.push_back( elapsed_seconds.count() );
-        }
-
-        device_e2.record();
-        std::cout << "device tensor time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
-
         /***********************************************************************************************************/
-
-        std::vector<double> gpu_ptr_func; gpu_ptr_func.reserve(number_of_iters);
-
-        //WARM UP
-        for(int it_ = 0; it_ < 5; it_++)
         {
-            mat_mul_device_ptr<T, for_each_device_t>(N, u_ptr_func_dev, v_ptr_func_dev, mat_mul_ptr_func_dev);
-        }
-        device_e1.record();
-        for(int it_ = 0; it_ < number_of_iters; it_++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            mat_mul_device_ptr<T, for_each_device_t>(N, u_ptr_func_dev, v_ptr_func_dev, mat_mul_ptr_func_dev);
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-            gpu_ptr_func.push_back( elapsed_seconds.count() );
-        }
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_func_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_func_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_func_dev , sizeof(T)*total_size ) );
 
-        device_e2.record();
-        std::cout << "device ptr_func time     = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
 
+
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_device_ptr<T, for_each_device_t>(N, u_ptr_func_dev, v_ptr_func_dev, mat_mul_ptr_func_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_device_ptr<T, for_each_device_t>(N, u_ptr_func_dev, v_ptr_func_dev, mat_mul_ptr_func_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_ptr_func.push_back( elapsed_seconds.count() );
+            }
+
+            device_e2.record();
+            std::cout << "device ptr_func time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+
+            if(tests == 'a')
+            {
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_func_check, (void*)mat_mul_ptr_func_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
+                std::cout << "gpu ptr_func diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check) << std::endl;
+            } 
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_func_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_func_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_func_dev) );
+        }
         /**************************************************************************************************************/
 
         dim3 dimBlock(block_size,1);
         dim3 dimGrid( (N/block_size)+1,1);
+        {
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_dev        , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_dev        , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_dev  , sizeof(T)*total_size ) );
 
-        std::vector<double> gpu_ptr; gpu_ptr.reserve(number_of_iters);
-        //WARM UP
-        for(int it_ = 0; it_ < 5; it_++)
-        {
-             mat_mul_kern<T><<<dimGrid, dimBlock>>>(N, u_ptr_dev, v_ptr_dev, mat_mul_ptr_dev);
-        }
-        device_e1.record();
-        for(int it_ = 0; it_ < number_of_iters; it_++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            mat_mul_kern<T><<<dimGrid, dimBlock>>>(N, u_ptr_dev, v_ptr_dev, mat_mul_ptr_dev);
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-            gpu_ptr.push_back( elapsed_seconds.count() );
-        }
-        device_e2.record();
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_dev,        (void*)u_ptr_host,         sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_dev,        (void*)v_ptr_host,         sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+    
+            
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                 mat_mul_kern<T><<<dimGrid, dimBlock>>>(N, u_ptr_dev, v_ptr_dev, mat_mul_ptr_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_kern<T><<<dimGrid, dimBlock>>>(N, u_ptr_dev, v_ptr_dev, mat_mul_ptr_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_ptr.push_back( elapsed_seconds.count() );
+            }
+            device_e2.record();
+    #ifdef USE_CONST
+            std::cout << "device ptr_const time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+    #else
+            std::cout << "device ptr time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+    #endif
+            if(tests == 'a')
+            {
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_check, (void*)mat_mul_ptr_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
 #ifdef USE_CONST
-        std::cout << "device ptr_const time    = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+                std::cout << "gpu ptr_const diff = " << check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check) << std::endl;
 #else
-        std::cout << "device ptr time          = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+                std::cout << "gpu ptr diff = " << check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check) << std::endl;
 #endif
+            }
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_dev) );            
+
+        }
         /***************************************************************************************************************/
-
-        std::vector<double> gpu_ptr_ok; gpu_ptr_ok.reserve(number_of_iters);
-        //WARM UP
-        for(int it_ = 0; it_ < 5; it_++)
         {
-            mat_mul_kern_ok<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
-        }
-        device_e1.record();
-        for(int it_ = 0; it_ < number_of_iters; it_++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            mat_mul_kern_ok<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-            gpu_ptr_ok.push_back( elapsed_seconds.count() );
-        }
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_ok_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_ok_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_ok_dev , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_ok_dev,     (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_ok_dev,     (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
 
-        device_e2.record();
+            
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_kern_ok<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_kern_ok<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_ptr_ok.push_back( elapsed_seconds.count() );
+            }
+
+            device_e2.record();
+    #ifdef USE_CONST
+            std::cout << "device ptr_ok_const time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+    #else
+            std::cout << "device ptr_ok time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+    #endif
+            if(tests == 'a')
+            {
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_ok_check, (void*)mat_mul_ptr_ok_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
 #ifdef USE_CONST
-        std::cout << "device ptr_ok_const time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+                std::cout << "gpu ptr_ok_const diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
 #else
-        std::cout << "device ptr_ok time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
-#endif
-        std::vector<double> gpu_ptr_ok_mm; gpu_ptr_ok_mm.reserve(number_of_iters);
-        //WARM UP
-        for(int it_ = 0; it_ < 5; it_++)
-        {
-            mat_mul_kern_ok_mm<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
-        }
-        device_e1.record();
-        for(int it_ = 0; it_ < number_of_iters; it_++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            mat_mul_kern_ok_mm<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-            gpu_ptr_ok.push_back( elapsed_seconds.count() );
-        }
-
-        device_e2.record();
-#ifdef USE_CONST
-        std::cout << "device ptr_ok_mm_const time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
-#else
-        std::cout << "device ptr_ok_mm time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
-#endif        
-        if(tests == 'a')
-        {
-        /***************************************************************************************************************/
-
-            mat_mul_dev_view.init(mat_mul_dev, true);
-            std::cout << "gpu tensor diff          = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
-            mat_mul_dev_view.release(false);
-
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_func_check, (void*)mat_mul_ptr_func_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
-            std::cout << "gpu ptr_func diff        = " << check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check) << std::endl;
-
-
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_check, (void*)mat_mul_ptr_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
-#ifdef USE_CONST
-            std::cout << "gpu ptr_const diff       = " << check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check) << std::endl;
-#else
-            std::cout << "gpu ptr    diff          = " << check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check) << std::endl;
+                std::cout << "gpu ptr_ok diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
 #endif
 
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_ok_check, (void*)mat_mul_ptr_ok_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
+            }
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_ok_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_ok_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_ok_dev) );
+        }
+        {
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_ok_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_ok_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_ok_dev , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_ok_dev,     (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_ok_dev,     (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            
+
+            
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_kern_ok_mm<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_kern_ok_mm<T><<<dimGrid, dimBlock>>>(N, u_ptr_ok_dev, v_ptr_ok_dev, mat_mul_ptr_ok_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_ptr_ok.push_back( elapsed_seconds.count() );
+            }
+
+            device_e2.record();
+    #ifdef USE_CONST
+            std::cout << "device ptr_ok_mm_const time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+    #else
+            std::cout << "device ptr_ok_mm time       = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+    #endif        
+            if(tests == 'a')
+            {
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_ok_check, (void*)mat_mul_ptr_ok_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
 #ifdef USE_CONST
-            std::cout << "gpu ptr_ok_const diff    = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
+                std::cout << "gpu ptr_ok_const diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
 #else
-            std::cout << "gpu ptr_ok diff          = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
+                std::cout << "gpu ptr_ok diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
 #endif
-        /***************************************************************************************************************/
+
+            }
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_ok_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_ok_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_ok_dev) );
         }
 
         std::string filename;
@@ -429,17 +493,7 @@
     std::free(mat_mul_ptr_ok_check);
     std::free(mat_mul_ptr_func_check);
 
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_ok_dev) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_ok_dev) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_ok_dev) );
 
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_dev) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_dev) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_dev) );
-
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_func_dev) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_func_dev) );
-    __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_func_dev) );
 
 
 #endif    
