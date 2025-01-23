@@ -142,7 +142,13 @@ public:
         for (int j = 0;j < dim;++j) res.d[j] = value_type(1);
         return res;
     }
-    
+    static __DEVICE_TAG__ vec            make_unit(int j)
+    {
+        vec res  = make_zero();
+        res.d[j] = value_type(1);
+        return res;
+    }
+
     template<class Vec, 
              class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
     __DEVICE_TAG__ vec                   &operator=(const Vec &v)
