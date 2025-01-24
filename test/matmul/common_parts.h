@@ -112,16 +112,53 @@
 
 
     std::vector<double> gpu_tensor_mm, gpu_tensor, gpu_ptr_func, gpu_ptr, gpu_ptr_ok, gpu_ptr_ok_mm;
+    std::vector<double> gpu_tensor_naive, gpu_ptr_naive;
     gpu_tensor_mm.reserve(number_of_iters);
     gpu_tensor.reserve(number_of_iters);
     gpu_ptr_func.reserve(number_of_iters);
     gpu_ptr.reserve(number_of_iters);
     gpu_ptr_ok.reserve(number_of_iters);
     gpu_ptr_ok_mm.reserve(number_of_iters);
+    gpu_tensor_naive.reserve(number_of_iters);
+    gpu_ptr_naive.reserve(number_of_iters);
 
     if((tests == 'd')||(tests == 'a'))
     {
 	    std::cout << "executing device tests ... " << std::endl;
+        {
+            array_device_t u_dev, v_dev, mat_mul_dev;
+            u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
+            array_device_view_t u_dev_view(u_dev), v_dev_view(v_dev), mat_mul_dev_view(mat_mul_dev);
+            std::cout << "   cpy 2 device..." << std::endl;
+            copy_2_device(u_dev_view, v_dev_view, mat_mul_dev_view);
+            u_dev_view.release(true);
+            v_dev_view.release(true);
+            mat_mul_dev_view.release(true);
+            std::cout << "   done." << std::endl;
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_device_naive<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_device_naive<T, for_each_device_t, array_device_t>(N, u_dev, v_dev, mat_mul_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_tensor_naive.push_back( elapsed_seconds.count() );
+            }
+            device_e2.record();
+            std::cout << "device tensor naive time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+            if(tests == 'a')
+            {
+                mat_mul_dev_view.init(mat_mul_dev, true);
+                std::cout << "gpu tensor diff = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
+                mat_mul_dev_view.release(false);
+            }
+        }
         {
             array_device_t u_dev, v_dev, mat_mul_dev;
             u_dev.init(N); v_dev.init(N); mat_mul_dev.init(N);
@@ -147,7 +184,6 @@
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
                 gpu_tensor_mm.push_back( elapsed_seconds.count() );
             }
-
             device_e2.record();
             std::cout << "device tensor mm time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
             if(tests == 'a')
@@ -193,6 +229,46 @@
             }            
         }
         /***********************************************************************************************************/
+        dim3 dimBlock(block_size,1);
+        dim3 dimGrid( (N/block_size)+1,1);
+        {
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_func_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_func_dev       , sizeof(T)*total_size ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_func_dev , sizeof(T)*total_size ) );
+
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+
+
+            //WARM UP
+            for(int it_ = 0; it_ < 20; it_++)
+            {
+                mat_mul_kern_naive<T><<<dimGrid, dimBlock>>>(N, u_ptr_func_dev, v_ptr_func_dev, mat_mul_ptr_func_dev);
+            }
+            device_e1.record();
+            for(int it_ = 0; it_ < number_of_iters; it_++)
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                mat_mul_kern_naive<T><<<dimGrid, dimBlock>>>(N, u_ptr_func_dev, v_ptr_func_dev, mat_mul_ptr_func_dev);
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
+                gpu_ptr_naive.push_back( elapsed_seconds.count() );
+            }
+
+            device_e2.record();
+            std::cout << "device ptr_func naive time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
+
+            if(tests == 'a')
+            {
+                __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_func_check, (void*)mat_mul_ptr_func_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
+                std::cout << "gpu ptr_func diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check) << std::endl;
+            } 
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_func_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_func_dev) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_func_dev) );
+        }
+        /***********************************************************************************************************/
         {
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_func_dev       , sizeof(T)*total_size ) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_func_dev       , sizeof(T)*total_size ) );
@@ -232,8 +308,6 @@
         }
         /**************************************************************************************************************/
 
-        dim3 dimBlock(block_size,1);
-        dim3 dimGrid( (N/block_size)+1,1);
         {
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&u_ptr_dev        , sizeof(T)*total_size ) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_dev        , sizeof(T)*total_size ) );
@@ -368,22 +442,38 @@
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_ok_dev) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_ok_dev) );
         }
-
-        std::string filename;
-        filename = "mat_mul_" + std::to_string(N) + "_device_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
-        std::fstream out_file{filename, out_file.out};
-        if (!out_file.is_open())
-            std::cout << "failed to open " << filename << '\n';
-        else
         {
-            out_file << "tensor,ptr_bad,ptr_ok" << std::endl;
-            for(int j = 0; j<number_of_iters; j++)
+            std::string filename;
+            filename = "mat_mul_" + std::to_string(N) + "_device_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            std::fstream out_file{filename, out_file.out};
+            if (!out_file.is_open())
+                std::cout << "failed to open " << filename << '\n';
+            else
             {
-                out_file << gpu_tensor.at(j) << "," << gpu_ptr.at(j) << "," << gpu_ptr_ok.at(j) << std::endl;
+                out_file << "tensor,ptr_bad,ptr_ok" << std::endl;
+                for(int j = 0; j<number_of_iters; j++)
+                {
+                    out_file << gpu_tensor.at(j) << "," << gpu_ptr.at(j) << "," << gpu_ptr_ok.at(j) << std::endl;
+                }
+                out_file.close();
             }
-            out_file.close();
         }
-
+        {
+            std::string filename;
+            filename = "mat_mul_" + std::to_string(N) + "_cmp_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            std::fstream out_file{filename, out_file.out};
+            if (!out_file.is_open())
+                std::cout << "failed to open " << filename << '\n';
+            else
+            {
+                out_file << "tensor_naive,tensor_ok,tensor_mm" << std::endl;
+                for(int j = 0; j<number_of_iters; j++)
+                {
+                    out_file << gpu_tensor_naive.at(j) << "," << gpu_tensor.at(j) << "," << gpu_tensor_mm.at(j) << std::endl;
+                }
+                out_file.close();
+            }
+        }        
     }
     if((tests == 'h')||(tests == 'a'))
     {
@@ -461,22 +551,22 @@
         std::cout << "host ptr time    = " <<  host_e2.elapsed_time(host_e1)/number_of_iters  << "s." << std::endl;
 
         /*******************************************************************************************************/
-
-        std::string filename;
-        filename = "mat_mul_" + std::to_string(N) + "_device_host_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
-        std::fstream out_file_cpu{filename, out_file_cpu.out};
-        if (!out_file_cpu.is_open())
-            std::cout << "failed to open " << filename << '\n';
-        else
         {
-            out_file_cpu << "tensor,ptr_bad,ptr_ok" << std::endl;
-            for(int j = 0; j<number_of_iters; j++)
+            std::string filename;
+            filename = "mat_mul_" + std::to_string(N) + "_device_host_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            std::fstream out_file_cpu{filename, out_file_cpu.out};
+            if (!out_file_cpu.is_open())
+                std::cout << "failed to open " << filename << '\n';
+            else
             {
-                out_file_cpu << host_tensor.at(j) << "," << host_ptr.at(j) << "," << host_ptr_ok.at(j) << std::endl;
+                out_file_cpu << "tensor,ptr_bad,ptr_ok" << std::endl;
+                for(int j = 0; j<number_of_iters; j++)
+                {
+                    out_file_cpu << host_tensor.at(j) << "," << host_ptr.at(j) << "," << host_ptr_ok.at(j) << std::endl;
+                }
+                out_file_cpu.close();
             }
-            out_file_cpu.close();
         }
-
     }
 
     std::free(u_ptr_ok_host);

@@ -9,6 +9,28 @@
 /******************************* BEGIN DEVICE KERNELS ***************************************/
 template<class T>
 #ifdef USE_CONST
+__global__ void mat_mul_kern_naive(std::size_t N, const T* f1_, const T* f2_, T* f_out_)
+#else
+__global__ void mat_mul_kern_naive(std::size_t N, T* f1_, T* f2_, T* f_out_)
+#endif
+{
+    SCFD_ARRAYS_ORDINAL_TYPE idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx>=N) return;
+    for(int i = 0; i < K; ++i)
+    {
+        for(int j = 0; j < K; ++j)
+        {
+            f_out_[IC(idx, i, j)] = static_cast<T>(0);
+            for(int k = 0; k < K; ++k)
+            {
+                f_out_[IC(idx, i, j)] += f1_[IC(idx, i, k)]*f2_[IC(idx, k, j)];
+            }
+        }
+    }
+}
+
+template<class T>
+#ifdef USE_CONST
 __global__ void mat_mul_kern(std::size_t N, const T* f1_, const T* f2_, T* f_out_)
 #else
 __global__ void mat_mul_kern(std::size_t N, T* f1_, T* f2_, T* f_out_)
@@ -133,6 +155,36 @@ __global__ void mat_mul_kern_ok_mm(std::size_t N, T* f1_, T* f2_, T* f_out_)
 
 /****************************** BEGIN TENSOR FUNCTOR **************************************/
 template<class T, class MatrixND>
+struct func_mat_mul_naive
+{
+
+    MatrixND f1_;
+    MatrixND f2_;
+    MatrixND f_out_;
+
+    func_mat_mul_naive(const MatrixND &f1, const MatrixND &f2, MatrixND &f_out):
+    f1_(f1),
+    f2_(f2),
+    f_out_(f_out)
+    {}
+    __DEVICE_TAG__ void operator()(const int &idx)
+    {
+
+        for(int i = 0; i < K; ++i)
+        {
+            for(int j = 0; j < K; ++j)
+            {
+                f_out_(idx, i, j) = static_cast<T>(0);
+                for(int k = 0; k < K; ++k)
+                {
+                    f_out_(idx, i, j) += f1_(idx, i, k)*f2_(idx, k, j);
+                }
+            }
+        }        
+    }
+};
+
+template<class T, class MatrixND>
 struct func_mat_mul
 {
 
@@ -171,8 +223,6 @@ struct func_mat_mul
         }        
     }
 };
-
-
 template<class T, class MatrixND>
 struct func_mat_mul_mm
 {
@@ -230,7 +280,16 @@ struct func_mat_mul_mm
     }
 };
 
+template<class T, class ForEach, class MatrixND>
+void mat_mul_device_naive(const std::size_t N, const MatrixND& u, const MatrixND& v, MatrixND& w)
+{
 
+    ForEach for_each;
+    for_each.block_size = block_size;
+    for_each(func_mat_mul_naive<T, MatrixND>(u, v, w), 0, N);
+    for_each.wait();
+
+}
 template<class T, class ForEach, class MatrixND>
 void mat_mul_device_f(const std::size_t N, const MatrixND& u, const MatrixND& v, MatrixND& w)
 {
