@@ -16,6 +16,17 @@
     std::size_t N = std::atoi(argv[1]);
     char tests = argv[3][0];
 
+    std::string file_type;
+    if constexpr (std::is_same<double, REAL>::value)
+    {
+        file_type = "double";
+    }
+    else
+    {
+        file_type = "single";
+    }
+    std::cout << "using " << file_type << " precision floating point arithmetic." << std::endl; 
+
    __COMMON_PARTS_DEVICE_INIT__
 
     if(N == 0) //select automatic size
@@ -444,7 +455,7 @@
         }
         {
             std::string filename;
-            filename = "mat_mul_" + std::to_string(N) + "_device_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            filename = "mat_mul_" + file_type + "_" + std::to_string(N) + "_device_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
             std::fstream out_file{filename, out_file.out};
             if (!out_file.is_open())
                 std::cout << "failed to open " << filename << '\n';
@@ -460,7 +471,7 @@
         }
         {
             std::string filename;
-            filename = "mat_mul_" + std::to_string(N) + "_cmp_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            filename = "mat_mul_" + file_type + "_" + std::to_string(N) + "_cmp_device_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
             std::fstream out_file{filename, out_file.out};
             if (!out_file.is_open())
                 std::cout << "failed to open " << filename << '\n';
@@ -553,7 +564,7 @@
         /*******************************************************************************************************/
         {
             std::string filename;
-            filename = "mat_mul_" + std::to_string(N) + "_device_host_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            filename = "mat_mul_" + file_type + "_" + std::to_string(N) + "_device_host_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
             std::fstream out_file_cpu{filename, out_file_cpu.out};
             if (!out_file_cpu.is_open())
                 std::cout << "failed to open " << filename << '\n';

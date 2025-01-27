@@ -1,15 +1,23 @@
+$(info for cuda target run 'ARCH=XX make cuda')
+
 LIST = float double
 template:
 	for i in $(LIST); do \
 		for number in 2 3 4 5 ; do \
 		    echo $$number ; \
-			nvcc -arch=sm_80 -O3 test_matmul_cuda.cu  -Xcompiler -fopenmp -lpthread -I../../include -DN_NUM=$$number -DREAL=float -o a$$i$$number.bin ; \
+			$(CC) -O3 $(FILE) $(OPENMP) -I../../include -DN_NUM=$$number -DREAL=$$i -o a$$i$$number.bin ; \
 	    done ; \
 	done
+info_cuda:
+	echo 
 
 
-#LIST = float double
-#test:
-#	for i in $(LIST); do \
-#		echo $$i ; \
-#	done
+cuda: 	CC = nvcc -arch=sm_$(ARCH)
+cuda:	FILE = test_matmul_cuda.cu
+cuda:   OPENMP = -Xcompiler -fopenmp -lpthread
+cuda:	template
+
+hip:	CC = HIPCC_VERBOSE=7 hipcc
+hip:	FILE = test_matmul_hip.cpp
+hip:	OPENMP = -fopenmp -lpthread
+hip:	template
