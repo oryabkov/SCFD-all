@@ -43,7 +43,7 @@ using for_each_omp_t = scfd::for_each::openmp<>;
 using mem_host_t = scfd::memory::host;
 
 
-using T = float;
+using T = REAL;
 template<scfd::arrays::ordinal_type... Dims>
 using gpu_arranger_t = scfd::arrays::first_index_fast_arranger<Dims...>;
 template<scfd::arrays::ordinal_type... Dims>

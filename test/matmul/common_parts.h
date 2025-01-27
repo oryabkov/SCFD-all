@@ -148,7 +148,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_tensor_naive.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_tensor_naive.push_back( elapsed_seconds.count() );
             }
             device_e2.record();
             std::cout << "device tensor naive time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
@@ -182,7 +182,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_tensor_mm.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_tensor_mm.push_back( elapsed_seconds.count() );
             }
             device_e2.record();
             std::cout << "device tensor mm time = " <<  device_e2.elapsed_time(device_e1)/number_of_iters  << "ms." << std::endl;
@@ -216,7 +216,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_tensor.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_tensor.push_back( elapsed_seconds.count() );
             }
 
             device_e2.record();
@@ -253,7 +253,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_ptr_naive.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_ptr_naive.push_back( elapsed_seconds.count() );
             }
 
             device_e2.record();
@@ -291,7 +291,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_ptr_func.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_ptr_func.push_back( elapsed_seconds.count() );
             }
 
             device_e2.record();
@@ -330,7 +330,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_ptr.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_ptr.push_back( elapsed_seconds.count() );
             }
             device_e2.record();
     #ifdef USE_CONST
@@ -374,7 +374,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_ptr_ok.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_ptr_ok.push_back( elapsed_seconds.count() );
             }
 
             device_e2.record();
@@ -419,7 +419,7 @@
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_SYNCRONIZE__() );
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed_seconds = end-start;
-                gpu_ptr_ok.push_back( elapsed_seconds.count() );
+                if(it_>0) gpu_ptr_ok.push_back( elapsed_seconds.count() );
             }
 
             device_e2.record();
@@ -491,7 +491,7 @@
             mat_mul_host_f<T, for_each_omp_t, array_host_t>(N, u_host, v_host, mat_mul_host);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
-            host_tensor.push_back( elapsed_seconds.count() );
+            if(it_>0) host_tensor.push_back( elapsed_seconds.count() );
 
         }
         host_e2.record();
@@ -517,7 +517,7 @@
             }
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
-            host_ptr_ok.push_back( elapsed_seconds.count() );
+            if(it_>0) host_ptr_ok.push_back( elapsed_seconds.count() );
 
         }
         host_e2.record();
@@ -544,7 +544,7 @@
 
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
-            host_ptr.push_back( elapsed_seconds.count() );
+            if(it_>0) host_ptr.push_back( elapsed_seconds.count() );
 
         }
         host_e2.record();
