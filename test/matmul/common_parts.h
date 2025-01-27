@@ -462,7 +462,7 @@
             else
             {
                 out_file << "tensor,ptr_bad,ptr_ok" << std::endl;
-                for(int j = 0; j<number_of_iters; j++)
+                for(int j = 0; j<number_of_iters-1; j++)
                 {
                     out_file << gpu_tensor.at(j) << "," << gpu_ptr.at(j) << "," << gpu_ptr_ok.at(j) << std::endl;
                 }
@@ -478,7 +478,7 @@
             else
             {
                 out_file << "tensor_naive,tensor_ok,tensor_mm" << std::endl;
-                for(int j = 0; j<number_of_iters; j++)
+                for(int j = 0; j<number_of_iters-1; j++)
                 {
                     out_file << gpu_tensor_naive.at(j) << "," << gpu_tensor.at(j) << "," << gpu_tensor_mm.at(j) << std::endl;
                 }
