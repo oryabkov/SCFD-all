@@ -75,9 +75,12 @@ public:
         for (int j = 0;j < dim;++j) res.d[j] = d[j]*mul;
         return res;
     }
-    __DEVICE_TAG__ vec                  operator/(value_type x)const
+    __DEVICE_TAG__ vec                  operator/(value_type div)const
     {
-        return operator*(value_type(1.)/x);
+        vec res;
+        #pragma unroll
+        for (int j = 0;j < dim;++j) res.d[j] = d[j]/div;
+        return res;
     }
     __DEVICE_TAG__ vec                  operator+(const vec &x)const
     {
