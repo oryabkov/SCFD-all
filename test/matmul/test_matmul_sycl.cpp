@@ -11,9 +11,8 @@
 #include <fstream>
 #include <string>
 
-#include <scfd/utils/init_hip.h>
-#include <scfd/utils/hip_timer_event.h>
-#include <scfd/utils/hip_safe_call.h>
+#include <scfd/utils/init_sycl.h>
+#include <scfd/utils/timer_event.h>
 #include <scfd/utils/system_timer_event.h>
 
 #include <scfd/static_vec/vec.h>
@@ -22,22 +21,25 @@
 #include <scfd/arrays/first_index_fast_arranger.h>
 #include <scfd/arrays/last_index_fast_arranger.h>
 
-#include <scfd/memory/hip.h>
-#include <scfd/for_each/hip.h>
-#include <scfd/for_each/hip_impl.h>
+#include <scfd/memory/sycl.h>
+#include <scfd/for_each/sycl.h>
+#include <scfd/for_each/sycl_impl.h>
 
 #include <scfd/memory/host.h>
 #include <scfd/for_each/openmp.h>
 #include <scfd/for_each/openmp_impl.h>
 
+
 constexpr std::size_t K  = N_NUM; // matrix size K x K
 constexpr std::size_t K2 = K * K;
 
-using timer_event_device_t = scfd::utils::hip_timer_event;
-using timer_event_host_t = scfd::utils::system_timer_event;
 
-using for_each_device_t  = scfd::for_each::hip<>;
-using mem_device_t = scfd::memory::hip_device;
+
+using timer_event_host_t = scfd::utils::system_timer_event;
+using timer_event_device_t = timer_event_host_t;
+
+using for_each_device_t  = scfd::for_each::sycl<>;
+using mem_device_t = scfd::memory::sycl_device;
 using for_each_omp_t = scfd::for_each::openmp<>;
 using mem_host_t = scfd::memory::host;
 
@@ -67,23 +69,9 @@ const int block_size = 128;
 #define IC(idx, i, j) (idx)*(K2)+(i)*(K)+(j)
 #define IG(idx, i, j) (idx)+(N)*((K)*(j)+(i))
 
-#include "all_kernels.h"
-
 int main(int argc, char const *argv[])
 {
+	
 
-    #define __COMMON_PARTS_DEVICE_INIT__ scfd::utils::init_hip_persistent();
-    #define __COMMON_PARTS_SAFE_CALL__  HIP_SAFE_CALL
-    #define __COMMON_PARTS_DEVICE_MALLOC__ hipMalloc
-    #define __COMMON_PARTS_DEVICE_MEMCPY__ hipMemcpy
-    #define __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ hipMemcpyHostToDevice
-    #define __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ hipMemcpyDeviceToHost
-    #define __COMMON_PARTS_DEVICE_SYNCRONIZE__ hipDeviceSynchronize
-    #define __COMMON_PARTS_DEVICE_FREE__ hipFree
-    #define __COMMON_PARTS_MEM_GET_INFO__ hipMemGetInfo
-
-
-    #include "common_parts.h"
-
-    return 0;
+	return 0;
 }
