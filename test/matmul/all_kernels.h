@@ -7,6 +7,8 @@
  */
 
 /******************************* BEGIN DEVICE KERNELS ***************************************/
+#ifndef __COMMON_PARTS_USING_SYCL__
+
 template<class T>
 #ifdef USE_CONST
 __global__ void mat_mul_kern_naive(std::size_t N, const T* f1_, const T* f2_, T* f_out_)
@@ -148,7 +150,7 @@ __global__ void mat_mul_kern_ok_mm(std::size_t N, T* f1_, T* f2_, T* f_out_)
 
 }
 
-
+#endif //__COMMON_PARTS_USING_SYCL__
 /******************************* END DEVICE KERNELS ***************************************/
 
 
@@ -167,7 +169,7 @@ struct func_mat_mul_naive
     f2_(f2),
     f_out_(f_out)
     {}
-    __DEVICE_TAG__ void operator()(const int &idx)
+    __DEVICE_TAG__ void operator()(const std::size_t &idx) const
     {
 
         for(int i = 0; i < K; ++i)
@@ -197,7 +199,7 @@ struct func_mat_mul
     f2_(f2),
     f_out_(f_out)
     {}
-    __DEVICE_TAG__ void operator()(const int &idx)
+    __DEVICE_TAG__ void operator()(const int &idx) const
     {
         T buf[K];
         T val_l;
@@ -236,7 +238,7 @@ struct func_mat_mul_mm
     f2_(f2),
     f_out_(f_out)
     {}
-    __DEVICE_TAG__ void operator()(const int &idx)
+    __DEVICE_TAG__ void operator()(const int &idx) const
     {
         T mat1[K][K];
         T mat2[K][K];
@@ -280,22 +282,31 @@ struct func_mat_mul_mm
     }
 };
 
+#ifdef __COMMON_PARTS_USING_SYCL__
+template<> struct sycl::is_device_copyable< func_mat_mul_naive<T, array_device_t> > : std::true_type {};
+template<> struct sycl::is_device_copyable< func_mat_mul<T, array_device_t> > : std::true_type {};
+template<> struct sycl::is_device_copyable< func_mat_mul_mm<T, array_device_t> > : std::true_type {};
+#endif
+
 template<class T, class ForEach, class MatrixND>
 void mat_mul_device_naive(const std::size_t N, const MatrixND& u, const MatrixND& v, MatrixND& w)
 {
 
     ForEach for_each;
+#ifndef __COMMON_PARTS_USING_SYCL__
     for_each.block_size = block_size;
+#endif
     for_each(func_mat_mul_naive<T, MatrixND>(u, v, w), 0, N);
     for_each.wait();
-
 }
 template<class T, class ForEach, class MatrixND>
 void mat_mul_device_f(const std::size_t N, const MatrixND& u, const MatrixND& v, MatrixND& w)
 {
 
     ForEach for_each;
+#ifndef __COMMON_PARTS_USING_SYCL__    
     for_each.block_size = block_size;
+#endif    
     for_each(func_mat_mul<T, MatrixND>(u, v, w), 0, N);
     for_each.wait();
 
@@ -305,7 +316,9 @@ void mat_mul_device_mm_f(const std::size_t N, const MatrixND& u, const MatrixND&
 {
 
     ForEach for_each;
+#ifndef __COMMON_PARTS_USING_SYCL__    
     for_each.block_size = block_size;
+#endif
     for_each(func_mat_mul_mm<T, MatrixND>(u, v, w), 0, N);
     for_each.wait();
 
@@ -325,7 +338,7 @@ void mat_mul_host_f(const std::size_t N, const MatrixND& u, const MatrixND& v, M
 
 /******************************** BEGIN PTR FUNCTOR ***************************************/
 template<class T>
-struct func_mat_mul_ptr
+struct func_mat_mul_ptr_dev
 {
 
     const T* f1_;
@@ -333,7 +346,7 @@ struct func_mat_mul_ptr
     T*    f_out_;
     std::size_t N;
 
-    func_mat_mul_ptr(std::size_t const sz, const T* f1, const T* f2, T* f_out):
+    func_mat_mul_ptr_dev(std::size_t const sz, const T* f1, const T* f2, T* f_out):
     N(sz),
     f1_(f1),
     f2_(f2),
@@ -341,7 +354,7 @@ struct func_mat_mul_ptr
     {}
 
 
-    __DEVICE_TAG__ void operator()(const int &idx)
+    __DEVICE_TAG__ void operator()(const int &idx) const
     {
         T buf1[K];
         T buf2[K];
@@ -373,23 +386,82 @@ struct func_mat_mul_ptr
         }
     }
 };
+template<class T>
+struct func_mat_mul_ptr_host
+{
+
+    const T* f1_;
+    const T* f2_;
+    T*    f_out_;
+    std::size_t N;
+
+    func_mat_mul_ptr_host(std::size_t const sz, const T* f1, const T* f2, T* f_out):
+    N(sz),
+    f1_(f1),
+    f2_(f2),
+    f_out_(f_out)
+    {}
+
+
+    __DEVICE_TAG__ void operator()(const int &idx) const
+    {
+        T buf1[K];
+        T buf2[K];
+        T buf3[K];   
+        T val_l;     
+        for(std::size_t i = 0u; i < K; ++i)
+        {
+            for(std::size_t j = 0u; j < K; ++j)
+            {
+                #pragma unroll
+                for(std::size_t k = 0u; k < K; ++k)
+                {
+                    buf1[k] = f1_[IC(idx, i, k)];
+                    buf2[k] = f2_[IC(idx, k, j)];
+                }
+                val_l = static_cast<T>(0.0);
+                #pragma unroll
+                for(std::size_t k = 0u; k < K; ++k)
+                {
+                    val_l = fma(buf1[k], buf2[k], val_l);
+                }
+                buf3[j] = val_l;
+            }
+            #pragma unroll
+            for(std::size_t k = 0u; k < K; ++k)
+            {
+                f_out_[IC(idx, i, k)] = buf3[k];
+            }
+        }
+    }
+};
+
+#ifdef __COMMON_PARTS_USING_SYCL__
+template<> struct sycl::is_device_copyable< func_mat_mul_ptr_dev<T> > : std::true_type {};
+template<> struct sycl::is_device_copyable< func_mat_mul_ptr_host<T> > : std::true_type {};
+#endif
 
 template<class T, class ForEach>
 void mat_mul_device_ptr(const std::size_t N, const T* u, const T* v, T* w)
 {
 
     ForEach for_each;
+#ifndef __COMMON_PARTS_USING_SYCL__
     for_each.block_size = block_size;
-    for_each(func_mat_mul_ptr<T>(N, u, v, w), 0, N);
+#endif
+    for_each(func_mat_mul_ptr_dev<T>(N, u, v, w), 0, N);
     for_each.wait();
-
 }
+
+
 template<class T, class ForEach>
 void mat_mul_host_ptr(const std::size_t N, const T* u, const T* v, T* w)
 {
-
     ForEach for_each;
-    for_each(func_mat_mul_ptr<T>(N, u, v, w), 0, N);
+#ifndef __COMMON_PARTS_USING_SYCL__
+    for_each.block_size = block_size;
+#endif    
+    for_each(func_mat_mul_ptr_host<T>(N, u, v, w), 0, N);
     for_each.wait();
 
 }

@@ -29,4 +29,10 @@ hip:	template
 sycl:	CC = icpx -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102
 sycl:	FILE = test_matmul_sycl.cpp
 sycl:	OPENMP = -qopenmp -lpthread
-sycl:	template1
+sycl:	template
+
+
+syclnv:	CC = icpx -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=sm_$(ARCH)
+syclnv:	FILE = test_matmul_sycl.cpp
+syclnv:	OPENMP = -qopenmp -lpthread
+syclnv:	template

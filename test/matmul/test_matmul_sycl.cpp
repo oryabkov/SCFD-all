@@ -81,15 +81,20 @@ struct sycl_selector
     bool mem_set;
     sycl_selector():
     mem_set(false)
-    {}
+    {
+        cnt = 0;
+    }
     sycl_selector(std::size_t free_mem):
     max_free_mem(free_mem),
     mem_set(true)
-    {}
+    {
+        cnt = 0;
+    }
 
     int operator ()(const sycl::device& device)
     {
         
+        std::size_t free_mem_l{0};
         if (!mem_set) std::cout << "cnt: " << cnt << "  Device: " << device.get_info<sycl::info::device::name>();
         auto device_info = device.get_info<sycl::info::device::device_type>();
         if ( device_info == sycl::info::device_type::gpu )//device.is_gpu() )//get_info<sycl::device::is_gpu()>() )
@@ -97,12 +102,16 @@ struct sycl_selector
             std::size_t total_mem_, free_mem_;
             syclcompat::device_ext de(device);
             de.get_memory_info(free_mem_, total_mem_);
-            if( max_free_mem == 0)
+            if(!mem_set)
             {
                 if (free_mem < free_mem_ )
                 {
                     free_mem = free_mem_;
                 }
+            }
+            else
+            {
+                free_mem_l = free_mem_;
             }
             if(!mem_set) std::cout << " is a gpu, total memory: " << total_mem_ << " bytes, free memory: " << free_mem_ << " bytes." << std::endl;
         }
@@ -118,21 +127,13 @@ struct sycl_selector
         {
             if(!mem_set) std::cout << " is a custom device" << std::endl;
         }
-
-        // if( device.get_info<sycl::info::device::name>() )
-        // {
-        //  std::cout << " is a custom device " << std::endl;
-        // }        
+        
+        cnt++; 
         if(!mem_set)
             return 0;
         else
         {
-            // cnt++;
-            // if(cnt == 2)
-            //     return  100;
-            // else
-            //     return 0;
-            if (free_mem == max_free_mem)
+            if (free_mem_l == max_free_mem)
             {
                 return 100;
             }
@@ -147,43 +148,39 @@ struct sycl_selector
 int sycl_selector::cnt = 0;
 std::size_t sycl_selector::free_mem = 0;
 
+
+#define __COMMON_PARTS_USING_SYCL__
+
+#include "all_kernels.h"
+
 int main(int argc, char const *argv[])
 {
-  
-  // for (auto device : sycl::device::get_devices(sycl::info::device_type::gpu)) {
 
-  //   std::cout << "  Device: " << device.get_info<sycl::info::device::name>() << std::endl;
-  //   // std::cout << "  Device: " << device.get_info<sycl::info::device::parent_device>() << std::endl;
+    // {
+    //     sycl_selector ss;
+    //     sycl::device qq { ss };
+    // }
+    // sycl_selector ss(sycl_selector::free_mem);
+    // sycl::device q { ss };
 
-  // }
+    // scfd::utils::sycl_queue_singleton& sdq = scfd::utils::sycl_queue_singleton::get_instance();
 
-    {
-        sycl_selector ss;
-        sycl::device my_gpu { ss };
-    }
-    sycl_selector ss(sycl_selector::free_mem);
-    sycl::device my_gpu { ss };
+    // std::cout << "current_device = " << sdq.get_queue().get_device().get_info<sycl::info::device::name>() << std::endl;
 
-    std::cout << "current_device = " << my_gpu.get_info<sycl::info::device::name>() << std::endl;
+    syclcompat::device_ext de(sycl_device_queue.get_device());
 
-    // sycl::device my_gpu { sycl::gpu_selector_v };
-    // std::cout << "selected device: " << sycl_device_queue.get_device().get_info<sycl::info::device::name>() << std::endl;
-    // std::cout << "global_mem_size: " <<sycl_device_queue.get_device().get_info<sycl::info::device::global_mem_size>() << " bytes." << std::endl;
-
-
-
-    // #define __COMMON_PARTS_DEVICE_INIT__ std::cout << "Selected device: " <<  sycl_device_queue.get_device().get_info<sycl::info::device::name>() << std::endl;
-    // #define __COMMON_PARTS_SAFE_CALL__  
+    #define __COMMON_PARTS_DEVICE_INIT__ std::cout << "Selected device: " <<  sycl_device_queue.get_device().get_info<sycl::info::device::name>() << std::endl;
+    #define __COMMON_PARTS_SAFE_CALL__  
     // #define __COMMON_PARTS_DEVICE_MALLOC__ hipMalloc
     // #define __COMMON_PARTS_DEVICE_MEMCPY__ hipMemcpy
     // #define __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ hipMemcpyHostToDevice
     // #define __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ hipMemcpyDeviceToHost
-    // #define __COMMON_PARTS_DEVICE_SYNCRONIZE__ hipDeviceSynchronize
+    #define __COMMON_PARTS_DEVICE_SYNCRONIZE__ {}
     // #define __COMMON_PARTS_DEVICE_FREE__ hipFree
-    // #define __COMMON_PARTS_MEM_GET_INFO__ hipMemGetInfo
+    #define __COMMON_PARTS_MEM_GET_INFO__ de.get_memory_info
 
 
-    // #include "common_parts.h"
+    #include "common_parts.h"
 
     return 0;
 }
