@@ -18,21 +18,25 @@ template1:
 cuda: 	CC = nvcc -arch=sm_$(ARCH)
 cuda:	FILE = test_matmul_cuda.cu
 cuda:   OPENMP = -Xcompiler -fopenmp -lpthread
+cuda:	TARGET = cuda
 cuda:	template
 
 hip:	CC = HIPCC_VERBOSE=7 hipcc
 hip:	FILE = test_matmul_hip.cpp
 hip:	OPENMP = -fopenmp -lpthread
+hip:	TARGET = hip
 hip:	template
 
 
-sycl:	CC = icpx -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102
-sycl:	FILE = test_matmul_sycl.cpp
-sycl:	OPENMP = -qopenmp -lpthread
-sycl:	template
+syclamd:	CC = icpx -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102
+syclamd:	FILE = test_matmul_sycl.cpp
+syclamd:	OPENMP = -qopenmp -lpthread
+syclamd:	TARGET = sycl
+syclamd:	template
 
 
 syclnv:	CC = icpx -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=sm_$(ARCH)
 syclnv:	FILE = test_matmul_sycl.cpp
 syclnv:	OPENMP = -qopenmp -lpthread
+syclnv: TARGET = sycl
 syclnv:	template

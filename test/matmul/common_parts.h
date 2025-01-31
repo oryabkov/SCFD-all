@@ -553,11 +553,14 @@
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(u_ptr_ok_dev) );
         }
 #endif //__COMMON_PARTS_USING_SYCL__        
-        
+        std::string target_name{"device"};   
+#ifdef __COMMON_PARTS_USING_SYCL__             
+        target_name = "sycl";
+#endif
 #ifndef __COMMON_PARTS_USING_SYCL__ 
         {
             std::string filename;
-            filename = "mat_mul_" + file_type + "_" + std::to_string(N) + "_dev_tensor_ptr_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            filename = "mat_mul_" + target_name + "_" + file_type + "_" + std::to_string(N) + "_dev_tensor_ptr_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
             std::fstream out_file{filename, out_file.out};
             if (!out_file.is_open())
                 std::cout << "failed to open " << filename << '\n';
@@ -574,7 +577,7 @@
 #endif
         {
             std::string filename;
-            filename = "mat_mul_" + file_type + "_" + std::to_string(N) + "_dev_ptr_arrange_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            filename = "mat_mul_" + target_name + "_" + file_type + "_" + std::to_string(N) + "_dev_ptr_arrange_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
             std::fstream out_file{filename, out_file.out};
             if (!out_file.is_open())
                 std::cout << "failed to open " << filename << '\n';
@@ -590,7 +593,7 @@
         }        
         {
             std::string filename;
-            filename = "mat_mul_" + file_type + "_" + std::to_string(N) + "_dev_cmp_tensors_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
+            filename = "mat_mul_" + target_name + "_" + file_type + "_" + std::to_string(N) + "_dev_cmp_tensors_" + std::to_string(K) + "x" + std::to_string(K) + ".csv";
             std::fstream out_file{filename, out_file.out};
             if (!out_file.is_open())
                 std::cout << "failed to open " << filename << '\n';
