@@ -21,11 +21,14 @@
 #include <scfd/utils/device_tag.h>
 #include "detail/bool_array.h"
 #include "detail/has_subscript_operator.h"
+#include "detail/vec_div_scalar.h"
 
 namespace scfd
 {
 namespace static_vec 
 {
+
+
 
 template<class T,int Dim>
 class vec
@@ -77,10 +80,7 @@ public:
     }
     __DEVICE_TAG__ vec                  operator/(value_type div)const
     {
-        vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = d[j]/div;
-        return res;
+        return detail::vec_div_scalar(*this, div);
     }
     __DEVICE_TAG__ vec                  operator+(const vec &x)const
     {
@@ -179,10 +179,9 @@ public:
         for (int j = 0;j < dim;++j) d[j] *= mul;
         return *this;
     }
-    __DEVICE_TAG__ vec                   &operator/=(const value_type &mul)
+    __DEVICE_TAG__ vec                   &operator/=(const value_type &div)
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] /= mul;
+        detail::vec_div_scalar_inplace(div, *this);
         return *this;
     }
     __DEVICE_TAG__ T                     components_prod()const
@@ -219,10 +218,16 @@ template<class T,int Dim>
 __DEVICE_TAG__ vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
 #endif
 
-template<class T,int Dim>
+/*template<class T,int Dim>
 __DEVICE_TAG__ vec<T,Dim>   operator*(T mul, const vec<T,Dim> &v)
 {
     return v*mul;
+}*/
+
+template<class T,class T2,int Dim,class X = typename std::enable_if<std::is_convertible<T2,T>::value>::type>
+vec<T,Dim> operator*(T2 mul, const vec<T,Dim> &v)
+{
+    return v*T(mul);
 }
 
 template<class T,int Dim>

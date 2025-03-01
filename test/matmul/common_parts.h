@@ -17,7 +17,7 @@
     char tests = argv[3][0];
 
     std::string file_type;
-    if constexpr (std::is_same<double, REAL>::value)
+    if (std::is_same<double, REAL>::value)
     {
         file_type = "double";
     }
@@ -26,6 +26,11 @@
         file_type = "single";
     }
     std::cout << "using " << file_type << " precision floating point arithmetic." << std::endl; 
+
+    T   values_range = 100, 
+        error_mlups = 50,
+        error_mul = values_range*error_mlups;
+    int errors_num = 0;
 
    __COMMON_PARTS_DEVICE_INIT__
 
@@ -58,7 +63,7 @@
 
     std::random_device rd;
     std::mt19937 engine{ rd() };
-    std::uniform_real_distribution<> dist(-100.0, 100.0);
+    std::uniform_real_distribution<> dist(-values_range, values_range);
 
     u_ptr_host                = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
     v_ptr_host                = reinterpret_cast<T*>( std::malloc(sizeof(T)*total_size ) );
@@ -173,7 +178,10 @@
             if(tests == 'a')
             {
                 mat_mul_dev_view.init(mat_mul_dev, true);
-                std::cout << "gpu tensor diff = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
+                T curr_diff = check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view);
+                std::cout << "gpu tensor diff = " << curr_diff << std::endl;
+                //std::cout << "std::numeric_limits<T>::epsilon()*error_mul = " << std::numeric_limits<T>::epsilon()*error_mul << std::endl;
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
                 mat_mul_dev_view.release(false);
             }
         }
@@ -209,7 +217,9 @@
             if(tests == 'a')
             {
                 mat_mul_dev_view.init(mat_mul_dev, true);
-                std::cout << "gpu tensor diff = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
+                T curr_diff = check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view);
+                std::cout << "gpu tensor diff = " << curr_diff << std::endl;
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
                 mat_mul_dev_view.release(false);
             }
         }
@@ -246,7 +256,9 @@
             if(tests == 'a')
             {
                 mat_mul_dev_view.init(mat_mul_dev, true);
-                std::cout << "gpu tensor diff = " << check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view) << std::endl;
+                T curr_diff = check_coincide_tensor(N, mat_mul_ptr_host, mat_mul_dev_view);
+                std::cout << "gpu tensor diff = " << curr_diff << std::endl;
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
                 mat_mul_dev_view.release(false);
             }            
         }
@@ -261,8 +273,8 @@
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_func_dev       , sizeof(T)*total_size ) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_func_dev , sizeof(T)*total_size ) );
 
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
 
             //WARM UP
             for(int it_ = 0; it_ < 20; it_++)
@@ -286,7 +298,9 @@
             if(tests == 'a')
             {
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_func_check, (void*)mat_mul_ptr_func_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
-                std::cout << "gpu ptr_func diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check) << std::endl;
+                T curr_diff = check_coincide_ptr(N, mat_mul_ptr_host,  mat_mul_ptr_func_check);
+                std::cout << "gpu ptr_func diff = " << curr_diff << std::endl;
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
             } 
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_func_dev) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_func_dev) );
@@ -343,7 +357,9 @@
 #else
                 sycl_device_queue.memcpy( mat_mul_ptr_func_check, mat_mul_ptr_func_dev, sizeof(T)*total_size ).wait();
 #endif
-                std::cout << "device ptr_func_dev diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check) << std::endl;
+                T curr_diff = check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check);
+                std::cout << "device ptr_func_dev diff = " << curr_diff << std::endl;
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
             } 
 #ifndef __COMMON_PARTS_USING_SYCL__
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_func_dev) );
@@ -363,14 +379,14 @@
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&v_ptr_func_dev       , sizeof(T)*total_size ) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void**)&mat_mul_ptr_func_dev , sizeof(T)*total_size ) );
 
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
-            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_ok_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) u_ptr_func_dev,   (void*)u_ptr_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
+            __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) v_ptr_func_dev,   (void*)v_ptr_host,      sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ ) );
 #else
             u_ptr_func_dev = sycl::malloc_device<T>(total_size , sycl_device_queue) ;
             v_ptr_func_dev = sycl::malloc_device<T>(total_size , sycl_device_queue) ;
             mat_mul_ptr_func_dev = sycl::malloc_device<T>(total_size , sycl_device_queue) ;
-            sycl_device_queue.memcpy( u_ptr_func_dev, u_ptr_ok_host, sizeof(T)*total_size ).wait();
-            sycl_device_queue.memcpy( v_ptr_func_dev, v_ptr_ok_host, sizeof(T)*total_size ).wait();            
+            sycl_device_queue.memcpy( u_ptr_func_dev, u_ptr_host, sizeof(T)*total_size ).wait();
+            sycl_device_queue.memcpy( v_ptr_func_dev, v_ptr_host, sizeof(T)*total_size ).wait();            
 #endif
 
 
@@ -403,7 +419,9 @@
 #else
                 sycl_device_queue.memcpy( mat_mul_ptr_func_check, mat_mul_ptr_func_dev, sizeof(T)*total_size ).wait();
 #endif
-                std::cout << "device ptr_func_host diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host,  mat_mul_ptr_func_check) << std::endl;
+                T curr_diff = check_coincide_ptr(N, mat_mul_ptr_host,  mat_mul_ptr_func_check);
+                std::cout << "device ptr_func_host diff = " << curr_diff << std::endl;
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
             } 
 #ifndef __COMMON_PARTS_USING_SYCL__
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_func_dev) );
@@ -451,11 +469,13 @@
             if(tests == 'a')
             {
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_check, (void*)mat_mul_ptr_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
+                T curr_diff = check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check);
 #ifdef USE_CONST
-                std::cout << "gpu ptr_const diff = " << check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check) << std::endl;
+                std::cout << "gpu ptr_const diff = " << curr_diff << std::endl;
 #else
-                std::cout << "gpu ptr diff = " << check_coincide_ptr(N, mat_mul_ptr_host, mat_mul_ptr_check) << std::endl;
+                std::cout << "gpu ptr diff = " << curr_diff << std::endl;
 #endif
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
             }
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_dev) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_dev) );
@@ -496,10 +516,11 @@
             if(tests == 'a')
             {
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_ok_check, (void*)mat_mul_ptr_ok_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
+                T curr_diff = check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check);
 #ifdef USE_CONST
-                std::cout << "gpu ptr_ok_const diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
+                std::cout << "gpu ptr_ok_const diff = " << curr_diff << std::endl;
 #else
-                std::cout << "gpu ptr_ok diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
+                std::cout << "gpu ptr_ok diff = " << curr_diff << std::endl;
 #endif
 
             }
@@ -541,12 +562,13 @@
             if(tests == 'a')
             {
                 __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MEMCPY__( (void*) mat_mul_ptr_ok_check, (void*)mat_mul_ptr_ok_dev, sizeof(T)*total_size, __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ ) );
+                T curr_diff = check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check);
 #ifdef USE_CONST
-                std::cout << "gpu ptr_ok_const diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
+                std::cout << "gpu ptr_ok_const diff = " << curr_diff << std::endl;
 #else
-                std::cout << "gpu ptr_ok diff = " << check_coincide_ptr(N, mat_mul_ptr_ok_host, mat_mul_ptr_ok_check) << std::endl;
+                std::cout << "gpu ptr_ok diff = " << curr_diff << std::endl;
 #endif
-
+                if (curr_diff >= std::numeric_limits<T>::epsilon()*error_mul) ++errors_num;
             }
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(mat_mul_ptr_ok_dev) );
             __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__(v_ptr_ok_dev) );
@@ -693,7 +715,7 @@
             else
             {
                 out_file_cpu << "tensor,ptr_bad,ptr_ok" << std::endl;
-                for(int j = 0; j<number_of_iters; j++)
+                for(int j = 0; j<number_of_iters-1; j++)
                 {
                     out_file_cpu << host_tensor.at(j) << "," << host_ptr.at(j) << "," << host_ptr_ok.at(j) << std::endl;
                 }
@@ -717,7 +739,9 @@
     std::free(mat_mul_ptr_ok_check);
     std::free(mat_mul_ptr_func_check);
 
+    std::cout << "errors_num = " << errors_num << std::endl;
 
+    return errors_num;
 
 
 #endif    

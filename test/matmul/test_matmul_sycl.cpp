@@ -182,5 +182,5 @@ int main(int argc, char const *argv[])
 
     #include "common_parts.h"
 
-    return 0;
+    //return 0;
 }
