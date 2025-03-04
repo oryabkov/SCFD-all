@@ -1,4 +1,4 @@
-// Copyright © 2016-2021 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
+// Copyright © 2016-2025 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch, Ivan Antonovich Sorokin
 
 // This file is part of SCFD.
 
