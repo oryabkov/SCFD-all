@@ -58,49 +58,49 @@ public:
     Log                 *get_log()const { return log_; }
     void                set_obj_log_lev(int obj_log_lev__) { obj_log_lev_ = obj_log_lev__; }
     int                 get_obj_log_lev()const { return obj_log_lev_; }
-    void                set_log_msg_prefix(const std::string log_msg_prefix__) 
+    void                set_log_msg_prefix(const std::string &log_msg_prefix__) 
     { 
         log_msg_prefix_ = log_msg_prefix__; 
     }
     const std::string   &get_log_msg_prefix()const { return log_msg_prefix_; }
 
-    void info(int log_lev_, const std::string s)const
+    void info(int log_lev_, const std::string &s)const
     {
         if (log_ != NULL) log_->info(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void info_all(int log_lev_, const std::string s)const
+    void info_all(int log_lev_, const std::string &s)const
     {
         if (log_ != NULL) log_->info_all(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void warning(int log_lev_, const std::string s)const
+    void warning(int log_lev_, const std::string &s)const
     {
         if (log_ != NULL) log_->warning(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void error(int log_lev_, const std::string s)const
+    void error(int log_lev_, const std::string &s)const
     {
         if (log_ != NULL) log_->error(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void debug(int log_lev_, const std::string s)const
+    void debug(int log_lev_, const std::string &s)const
     {
         if (log_ != NULL) log_->debug(obj_log_lev_ + log_lev_, log_msg_prefix_ + s);
     }
-    void info(const std::string s)const
+    void info(const std::string &s)const
     {
         info(1, s);
     }
-    void info_all(const std::string s)const
+    void info_all(const std::string &s)const
     {
         info_all(1, s);
     }
-    void warning(const std::string s)const
+    void warning(const std::string &s)const
     {
         warning(1, s);
     }
-    void error(const std::string s)const
+    void error(const std::string &s)const
     {
         error(1, s);
     }
-    void debug(const std::string s)const
+    void debug(const std::string &s)const
     {
         debug(1, s);
     }

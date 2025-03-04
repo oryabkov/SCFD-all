@@ -55,43 +55,43 @@ public:
     using LogBasic::set_verbosity;
 
 public:
-    void info(const std::string s)
+    void info(const std::string &s)
     {
         msg(s, log_msg_type::INFO, 1);
     }
-    void info_all(const std::string s)
+    void info_all(const std::string &s)
     {
         msg(s, log_msg_type::INFO_ALL, 1);
     }
-    void warning(const std::string s)
+    void warning(const std::string &s)
     {
         msg(s, log_msg_type::WARNING, 1);
     }
-    void error(const std::string s)
+    void error(const std::string &s)
     {
         msg(s, log_msg_type::ERROR, 1);
     }
-    void debug(const std::string s)
+    void debug(const std::string &s)
     {
         msg(s, log_msg_type::DEBUG, 1);
     }
-    void info(int _log_lev, const std::string s)
+    void info(int _log_lev, const std::string &s)
     {
         msg(s, log_msg_type::INFO, _log_lev);
     }
-    void info_all(int _log_lev, const std::string s)
+    void info_all(int _log_lev, const std::string &s)
     {
         msg(s, log_msg_type::INFO_ALL, _log_lev);
     }
-    void warning(int _log_lev, const std::string s)
+    void warning(int _log_lev, const std::string &s)
     {
         msg(s, log_msg_type::WARNING, _log_lev);
     }
-    void error(int _log_lev, const std::string s)
+    void error(int _log_lev, const std::string &s)
     {
         msg(s, log_msg_type::ERROR, _log_lev);
     }
-    void debug(int _log_lev, const std::string s)
+    void debug(int _log_lev, const std::string &s)
     {
         msg(s, log_msg_type::DEBUG, _log_lev);
     }
