@@ -211,13 +211,13 @@ public:
 };
 
 template<class T,int Dim1,int Dim2>
-mat<T,Dim1,Dim2>::mat() = default;
+__DEVICE_TAG__ mat<T,Dim1,Dim2>::mat() = default;
 
 template<class T,int Dim1,int Dim2>
-mat<T,Dim1,Dim2>::mat(const mat &v) = default;
+__DEVICE_TAG__ mat<T,Dim1,Dim2>::mat(const mat &v) = default;
 
 template<class T,int Dim1,int Dim2>
-mat<T,Dim1,Dim2>                &mat<T,Dim1,Dim2>::operator=(const mat &v) = default;
+__DEVICE_TAG__ mat<T,Dim1,Dim2>                &mat<T,Dim1,Dim2>::operator=(const mat &v) = default;
 
 
 template<class T,int Dim1,int Dim2>

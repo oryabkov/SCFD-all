@@ -43,13 +43,13 @@ public:
         params() : obj_log_lev(0), log_msg_prefix("")
         {
         }
-        params(int obj_log_lev_, const std::string &log_msg_prefix_) : 
+        params(int obj_log_lev_, const std::string log_msg_prefix_) : 
             obj_log_lev(obj_log_lev_), log_msg_prefix(log_msg_prefix_)
         {
         }
     };
 
-    logged_obj_base(Log *log = NULL, int obj_log_lev = 0, const std::string &log_msg_prefix = "") : 
+    logged_obj_base(Log *log = NULL, int obj_log_lev = 0, const std::string log_msg_prefix = "") : 
         log_(log),obj_log_lev_(obj_log_lev),log_msg_prefix_(log_msg_prefix) {}
     logged_obj_base(Log *log, const params &prm) : 
         logged_obj_base(log, prm.obj_log_lev, prm.log_msg_prefix) {}
@@ -111,43 +111,43 @@ public:
         va_start ( arguments, s );                                              \
         log_->METHOD_NAME(LOG_LEV, log_msg_prefix_ + s, arguments);             \
         va_end ( arguments );    
-    void info_f(int log_lev_, const std::string &s, ...)const
+    void info_f(int log_lev_, const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_f, obj_log_lev_ + log_lev_)
     }
-    void info_all_f(int log_lev_, const std::string &s, ...)const
+    void info_all_f(int log_lev_, const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_all_f, obj_log_lev_ + log_lev_)
     }
-    void warning_f(int log_lev_, const std::string &s, ...)const
+    void warning_f(int log_lev_, const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_warning_f, obj_log_lev_ + log_lev_)
     }
-    void error_f(int log_lev_, const std::string &s, ...)const
+    void error_f(int log_lev_, const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_error_f, obj_log_lev_ + log_lev_)
     }
-    void debug_f(int log_lev_, const std::string &s, ...)const
+    void debug_f(int log_lev_, const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_debug_f, obj_log_lev_ + log_lev_)
     }
-    void info_f(const std::string &s, ...)const
+    void info_f(const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_f, obj_log_lev_ + 1)
     }
-    void info_all_f(const std::string &s, ...)const
+    void info_all_f(const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_info_all_f, obj_log_lev_ + 1)
     }
-    void warning_f(const std::string &s, ...)const
+    void warning_f(const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_warning_f, obj_log_lev_ + 1)
     }
-    void error_f(const std::string &s, ...)const
+    void error_f(const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_error_f, obj_log_lev_ + 1)
     }
-    void debug_f(const std::string &s, ...)const
+    void debug_f(const std::string s, ...)const
     {
         LOGGED_OBJ_BASE__FORMATTED_OUT__(v_debug_f, obj_log_lev_ + 1)
     }

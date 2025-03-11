@@ -17,7 +17,9 @@
  where ```<TARGET_NAME>``` is one of the following:
  * ```cpu``` for serial only host version
  * ```omp``` for openmp host version
+ * ```hip``` for HIP  version (requeres HIP toolkit and hipcc available in path)
  * ```cuda``` for CUDA version (requeres CUDA toolkit and nvcc available in path)
+ * ```sycl``` for SYCL version (requeres INTEL ONEAPI toolkit and icpx available in path)
 
  ## Run
 

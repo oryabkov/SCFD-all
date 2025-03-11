@@ -40,8 +40,8 @@ namespace arrays
 
 using static_vec::vec;
 
-template<class T, class Memory, 
-         template <ordinal_type... DimsA> class Arranger, 
+template<class T, class Memory,
+         template <ordinal_type... DimsA> class Arranger,
          ordinal_type... Dims>
 class tensor_base : public Arranger<Dims...>
 {
@@ -59,11 +59,11 @@ protected:
     bool            own_;
 
 protected:
-    void                            init1_(const vec<ordinal_type,arranger_type::dynamic_dims_num> &dyn_dims) 
+    void                            init1_(const vec<ordinal_type,arranger_type::dynamic_dims_num> &dyn_dims)
     {
         assert(is_free());
         arranger_type::set_dyn_dims(dyn_dims);
-        try 
+        try
         {
             memory_type::malloc((void**)&d_, sizeof(T)*arranger_type::total_size());
             own_ = true;
@@ -78,7 +78,7 @@ protected:
             std::throw_with_nested( std::runtime_error("tensor_base::init1_: failed memory allocation") );
         }
     }
-    void                            init1_by_raw_data_(pointer_type raw_data_ptr, 
+    void                            init1_by_raw_data_(pointer_type raw_data_ptr,
                                                        const vec<ordinal_type,arranger_type::dynamic_dims_num> &dyn_dims)
     {
         assert(is_free());
@@ -94,16 +94,16 @@ protected:
         assert((!is_free() || (arranger_type::total_size() == 0)) && !own_);
     }
 
-    __DEVICE_TAG__ void             assign(const tensor_base &t) 
-    { 
-        arranger_type::operator=(t); 
-        d_ = t.d_; own_ = false; 
+    __DEVICE_TAG__ void             assign(const tensor_base &t)
+    {
+        arranger_type::operator=(t);
+        d_ = t.d_; own_ = false;
     }
-    __DEVICE_TAG__ void             move(tensor_base &&t) 
-    { 
-        arranger_type::operator=(t); 
-        d_ = t.d_; own_ = t.own_; 
-        t.d_ = NULL; t.own_ = false; 
+    __DEVICE_TAG__ void             move(tensor_base &&t)
+    {
+        arranger_type::operator=(t);
+        d_ = t.d_; own_ = t.own_;
+        t.d_ = NULL; t.own_ = false;
     }
 
     template<class... Indexes,
@@ -112,7 +112,7 @@ protected:
     __DEVICE_TAG__ T                &operator()(Indexes... indexes)const
     {
         return d_[arranger_type::calc_lin_index(indexes...)];
-    }  
+    }
 
     template<class... Args>
     struct vec_1_dim_
@@ -145,7 +145,7 @@ protected:
                                   sizeof...(Args)==sizeof...(Dims)
                               >::type,
              class = typename std::enable_if<
-                                  detail::true_counter< std::is_integral<Args>::value... >::value == 
+                                  detail::true_counter< std::is_integral<Args>::value... >::value ==
                                   sizeof...(Dims)-1
                               >::type,
              class = typename std::enable_if<
@@ -153,7 +153,7 @@ protected:
                               >::type>
     __DEVICE_TAG__ void                         get_vec(Vec &v, Args... args)const
     {
-        static_assert(vec_1_dim_<Args...>::value != dyn_dim, 
+        static_assert(vec_1_dim_<Args...>::value != dyn_dim,
                       "tensor_base::get_vec: trying to use with dynamic index");
         #pragma unroll
         for (ordinal_type i1 = 0;i1 < vec_1_dim_<Args...>::value;++i1) {
@@ -165,7 +165,7 @@ protected:
                                   sizeof...(Args)==sizeof...(Dims)
                               >::type,
              class = typename std::enable_if<
-                                  detail::true_counter< std::is_integral<Args>::value... >::value == 
+                                  detail::true_counter< std::is_integral<Args>::value... >::value ==
                                   sizeof...(Dims)-1
                               >::type,
              class = typename std::enable_if<
@@ -174,7 +174,7 @@ protected:
                               >::type>
     __DEVICE_TAG__ typename vec_1_t_<Args...>::type get_vec(Args... args)const
     {
-        static_assert(vec_1_dim_<Args...>::value != dyn_dim, 
+        static_assert(vec_1_dim_<Args...>::value != dyn_dim,
                       "tensor_base::get_vec: trying to use with dynamic index");
         typename vec_1_t_<Args...>::type     v;
         #pragma unroll
@@ -191,12 +191,12 @@ protected:
                                   sizeof...(Args)==sizeof...(Dims)-1
                               >::type,
              class = typename std::enable_if<
-                                  detail::true_counter< std::is_integral<Args>::value... >::value == 
+                                  detail::true_counter< std::is_integral<Args>::value... >::value ==
                                   sizeof...(Dims)-1
                               >::type>
     __DEVICE_TAG__ void                             get_vec(Vec &v, Args... args)const
     {
-        static_assert(vec_2_dim_<Args...>::value != dyn_dim, 
+        static_assert(vec_2_dim_<Args...>::value != dyn_dim,
                       "tensor_base::get_vec: trying to use with dynamic index");
         #pragma unroll
         for (ordinal_type i1 = 0;i1 < vec_2_dim_<Args...>::value;++i1) {
@@ -208,12 +208,12 @@ protected:
                                   sizeof...(Args)==sizeof...(Dims)-1
                               >::type,
              class = typename std::enable_if<
-                                  detail::true_counter< std::is_integral<Args>::value... >::value == 
+                                  detail::true_counter< std::is_integral<Args>::value... >::value ==
                                   sizeof...(Dims)-1
                               >::type>
     __DEVICE_TAG__ typename vec_2_t_<Args...>::type get_vec(Args... args)const
     {
-        static_assert(vec_2_dim_<Args...>::value != dyn_dim, 
+        static_assert(vec_2_dim_<Args...>::value != dyn_dim,
                       "tensor_base::get_vec: trying to use with dynamic index");
         typename vec_2_t_<Args...>::type     v;
         #pragma unroll
@@ -230,7 +230,7 @@ protected:
                                   sizeof...(Args)==sizeof...(Dims)
                               >::type,
              class = typename std::enable_if<
-                                  detail::true_counter< std::is_integral<Args>::value... >::value == 
+                                  detail::true_counter< std::is_integral<Args>::value... >::value ==
                                   sizeof...(Dims)-1
                               >::type,
              class = typename std::enable_if<
@@ -238,7 +238,7 @@ protected:
                               >::type>
     __DEVICE_TAG__ void                             set_vec(const Vec &v, Args... args)const
     {
-        static_assert(vec_1_dim_<Args...>::value != dyn_dim, 
+        static_assert(vec_1_dim_<Args...>::value != dyn_dim,
                       "tensor_base::set_vec: trying to use with dynamic index");
         #pragma unroll
         for (ordinal_type i1 = 0;i1 < vec_1_dim_<Args...>::value;++i1) {
@@ -253,12 +253,12 @@ protected:
                                   sizeof...(Args)==sizeof...(Dims)-1
                               >::type,
              class = typename std::enable_if<
-                                  detail::true_counter< std::is_integral<Args>::value... >::value == 
+                                  detail::true_counter< std::is_integral<Args>::value... >::value ==
                                   sizeof...(Dims)-1
                               >::type>
     __DEVICE_TAG__ void                             set_vec(const Vec &v, Args... args)const
     {
-        static_assert(vec_2_dim_<Args...>::value != dyn_dim, 
+        static_assert(vec_2_dim_<Args...>::value != dyn_dim,
                       "tensor_base::set_vec: trying to use with dynamic index");
         #pragma unroll
         for (ordinal_type i1 = 0;i1 < vec_2_dim_<Args...>::value;++i1) {
@@ -267,8 +267,8 @@ protected:
     }
 
 public:
-    __DEVICE_TAG__                  tensor_base() : d_(NULL) 
-    { 
+    __DEVICE_TAG__                  tensor_base() : d_(NULL)
+    {
         arranger_type::set_zero_dyn_dims();
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
         arranger_type::set_zero_dyn_indexes0();
@@ -293,7 +293,7 @@ public:
                                              (sizeof...(Args) <= arranger_type::dynamic_dims_num*2)>::type,
 #else
              class = typename std::enable_if<sizeof...(Args)==arranger_type::dynamic_dims_num>::type,
-#endif             
+#endif
              class = typename std::enable_if<detail::check_all_are_true< std::is_integral<Args>::value... >::value>::type>
     void                            init(Args ...args)
     {
@@ -301,7 +301,7 @@ public:
         vec<ordinal_type,arranger_type::dynamic_dims_num>      dims_vec, indexes0_vec;
         for (int j = 0;j < arranger_type::dynamic_dims_num;++j) {
             dims_vec[j] = args_vec[j];
-            if (arranger_type::dynamic_dims_num+j < sizeof...(Args)) { 
+            if (arranger_type::dynamic_dims_num+j < sizeof...(Args)) {
                 indexes0_vec[j] = args_vec[arranger_type::dynamic_dims_num+j];
             } else {
                 indexes0_vec[j] = 0;
@@ -318,7 +318,7 @@ public:
                                              (sizeof...(Args) <= arranger_type::dynamic_dims_num*2)>::type,
 #else
              class = typename std::enable_if<sizeof...(Args)==arranger_type::dynamic_dims_num>::type,
-#endif             
+#endif
              class = typename std::enable_if<detail::check_all_are_true< std::is_integral<Args>::value... >::value>::type>
     void                            init_by_raw_data(pointer_type raw_data_ptr,
                                                      Args ...args)
@@ -327,7 +327,7 @@ public:
         vec<ordinal_type,arranger_type::dynamic_dims_num>      dims_vec, indexes0_vec;
         for (int j = 0;j < arranger_type::dynamic_dims_num;++j) {
             dims_vec[j] = args_vec[j];
-            if (arranger_type::dynamic_dims_num+j < sizeof...(Args)) { 
+            if (arranger_type::dynamic_dims_num+j < sizeof...(Args)) {
                 indexes0_vec[j] = args_vec[arranger_type::dynamic_dims_num+j];
             } else {
                 indexes0_vec[j] = 0;
@@ -354,7 +354,10 @@ public:
         d_ = NULL;
     }
 
-#ifndef __CUDA_ARCH__
+#if    !defined(__CUDA_ARCH__)          \
+    && !defined(__SYCL_DEVICE_ONLY__)   \
+    && !defined(__HIP_DEVICE_COMPILE__)
+    
     ~tensor_base()
     {
         //TODO we must catch exceptions here

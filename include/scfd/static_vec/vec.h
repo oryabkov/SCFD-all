@@ -21,11 +21,14 @@
 #include <scfd/utils/device_tag.h>
 #include "detail/bool_array.h"
 #include "detail/has_subscript_operator.h"
+#include "detail/vec_div_scalar.h"
 
 namespace scfd
 {
 namespace static_vec 
 {
+
+
 
 template<class T,int Dim>
 class vec
@@ -38,8 +41,17 @@ public:
     typedef T                   value_type;
     static const int            dim = Dim;
 
-    //__DEVICE_TAG__                      vec() {}
+#if defined(__INTEL_LLVM_COMPILER)
+//icpx only
+    __DEVICE_TAG__                      vec()             = default;
+    __DEVICE_TAG__                      vec(const vec &v) = default;
+    __DEVICE_TAG__ vec           &operator=(const vec &v) = default;
+#else
     __DEVICE_TAG__                      vec();
+    __DEVICE_TAG__                      vec(const vec &v);
+    __DEVICE_TAG__ vec           &operator=(const vec &v);
+#endif
+
     /// ISSUE Still not sure about this static_cast here...
     template<typename... Args,
              class = typename std::enable_if<sizeof...(Args) == Dim>::type,
@@ -51,7 +63,6 @@ public:
     __DEVICE_TAG__                      vec(const Args&... args) : d{static_cast<T>(args)...}
     {
     }
-    __DEVICE_TAG__                      vec(const vec &v);
     template<class Vec, 
              class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
     __DEVICE_TAG__                      vec(const Vec &v)
@@ -67,9 +78,9 @@ public:
         for (int j = 0;j < dim;++j) res.d[j] = d[j]*mul;
         return res;
     }
-    __DEVICE_TAG__ vec                  operator/(value_type x)const
+    __DEVICE_TAG__ vec                  operator/(value_type div)const
     {
-        return operator*(value_type(1.)/x);
+        return detail::vec_div_scalar(*this, div);
     }
     __DEVICE_TAG__ vec                  operator+(const vec &x)const
     {
@@ -134,8 +145,13 @@ public:
         for (int j = 0;j < dim;++j) res.d[j] = value_type(1);
         return res;
     }
-    
-    __DEVICE_TAG__ vec                   &operator=(const vec &v);
+    static __DEVICE_TAG__ vec            make_unit(int j)
+    {
+        vec res  = make_zero();
+        res.d[j] = value_type(1);
+        return res;
+    }
+
     template<class Vec, 
              class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
     __DEVICE_TAG__ vec                   &operator=(const Vec &v)
@@ -163,10 +179,9 @@ public:
         for (int j = 0;j < dim;++j) d[j] *= mul;
         return *this;
     }
-    __DEVICE_TAG__ vec                   &operator/=(const value_type &mul)
+    __DEVICE_TAG__ vec                   &operator/=(const value_type &div)
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] /= mul;
+        detail::vec_div_scalar_inplace(div, *this);
         return *this;
     }
     __DEVICE_TAG__ T                     components_prod()const
@@ -192,19 +207,27 @@ public:
     }
 };
 
+#if !defined(__INTEL_LLVM_COMPILER)
 template<class T,int Dim>
-vec<T,Dim>::vec() = default;
+__DEVICE_TAG__ vec<T,Dim>::vec() = default;
 
 template<class T,int Dim>
-vec<T,Dim>::vec(const vec &v) = default;
+__DEVICE_TAG__ vec<T,Dim>::vec(const vec &v) = default;
 
 template<class T,int Dim>
-vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
+__DEVICE_TAG__ vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
+#endif
 
-template<class T,int Dim>
+/*template<class T,int Dim>
 __DEVICE_TAG__ vec<T,Dim>   operator*(T mul, const vec<T,Dim> &v)
 {
     return v*mul;
+}*/
+
+template<class T,class T2,int Dim,class X = typename std::enable_if<std::is_convertible<T2,T>::value>::type>
+vec<T,Dim> operator*(T2 mul, const vec<T,Dim> &v)
+{
+    return v*T(mul);
 }
 
 template<class T,int Dim>

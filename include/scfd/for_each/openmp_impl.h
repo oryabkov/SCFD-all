@@ -34,7 +34,7 @@ void openmp<T>::operator()(FUNC_T f, T i1, T i2)const
 {   
     int real_threads_num = threads_num;
     if (threads_num < 0) real_threads_num = omp_get_max_threads();
-
+    // omp_set_num_threads(real_threads_num); //https://stackoverflow.com/questions/46529242/openmp-with-c-and-gcc-omp-set-num-threads-has-no-effect
     #pragma omp parallel for num_threads(real_threads_num)
     for (T i = i1;i < i2;++i) 
     {
