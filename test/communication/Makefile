@@ -21,3 +21,7 @@ test_mpi_rect_distributor.bin: test_mpi_rect_distributor.cu
 test_sequential_mpi.bin: test_sequential_mpi.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_sequential_mpi.cpp -o test_sequential_mpi.bin
 	mpiexec --host localhost:77 -n 77 ./test_sequential_mpi.bin
+
+test_mpi_binary_file.bin: test_mpi_binary_file.cpp
+	${MPICC} -I${SCFD_INCLUDE} test_mpi_binary_file.cpp -o test_mpi_binary_file.bin
+	mpiexec --host localhost:77 -n 77 ./test_mpi_binary_file.bin		
