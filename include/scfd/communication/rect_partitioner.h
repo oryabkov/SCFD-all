@@ -15,12 +15,15 @@ namespace communication
 template<int Dim,class Ord,class BigOrd>
 struct rect_partitioner
 {
-    typedef     static_vec::vec<Ord,Dim>             ord_vec_t;
-    typedef     static_vec::rect<Ord,Dim>            ord_rect_t;
-    typedef     static_vec::vec<BigOrd,Dim>          big_ord_vec_t;
-    typedef     static_vec::rect<BigOrd,Dim>         big_ord_rect_t;
+    using ordinal = Ord;
+    using big_ordinal = BigOrd;
+    using ord_vec_t = static_vec::vec<Ord,Dim>;
+    using ord_rect_t = static_vec::rect<Ord,Dim>;
+    using big_ord_vec_t = static_vec::vec<BigOrd,Dim>;
+    using big_ord_rect_t = static_vec::rect<BigOrd,Dim>;
+    using comm_info_type = mpi_comm_info;
 
-    mpi_comm_info                   comm_info;
+    comm_info_type                   comm_info;
     //proc_rects is of size comm_size
     //proc_rects[i] contains indexes rect owned by i-th process
     big_ord_vec_t                   dom_size;

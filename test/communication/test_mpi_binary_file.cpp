@@ -20,7 +20,7 @@ using part_t = scfd::communication::rect_partitioner<Dim,ordinal,big_ordinal>;
 using idx_t = scfd::static_vec::vec<ordinal, Dim>;
 using big_idx_t = scfd::static_vec::vec<big_ordinal, Dim>;
 
-using big_ord_vec_t = scfd::static_vec::vec<big_ordinal,Dim>;
+using big_ord_vec_t = scfd::static_vec::vec<big_ordinal, Dim>;
 using big_ord_rect_t = typename part_t::big_ord_rect_t;
 
 
