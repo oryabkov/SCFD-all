@@ -117,7 +117,6 @@ int main(int argc, char *argv[])
         {
             for(ordinal k=0;k<loc_dom_sz(1);k++)
             {
-                #pragma omp parallel for
                 for(ordinal j=0;j<loc_dom_sz(0);j++)
                 {
                     auto loc_idx = sft_loc.idx({j,k,l});
@@ -141,7 +140,6 @@ int main(int argc, char *argv[])
                 auto shft = sft.shft(k,l);
                 file.seek(shft);
                 file.read(loc_dom_sz(0), buf.data() );
-                #pragma omp parallel for
                 for(ordinal j=0;j<loc_dom_sz(0);j++)
                 {
                     auto loc_idx = sft_loc.idx({j,k,l});
