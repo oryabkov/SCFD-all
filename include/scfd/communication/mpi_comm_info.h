@@ -18,6 +18,7 @@
 #define __SCFD_MPI_COMM_INFO_H__
 
 #include <stdexcept>
+#include <string>
 #include <mpi.h>
 
 #define __STR_HELPER(x) #x
@@ -25,8 +26,11 @@
 
 #define SCFD_MPI_SAFE_CALL(X) \
     do {                                                                                                                                                                                        \
-        auto mpi_res = (X);                                                                                                                                                       \
-        if (mpi_res != MPI_SUCCESS) throw scfd::communication::mpi_error(mpi_res, std::string("MPI_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: "));    \
+        auto mpi_res = (X);                                                                                                                                                                     \
+        char err_str[1024];                                                                                                                                                                     \
+        int str_len;                                                                                                                                                                            \
+        MPI_Error_string(mpi_res, err_str, &str_len);                                                                                                                                           \
+        if (mpi_res != MPI_SUCCESS) throw scfd::communication::mpi_error(mpi_res, std::string("MPI_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: ") + std::string(err_str) );     \
     } while (0)
 
 /*#define SCFD_MPI_SAFE_CALL(X,MSG_PREFIX) \
@@ -36,6 +40,7 @@
     } while (0)
 
 #define SCFD_MPI_SAFE_CALL(X) SCFD_MPI_SAFE_CALL(X,"")*/
+
 
 namespace scfd
 {
