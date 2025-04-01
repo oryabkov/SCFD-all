@@ -25,12 +25,12 @@
 #define __STR(x) __STR_HELPER(x)
 
 #define SCFD_MPI_SAFE_CALL(X) \
-    do {                                                                                                                                                                                        \
-        auto mpi_res = (X);                                                                                                                                                                     \
-        char err_str[1024];                                                                                                                                                                     \
-        int str_len;                                                                                                                                                                            \
-        MPI_Error_string(mpi_res, err_str, &str_len);                                                                                                                                           \
-        if (mpi_res != MPI_SUCCESS) throw scfd::communication::mpi_error(mpi_res, std::string("MPI_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: ") + std::string(err_str) );     \
+    do {                                                                                                                                                                                                \
+        auto mpi_res = (X);                                                                                                                                                                             \
+        char err_str[1024];                                                                                                                                                                             \
+        int str_len;                                                                                                                                                                                    \
+        MPI_Error_string(mpi_res, err_str, &str_len);                                                                                                                                                   \
+        if (mpi_res != MPI_SUCCESS) throw scfd::communication::mpi_error(mpi_res, std::string("MPI_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: ") + std::string(err_str) + " : " );     \
     } while (0)
 
 /*#define SCFD_MPI_SAFE_CALL(X,MSG_PREFIX) \
