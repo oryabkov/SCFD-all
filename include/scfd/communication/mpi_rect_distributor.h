@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <vector>
+#include <cmath>
 #include <stdexcept>
 #include <scfd/static_vec/vec.h>
 #include <scfd/static_vec/rect.h>
@@ -87,15 +88,18 @@ struct mpi_rect_distributor
     mpi_rect_distributor() = default;
     void init(
         const rect_partitioner_t &partitioner,
-        const bool_vec_t &periodic_flags, Ord stencil_size
+        const bool_vec_t &periodic_flags, Ord stencil_size, int stencil_max_order = 1
     )
     {
         ord_vec_t stencil_sizes = ord_vec_t::make_ones()*stencil_size;
-        init(partitioner, periodic_flags, stencil_sizes);
+        init(partitioner, periodic_flags, stencil_sizes, stencil_sizes, stencil_max_order);
     }
     void init(
         const rect_partitioner_t &partitioner,
-        const bool_vec_t &periodic_flags, ord_vec_t stencil_sizes
+        const bool_vec_t &periodic_flags, 
+        ord_vec_t stencil_sizes_lower, 
+        ord_vec_t stencil_sizes_upper,
+        int stencil_max_order = 1
     )
     {
         comm_info_ = partitioner.comm_info;
@@ -105,8 +109,8 @@ struct mpi_rect_distributor
         {
             packet pack;
             init_packet(
-                partitioner, periodic_flags, stencil_sizes, 
-                true, get_own_rank(), sender_proc_id, pack
+                partitioner, periodic_flags, stencil_sizes_lower, stencil_sizes_upper,
+                stencil_max_order, true, get_own_rank(), sender_proc_id, pack
             );
             if (!pack.buckets.empty())
             {
@@ -123,8 +127,8 @@ struct mpi_rect_distributor
         {
             packet pack;
             init_packet(
-                partitioner, periodic_flags, stencil_sizes, 
-                false, reciever_proc_id, get_own_rank(), pack
+                partitioner, periodic_flags, stencil_sizes_lower, stencil_sizes_upper,
+                stencil_max_order, false, reciever_proc_id, get_own_rank(), pack
             );
             if (!pack.buckets.empty())
             {
@@ -293,7 +297,9 @@ private:
 
     void init_packet(
         const rect_partitioner_t &partitioner,
-        const bool_vec_t &periodic_flags, ord_vec_t stencil_sizes, 
+        const bool_vec_t &periodic_flags, 
+        ord_vec_t stencil_sizes_lower, ord_vec_t stencil_sizes_upper,
+        int stencil_max_order,
         bool is_in_pkg, Ord reciever_proc_id, Ord sender_proc_id, packet &pack
     )
     {
@@ -311,12 +317,39 @@ private:
         {
             throw std::logic_error("mpi_rect_distributor::init_packet: niether sender nor reciever is my_id");
         }
-        for (int j = 0;j < Dim;++j)
+        for (auto dir : big_ord_rect_t::make_symm_square_range())
         {
-            for (Ord sign = -1;sign <= 1;sign+=2)
+            int stencil_order = 0;
+            for (int j = 0;j < Dim;++j)
             {
-                big_ord_rect_t  stencil_rect = recv_rect;
-                if (sign == -1)
+                stencil_order += std::abs(dir[j]);
+            }
+            if (stencil_order > stencil_max_order) continue;
+
+            big_ord_vec_t padding_size;
+            for (int j = 0;j < Dim;++j)
+            {
+                if (dir[j] < 0)
+                    padding_size[j] = -stencil_sizes_lower[j];
+                else if (dir[j] == 0)
+                    padding_size[j] = 0;
+                else
+                    padding_size[j] = stencil_sizes_upper[j];
+            }
+            big_ord_rect_t  stencil_rect_base = recv_rect.padding_rect(padding_size);
+
+            auto periodic_flags_rect = big_ord_rect_t::make_square_range();
+            /// Exclude non-periodic directions from tests
+            for (int j = 0;j < Dim;++j)
+            {
+                if (!periodic_flags[j]) periodic_flags_rect.i2[j] = 1;
+            }
+            for (auto periodic_flags_test : periodic_flags_rect)
+            {
+                big_ord_vec_t periodic_shift = pointwise_prod(periodic_flags_test, pointwise_prod(-dir,partitioner.dom_size));
+                big_ord_rect_t  stencil_rect = stencil_rect_base.shifted(periodic_shift);
+                
+                /*if (sign == -1)
                 {
                     stencil_rect.i2[j] = stencil_rect.i1[j];
                     stencil_rect.i1[j] = stencil_rect.i1[j]-stencil_sizes[j];
@@ -325,22 +358,25 @@ private:
                 {
                     stencil_rect.i1[j] = stencil_rect.i2[j];
                     stencil_rect.i2[j] = stencil_rect.i2[j]+stencil_sizes[j];
-                }
+                }*/
                 big_ord_rect_t  common_rect_from_recv = stencil_rect.intersect(send_rect),
                                 common_rect_from_send = common_rect_from_recv;
                 /// Try periodic case if not
-                if (common_rect_from_recv.is_empty() && periodic_flags[j])
+                //if (common_rect_from_recv.is_empty() && periodic_flags[j])
+               // {
+                    
+                    //stencil_rect.i1[j] += periodic_shift;
+                    //stencil_rect.i2[j] += periodic_shift;
+                    //common_rect_from_send = stencil_rect.intersect(send_rect);
+                    //common_rect_from_recv = common_rect_from_send;
+                    
+                //}
+                if (!common_rect_from_recv.is_empty())
                 {
-                    BigOrd periodic_shift = (-sign)*partitioner.dom_size[j];
-                    stencil_rect.i1[j] += periodic_shift;
-                    stencil_rect.i2[j] += periodic_shift;
-                    common_rect_from_send = stencil_rect.intersect(send_rect);
-                    common_rect_from_recv = common_rect_from_send;
-                    if (!common_rect_from_recv.is_empty())
-                    {
-                        common_rect_from_recv.i1[j] -= periodic_shift;
-                        common_rect_from_recv.i2[j] -= periodic_shift;
-                    }
+                    common_rect_from_recv = common_rect_from_recv.shifted(-periodic_shift);
+
+                    //common_rect_from_recv.i1[j] -= periodic_shift;
+                    //common_rect_from_recv.i2[j] -= periodic_shift;
                 }
                 /// TODO how to check or proove that only one of these cases is met at once
                 if (common_rect_from_recv.is_empty() != common_rect_from_send.is_empty()) 
