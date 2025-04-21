@@ -170,6 +170,28 @@ public:
         }
         parent_t::init1_(dims_vec);
     }
+    template<class SizeVec, class... Args,
+             class = typename std::enable_if<
+                                  detail::has_subscript_operator<SizeVec,ordinal_type>::value
+                              >::type,
+             class = typename std::enable_if<
+                                  sizeof...(Args)+ND==arranger_type::dynamic_dims_num
+                              >::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< std::is_integral<Args>::value... >::value
+                              >::type>
+    void                            init_by_raw_data(pointer_type raw_data_ptr, const SizeVec &sz, Args ...args)
+    {
+        vec<ordinal_type,sizeof...(Args)>                      args_vec{args...};
+        vec<ordinal_type,arranger_type::dynamic_dims_num>      dims_vec;
+        for (int j = 0;j < ND;++j) {
+            dims_vec[j] = sz[j];
+        }
+        for (int j = 0;j < arranger_type::dynamic_dims_num-ND;++j) {
+            dims_vec[ND+j] = args_vec[j];
+        }
+        parent_t::init1_by_raw_data_(raw_data_ptr,dims_vec);
+    }
     #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
     template<class SizeVec, class... Args,
              class = typename std::enable_if<
@@ -212,6 +234,48 @@ public:
     void                            init(const rect<RectOrd,ND> &nd_shape, Args... args)
     {
         init(nd_shape.i2-nd_shape.i1,nd_shape.i1,args...);
+    }
+    template<class SizeVec, class... Args,
+             class = typename std::enable_if<
+                                  detail::has_subscript_operator<SizeVec,ordinal_type>::value
+                              >::type,
+             class = typename std::enable_if<
+                                  (sizeof...(Args) >= (arranger_type::dynamic_dims_num-ND))&&
+                                  (sizeof...(Args) <= (arranger_type::dynamic_dims_num-ND)*2)
+                              >::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< std::is_integral<Args>::value... >::value
+                              >::type>
+    void                            init_by_raw_data(pointer_type raw_data_ptr, const SizeVec &sz, const SizeVec &index0, Args... args)
+    {
+        vec<ordinal_type,sizeof...(Args)>                      args_vec{args...};
+        vec<ordinal_type,arranger_type::dynamic_dims_num>      dims_vec, indexes0_vec;
+        for (int j = 0;j < ND;++j) {
+            dims_vec[j] = sz[j];
+            indexes0_vec[j] = index0[j];
+        }
+        for (int j = 0;j < arranger_type::dynamic_dims_num-ND;++j) {
+            dims_vec[ND+j] = args_vec[j];
+            if (arranger_type::dynamic_dims_num-ND+j < sizeof...(Args))
+                indexes0_vec[ND+j] = args_vec[arranger_type::dynamic_dims_num-ND+j];
+            else
+                indexes0_vec[ND+j] = 0;
+        }
+        parent_t::init1_by_raw_data_(raw_data_ptr,dims_vec);
+        arranger_type::set_dyn_indexes0(indexes0_vec);
+    }
+    template<class RectOrd, class... Args,
+             class = typename std::enable_if<
+                                  (sizeof...(Args) >= (arranger_type::dynamic_dims_num-ND))&&
+                                  (sizeof...(Args) <= (arranger_type::dynamic_dims_num-ND)*2)
+                              >::type,
+             class = typename std::enable_if<
+                                  detail::check_all_are_true< std::is_integral<Args>::value... >::value
+                              >::type,
+             class = typename std::enable_if<std::is_integral<RectOrd>::value>::type>
+    void                            init_by_raw_data(pointer_type raw_data_ptr, const rect<RectOrd,ND> &nd_shape, Args... args)
+    {
+        init_by_raw_data(raw_data_ptr,nd_shape.i2-nd_shape.i1,nd_shape.i1,args...);
     }
     #endif
 
