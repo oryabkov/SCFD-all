@@ -170,6 +170,7 @@ public:
         }
         parent_t::init1_(dims_vec);
     }
+    using                           parent_t::init_by_raw_data;
     template<class SizeVec, class... Args,
              class = typename std::enable_if<
                                   detail::has_subscript_operator<SizeVec,ordinal_type>::value
