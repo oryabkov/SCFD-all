@@ -52,6 +52,37 @@ namespace kernel
 {
 
 template<int Dim,class Ord,class Array>
+struct copy_array_nd_func 
+{
+    SCFD_FOR_EACH_FUNC_PARAMS(
+        copy_array_nd_func,
+        Array, input, Array, output
+    )
+    __DEVICE_TAG__ void operator()(const static_vec::vec<Ord,Dim> &idx)
+    {
+        output(idx) = input(idx);
+    }
+};
+
+} // namespace kernel
+
+template<class ForEach,int Dim,class Ord, class Array>    
+void copy_array_nd_rect(
+    const ForEach &for_each, 
+    const Array &input, const static_vec::rect<Ord,Dim> &rect, 
+    const Array &output
+)
+{   
+    for_each(
+        kernel::copy_array_nd_func<Dim,Ord,Array>(input, output),
+        rect
+    );
+}
+    
+namespace kernel
+{
+
+template<int Dim,class Ord,class Array>
 struct copy_array1_nd_func 
 {
     SCFD_FOR_EACH_FUNC_PARAMS(
