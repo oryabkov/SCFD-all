@@ -3,7 +3,7 @@ CUDA_ARCHITECTURE =
 HIP_ARCHITECTURE = 
 INCLUDE_SRC = ./src
 INCLUDE_SCFD = ../../include
-ROOT_CUDA = /usr/local/cuda
+ROOT_CUDA = /opt/cuda
 ROOT_HIP = /opt/rocm
 ROOT_MPI = /usr/local/mpi
 INCLUDE_CUDA = $(ROOT_CUDA)/include
@@ -18,7 +18,7 @@ MPICC = $(ROOT_MPI)/bin/mpic++
 OPENMP = -fopenmp -lpthread
 
 cuda:
-	$(NVCC) -O3 -std=c++17 $(CUDA_ARCHITECTURE) -I$(INCLUDE_SCFD) -I$(INCLUDE_SRC) -I$(INCLUDE_CUDA) -I$(INCLUDE_MPI) -DCUDA src/mgpu_reduce.cpp -c -o mgpu_reduce.obj -Xcompiler -fopenmp
+	$(NVCC) -O3 -std=c++17 -x cu $(CUDA_ARCHITECTURE) -I$(INCLUDE_SCFD) -I$(INCLUDE_SRC) -I$(INCLUDE_CUDA) -I$(INCLUDE_MPI) -DCUDA src/mgpu_reduce.cpp -c -o mgpu_reduce.obj -Xcompiler -fopenmp
 	$(MPICC) mgpu_reduce.obj -L$(LIB_CUDA) -L$(LIB_MPI) -lcudart -o mgpu_reduce.bin $(OPENMP)
 	rm mgpu_reduce.obj
 
