@@ -62,9 +62,8 @@
 struct sycl::is_device_copyable<typename kernel>        \
     : std::true_type {}
 
-#endif
-#else
 
+#else
 #error "No platform has been chosen for backend"
 
 #endif
@@ -104,7 +103,7 @@ struct backend
 #elif defined(PLATFORM_HIP)
     using memory_type       = scfd::memory::hip_device;
     template <class ordinal = int>
-    using for_each_type     = scfd::for_each::hip<dim, ordinal>;
+    using for_each_type     = scfd::for_each::hip<ordinal>;
     template <int dim, class ordinal = int>
     using for_each_nd_type  = scfd::for_each::hip_nd<dim, ordinal>;
     using reduce_type       = scfd::thrust_reduce<>;
@@ -113,13 +112,21 @@ struct backend
 #elif defined(PLATFORM_SYCL)
     using memory_type       = scfd::memory::sycl_device;
     template <class ordinal = int>
-    using for_each_type     = scfd::for_each::sycl<dim, ordinal>;
+    using for_each_type     = scfd::for_each::sycl<ordinal>;
     template <int dim, class ordinal = int>
     using for_each_nd_type  = scfd::for_each::sycl_nd<dim, ordinal>;
     using reduce_type       = scfd::sycl_reduce<>;
 
 
 #endif
+
+    // usefull aliases
+    using memory      = memory_type;
+    template <class ordinal = int>
+    using for_each    = for_each_type<ordinal>;
+    template <int dim, class ordinal = int>
+    using for_each_nd = for_each_nd_type<dim, ordinal>;
+    using reduce      = reduce_type;
 };
 
 } //scfd
