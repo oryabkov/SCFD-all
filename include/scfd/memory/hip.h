@@ -111,8 +111,8 @@ struct hip_host
 
 }
 
-#if 0
+// #if 0
 #include "thrust_ptr_hip.h" // TODO: add thrust support for hip
-#endif
+// #endif
 
 #endif
