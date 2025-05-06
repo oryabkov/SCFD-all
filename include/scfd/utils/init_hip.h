@@ -50,7 +50,7 @@ inline int init_hip(int log_lev, Log &log, int pci_id, int dev_num = -2)
     int count = 0;
     int i = 0;
 
-    hipGetDeviceCount(&count);
+    HIP_SAFE_CALL( hipGetDeviceCount(&count) );
     if(count == 0)
     {
         throw std::runtime_error("init_hip: There is no compartable device found\n");
@@ -65,7 +65,7 @@ inline int init_hip(int log_lev, Log &log, int pci_id, int dev_num = -2)
             for (i = 0; i < count; i++)
             {
                 hipDeviceProp_t device_prop;
-                hipGetDeviceProperties(&device_prop, i);
+                HIP_SAFE_CALL( hipGetDeviceProperties(&device_prop, i) );
                 //printf( "#%i:   %s, pci-bus id:%i %i %i \n", i, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
                 log.info_f(log_lev, "init_hip: #%i:   %s, pci-bus id:%i %i %i ", i, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
             }
@@ -78,7 +78,7 @@ inline int init_hip(int log_lev, Log &log, int pci_id, int dev_num = -2)
         {
             res_dev_num = dev_num;
             hipDeviceProp_t device_prop;
-            hipGetDeviceProperties(&device_prop, res_dev_num);
+            HIP_SAFE_CALL( hipGetDeviceProperties(&device_prop, res_dev_num) );
 
             //printf("Using #%i:   %s@[%i:%i:%i]\n",res_dev_num,(char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
             log.info_f(log_lev, "init_hip: Using #%i:   %s@[%i:%i:%i]",res_dev_num,(char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
@@ -89,7 +89,7 @@ inline int init_hip(int log_lev, Log &log, int pci_id, int dev_num = -2)
             bool found = false;
             for (int j=0;j<count;j++)
             {
-                hipGetDeviceProperties(&device_prop, j);
+                HIP_SAFE_CALL( hipGetDeviceProperties(&device_prop, j) );
                 if (device_prop.pciBusID==pci_id)
                 {
                     res_dev_num = j;
@@ -113,7 +113,7 @@ inline int init_hip(int log_lev, Log &log, int pci_id, int dev_num = -2)
     else
     {
         hipDeviceProp_t device_prop;
-        hipGetDeviceProperties(&device_prop, res_dev_num);
+        HIP_SAFE_CALL( hipGetDeviceProperties(&device_prop, res_dev_num) );
         /*printf("init_hip: There is only one compartable HIP device. It will be used regardless of preference.\n");
         printf( "#%i:   %s, pci-bus id:%i %i %i \n", res_dev_num, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
         printf( "       using it...\n");*/
