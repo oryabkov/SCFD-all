@@ -36,6 +36,7 @@
 
 #elif defined(PLATFORM_CUDA)
 
+#include <scfd/utils/init_cuda.h>
 #include <scfd/memory/cuda.h>
 #include <scfd/for_each/cuda_impl.cuh>
 #include <scfd/for_each/cuda_nd_impl.cuh>
@@ -44,6 +45,7 @@
 
 #elif defined(PLATFORM_HIP)
 
+#include <scfd/utils/init_hip.h>
 #include <scfd/memory/hip.h>
 #include <scfd/for_each/hip_impl.h>
 #include <scfd/for_each/hip_nd_impl.h>
