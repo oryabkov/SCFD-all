@@ -18,6 +18,7 @@
 #define __SCFD_MPI_WRAP_H__
 
 #include <mpi.h>
+#include <stdexcept>
 #include "mpi_comm_info.h"
 
 namespace scfd
@@ -25,37 +26,28 @@ namespace scfd
 namespace communication
 {
 
-template<std::int8_t UseThreadInit = -1>
 struct mpi_wrap
 {
     // https://docs.open-mpi.org/en/main/man-openmpi/man3/MPI_Init_thread.3.html
-    // UseThreadInit=0: MPI_THREAD_SINGLE: Indicating that only one thread will execute.
-    // UseThreadInit=1: MPI_THREAD_FUNNELED: Indicating that if the process is multithreaded, only the thread that called MPI_Init_thread will make MPI calls.
-    // UseThreadInit=2: MPI_THREAD_SERIALIZED: Indicating that if the process is multithreaded, only one thread will make MPI library calls at one time.
-    // UseThreadInit=3: MPI_THREAD_MULTIPLE: Indicating that if the process is multithreaded, multiple threads may call MPI at once with no restrictions.
+    // thread=0: MPI_THREAD_SINGLE: Indicating that only one thread will execute.
+    // thread=1: MPI_THREAD_FUNNELED: Indicating that if the process is multithreaded, only the thread that called MPI_Init_thread will make MPI calls.
+    // thread=2: MPI_THREAD_SERIALIZED: Indicating that if the process is multithreaded, only one thread will make MPI library calls at one time.
+    // thread=3: MPI_THREAD_MULTIPLE: Indicating that if the process is multithreaded, multiple threads may call MPI at once with no restrictions.
     
-    mpi_wrap(int argc, char *argv[]):
+    mpi_wrap(int argc, char *argv[], int thread = -1):
     provided_threads_(-1)
     {
-        if constexpr(UseThreadInit == 0)
+        if (thread == -1)
         {
-            MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided_threads_);
+             MPI_Init(&argc, &argv);
         }
-        else if constexpr(UseThreadInit == 1)
-        {
-            MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided_threads_);
-        }
-        else if constexpr(UseThreadInit == 2)
-        {
-            MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided_threads_);
-        }
-        else if constexpr(UseThreadInit == 3)
-        {
-            MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threads_);
-        }        
         else
         {
-            MPI_Init(&argc, &argv);
+            MPI_Init_thread(&argc, &argv, thread, &provided_threads_);
+            if(provided_threads_ != thread)
+            {
+                throw std::runtime_error("failed to initialize MPI with privided thread option.");
+            }                        
         }
         //int provided;
         //MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);

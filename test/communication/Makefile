@@ -29,4 +29,8 @@ test_mpi_binary_file.bin: test_mpi_binary_file.cpp
 
 test_mpi_thread_multiple.bin: test_mpi_thread_multiple.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_mpi_thread_multiple.cpp -o test_mpi_thread_multiple.bin
-	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin		
+	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin	
+	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 0	
+	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 1	
+	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 2	
+	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 3	
