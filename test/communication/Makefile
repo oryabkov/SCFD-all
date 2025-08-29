@@ -25,3 +25,8 @@ test_sequential_mpi.bin: test_sequential_mpi.cpp
 test_mpi_binary_file.bin: test_mpi_binary_file.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_mpi_binary_file.cpp -o test_mpi_binary_file.bin
 	mpiexec --host localhost:77 -n 77 ./test_mpi_binary_file.bin		
+
+
+test_mpi_thread_multiple.bin: test_mpi_thread_multiple.cpp
+	${MPICC} -I${SCFD_INCLUDE} test_mpi_thread_multiple.cpp -o test_mpi_thread_multiple.bin
+	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin		

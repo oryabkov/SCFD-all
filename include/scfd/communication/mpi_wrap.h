@@ -25,13 +25,38 @@ namespace scfd
 namespace communication
 {
 
+template<std::int8_t UseThreadInit = -1>
 struct mpi_wrap
 {
-
-
-    mpi_wrap(int argc, char *argv[])
+    // https://docs.open-mpi.org/en/main/man-openmpi/man3/MPI_Init_thread.3.html
+    // UseThreadInit=0: MPI_THREAD_SINGLE: Indicating that only one thread will execute.
+    // UseThreadInit=1: MPI_THREAD_FUNNELED: Indicating that if the process is multithreaded, only the thread that called MPI_Init_thread will make MPI calls.
+    // UseThreadInit=2: MPI_THREAD_SERIALIZED: Indicating that if the process is multithreaded, only one thread will make MPI library calls at one time.
+    // UseThreadInit=3: MPI_THREAD_MULTIPLE: Indicating that if the process is multithreaded, multiple threads may call MPI at once with no restrictions.
+    
+    mpi_wrap(int argc, char *argv[]):
+    provided_threads_(-1)
     {
-        MPI_Init(&argc, &argv);
+        if constexpr(UseThreadInit == 0)
+        {
+            MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided_threads_);
+        }
+        else if constexpr(UseThreadInit == 1)
+        {
+            MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided_threads_);
+        }
+        else if constexpr(UseThreadInit == 2)
+        {
+            MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided_threads_);
+        }
+        else if constexpr(UseThreadInit == 3)
+        {
+            MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threads_);
+        }        
+        else
+        {
+            MPI_Init(&argc, &argv);
+        }
         //int provided;
         //MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
         /*if (provided != MPI_THREAD_FUNNELED)
@@ -40,7 +65,8 @@ struct mpi_wrap
         }*/
         data.comm = MPI_COMM_WORLD;
         MPI_Comm_size(MPI_COMM_WORLD, &data.num_procs );
-        MPI_Comm_rank(MPI_COMM_WORLD, &data.myid );   
+        MPI_Comm_rank(MPI_COMM_WORLD, &data.myid );
+        data.provided_threads = provided_threads_;
     }
     ~mpi_wrap()
     {
@@ -49,8 +75,12 @@ struct mpi_wrap
 
     ///NOTE please use this method instead of data public member
     mpi_comm_info comm_world()const { return data; }    
+    int provided_threads()const {return provided_threads_; }
 
-    mpi_comm_info data;    
+    mpi_comm_info data;  
+
+private:
+    int provided_threads_; 
 
 };
 

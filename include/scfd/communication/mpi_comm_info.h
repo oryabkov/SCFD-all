@@ -238,6 +238,7 @@ struct mpi_comm_info
     MPI_Comm comm;
     int num_procs;
     int myid;
+    int provided_threads;
 
     void barrier()const
     {

@@ -22,8 +22,6 @@
 #include "mpi_comm_info.h"
 
 
-
-
 namespace scfd
 {
 namespace communication
