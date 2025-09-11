@@ -34,3 +34,14 @@ test_mpi_thread_multiple.bin: test_mpi_thread_multiple.cpp
 	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 1	
 	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 2	
 	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 3	
+
+	
+test_mpi_comm_split.bin: test_mpi_comm_split.cpp
+	${MPICC} -I${SCFD_INCLUDE} test_mpi_comm_split.cpp -o test_mpi_comm_split.bin
+	mpiexec --host localhost:8 -n 2 test_mpi_comm_split.bin
+	mpiexec --host localhost:8 -n 3 test_mpi_comm_split.bin
+	mpiexec --host localhost:8 -n 4 test_mpi_comm_split.bin
+	mpiexec --host localhost:8 -n 5 test_mpi_comm_split.bin
+	mpiexec --host localhost:8 -n 6 test_mpi_comm_split.bin		
+	mpiexec --host localhost:8 -n 7 test_mpi_comm_split.bin		
+	mpiexec --host localhost:8 -n 8 test_mpi_comm_split.bin
