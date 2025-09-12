@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
     {
         res_all_ref = 2*num_procs - 1;
     }
-    
-    log.info_f("res_all = %i, res_all_ref = %i", res_all, res_all_ref);
-    if(res_all_ref != res_all)
+
+    log.info_f("res_all = %i, res_all_ref = %i | num_procs = %i, res = %i", res_all, res_all_ref, num_procs, res);
+    if((res != num_procs)||(res_all_ref != res_all))
     {
         log.error("FAILED");
         return 1;
