@@ -13,63 +13,36 @@
 
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
+// 
+#ifndef __SCFD_BACKEND_CUDA_H__
+#define __SCFD_BACKEND_CUDA_H__
 
-#ifndef __SCFD_BACKEND_H__
-#define __SCFD_BACKEND_H__
 
-#if  defined(PLATFORM_SERIAL_CPU)
-#include "serial_cpu.h"
+#include <scfd/utils/init_cuda.h>
+#include <scfd/memory/cuda.h>
+#include <scfd/for_each/cuda_impl.cuh>
+#include <scfd/for_each/cuda_nd_impl.cuh>
+#include <scfd/reduce/thrust.h>
+
 namespace scfd
 {
 namespace backend
 {
-using selection = serial_cpu;
-}
-}
 
-#elif defined(PLATFORM_OMP)
-#include "omp.h"
-namespace scfd
+struct cuda
 {
-namespace backend
-{
-using selection = omp;
-}
-}
+    using memory_type       = scfd::memory::cuda_device;
+    template <class Ordinal = int>
+    using for_each_type     = scfd::for_each::cuda<Ordinal>;
+    template <int Dim, class Ordinal = int>
+    using for_each_nd_type  = scfd::for_each::cuda_nd<Dim, Ordinal>;
+    using reduce_type       = scfd::thrust_reduce<>;
+};
 
-#elif defined(PLATFORM_CUDA)
-#include "cuda.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = cuda;
 }
 }
+    
 
-#elif defined(PLATFORM_HIP)
-#include "hip.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = hip;
-}
-}
 
-#elif defined(PLATFORM_SYCL)
-#include "sycl.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = sycl;
-}
-}
 
-#else
-#error "No platform has been chosen for backend"
-
-#endif
-
-#endif
+#endif // __SCFD_BACKEND_CUDA_H__

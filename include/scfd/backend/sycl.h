@@ -13,63 +13,35 @@
 
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
+// 
 
-#ifndef __SCFD_BACKEND_H__
-#define __SCFD_BACKEND_H__
+#ifndef __SCFD_BACKEND_SYCL_H__
+#define __SCFD_BACKEND_SYCL_H__
 
-#if  defined(PLATFORM_SERIAL_CPU)
-#include "serial_cpu.h"
+#include <scfd/memory/sycl.h>
+#include <scfd/for_each/sycl_impl.h>
+#include <scfd/for_each/sycl_nd_impl.h>
+#include <scfd/reduce/sycl_reduce_impl.h>
+
+#define MAKE_SYCL_DEVICE_COPYABLE(kernel) template<>    \
+struct sycl::is_device_copyable<typename kernel>        \
+    : std::true_type {}
+
 namespace scfd
 {
 namespace backend
 {
-using selection = serial_cpu;
+struct sycl
+{
+    using memory_type       = scfd::memory::sycl_device;
+    template <class Ordinal = int>
+    using for_each_type     = scfd::for_each::sycl<Ordinal>;
+    template <int Dim, class Ordinal = int>
+    using for_each_nd_type  = scfd::for_each::sycl_nd<Dim, Ordinal>;
+    using reduce_type       = scfd::sycl_reduce<>;
+};
 }
 }
 
-#elif defined(PLATFORM_OMP)
-#include "omp.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = omp;
-}
-}
+#endif // __SCFD_BACKEND_SYCL_H__
 
-#elif defined(PLATFORM_CUDA)
-#include "cuda.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = cuda;
-}
-}
-
-#elif defined(PLATFORM_HIP)
-#include "hip.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = hip;
-}
-}
-
-#elif defined(PLATFORM_SYCL)
-#include "sycl.h"
-namespace scfd
-{
-namespace backend
-{
-using selection = sycl;
-}
-}
-
-#else
-#error "No platform has been chosen for backend"
-
-#endif
-
-#endif
