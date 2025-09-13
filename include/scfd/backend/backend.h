@@ -72,4 +72,18 @@ using selection = sycl;
 
 #endif
 
+namespace scfd
+{
+namespace backend
+{
+// usefull aliases
+using memory      = selection::memory_type;
+template <class Ordinal = int>
+using for_each    = selection::for_each_type<Ordinal>;
+template <int Dim, class Ordinal = int>
+using for_each_nd = selection::for_each_nd_type<Dim, Ordinal>;
+using reduce      = selection::reduce_type;
+}
+}
+
 #endif
