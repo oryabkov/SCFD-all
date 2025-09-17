@@ -3,10 +3,10 @@
 #include <type_traits>
 #include <scfd/utils/log_std.h>
 #include <scfd/static_vec/vec.h>
-#include <scfd/backend/serial_cpu.h>
+#include <scfd/backend/omp.h>
 #include <scfd/arrays/tensorN_array_nd.h>
 
-#define PLATFORM_SERIAL_CPU
+#define PLATFORM_OMP
 #include <scfd/backend/backend.h>
 
 template<class Idx, class Vec>
@@ -36,7 +36,7 @@ int main(int argc, char const *argv[])
 {
     using T = std::complex<double>;
     using log_t = scfd::utils::log_std;
-    using backend_t = scfd::backend::serial_cpu;
+    using backend_t = scfd::backend::omp;
     using memory_t = backend_t::memory_type;
     using for_each_t = backend_t::for_each_type<int>;
     using for_each_nd_t = backend_t::for_each_nd_type<3>;

@@ -8,7 +8,7 @@
 int main(int argc, char const *argv[])
 {
     using backend_t = scfd::backend::cuda;
-    using backend_def_t = scfd::backend::selection;
+    using backend_def_t = scfd::backend::current;
 
     using memory_t = scfd::backend::memory;
     using for_each_t = scfd::backend::for_each<int>;

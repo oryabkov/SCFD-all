@@ -23,7 +23,7 @@ namespace scfd
 {
 namespace backend
 {
-using selection = serial_cpu;
+using current = serial_cpu;
 }
 }
 
@@ -33,7 +33,7 @@ namespace scfd
 {
 namespace backend
 {
-using selection = omp;
+using current = omp;
 }
 }
 
@@ -43,7 +43,7 @@ namespace scfd
 {
 namespace backend
 {
-using selection = cuda;
+using current = cuda;
 }
 }
 
@@ -53,7 +53,7 @@ namespace scfd
 {
 namespace backend
 {
-using selection = hip;
+using current = hip;
 }
 }
 
@@ -63,7 +63,7 @@ namespace scfd
 {
 namespace backend
 {
-using selection = sycl;
+using current = sycl;
 }
 }
 
@@ -77,12 +77,12 @@ namespace scfd
 namespace backend
 {
 // usefull aliases
-using memory      = selection::memory_type;
+using memory      = current::memory_type;
 template <class Ordinal = int>
-using for_each    = selection::for_each_type<Ordinal>;
+using for_each    = current::for_each_type<Ordinal>;
 template <int Dim, class Ordinal = int>
-using for_each_nd = selection::for_each_nd_type<Dim, Ordinal>;
-using reduce      = selection::reduce_type;
+using for_each_nd = current::for_each_nd_type<Dim, Ordinal>;
+using reduce      = current::reduce_type;
 }
 }
 
