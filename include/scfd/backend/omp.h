@@ -33,10 +33,10 @@ struct omp
 {
     using memory_type       = scfd::memory::host;
     template <class Ordinal = int>
-    using for_each_type     = scfd::for_each::omp<Ordinal>;
+    using for_each_type     = scfd::for_each::openmp<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type  = scfd::for_each::omp_nd<Dim, Ordinal>;
-    using reduce_type       = scfd::omp_reduce<>;   
+    using for_each_nd_type  = scfd::for_each::openmp_nd<Dim, Ordinal>;
+    using reduce_type       = scfd::omp_reduce<>;
 };
 
 }
