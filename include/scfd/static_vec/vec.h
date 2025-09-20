@@ -240,6 +240,15 @@ __DEVICE_TAG__ T            scalar_prod(const vec<T,Dim> &v1, const vec<T,Dim> &
 }
 
 template<class T,int Dim>
+__DEVICE_TAG__ vec<T,Dim>   pointwise_prod(const vec<T,Dim> &v1, const vec<T,Dim> &v2)
+{
+    vec<T,Dim>  res;
+    #pragma unroll
+    for (int j = 0;j < Dim;++j) res[j] = v1[j]*v2[j];
+    return res;
+}
+
+template<class T,int Dim>
 __DEVICE_TAG__ vec<T,Dim>   vector_prod(const vec<T,Dim> &v1, const vec<T,Dim> &v2)
 {
     static_assert(Dim==3, "static_vec::vector_prod: trying to apply to non 3d vectors");

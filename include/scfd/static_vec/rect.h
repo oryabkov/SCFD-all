@@ -46,6 +46,8 @@ struct rect
         return true;
     }
     __DEVICE_TAG__ vec<T,Dim>  calc_size()const { return i2-i1; }
+    __DEVICE_TAG__ T           calc_size(int j)const { return i2[j]-i1[j]; }
+    //TODO what about inversed rects where for some i2[j] < i1[j]? Think we should return zero for such case.
     __DEVICE_TAG__ T           calc_area()const 
     { 
         T   res(1);
@@ -56,6 +58,48 @@ struct rect
     static __DEVICE_TAG__ rect make_empty()
     {
         return rect<T,Dim>(vec_type::make_zero(),vec_type::make_zero());
+    }
+    /**
+     * Creates rect which range contains all points from (-half_size,-half_size,...) 
+     * up to (half_size,half_size,...) - borders included.
+     * Use together with range for loops to walkthrough over all {-half_size,..,0,..,half_size} combinations
+     * of indices. For example:
+     * for (auto i : rect<int,2>::make_symm_square_range())
+     * {
+     *     ...
+     * }
+     * will iterate over (2*1+1)^2 = 9 corresponding indices.
+     **/
+    static __DEVICE_TAG__ rect make_symm_square_range(T half_size = T(1))
+    {
+        rect res;
+        for (int j = 0;j < Dim;++j)
+        {
+            res.i1[j] = -half_size;
+            res.i2[j] = half_size+1;
+        }
+        return res;
+    }
+    /**
+     * Creates rect which range contains all points from (0,0,...) 
+     * up to (half_size,half_size,...) - borders included.
+     * Use together with range for loops to walkthrough over all {0,..,half_size} combinations
+     * of indices. For example:
+     * for (auto i : rect<int,3>::make_square_range(3))
+     * {
+     *     ...
+     * }
+     * will iterate over (3+1)^3 = 64 corresponding indices.
+     **/
+    static __DEVICE_TAG__ rect make_square_range(T size = T(1))
+    {
+        rect res;
+        for (int j = 0;j < Dim;++j)
+        {
+            res.i1[j] = 0;
+            res.i2[j] = size+1;
+        }
+        return res;
     }
     /// TODO better to rename it into intersection (intersect is a verb)
     __DEVICE_TAG__ rect        intersect(const rect &r)
@@ -89,6 +133,29 @@ struct rect
         rect res = *this;
         res.i1[dir] -= pad_size;
         res.i2[dir] += pad_size;
+        return res;
+    }
+    /// Returns padding rect in the neibourhood of the original one according to the following rules:
+    /// For all dimensions j: padding_size[j]==0 dimensions leaved without changes.
+    /// For all dimensions j: padding_size[j]<0 dimensions left (lower border) padding with absolute size -padding_size[j] is taken.
+    /// For all dimensions j: padding_size[j]>0 dimensions right (upper border) padding with absolute size padding_size[j] is taken.
+    /// TODO what about initially empty rect?
+    __DEVICE_TAG__ rect        padding_rect(const vec<T, Dim> &padding_size)const
+    {
+        rect res = *this;
+        for (int j = 0;j < Dim;++j)
+        {
+            if (padding_size[j] < 0) 
+            {
+                res.i2[j] = res.i1[j];
+                res.i1[j] += padding_size[j];
+            }
+            else if (padding_size[j] > 0) 
+            {
+                res.i1[j] = res.i2[j];
+                res.i2[j] += padding_size[j];
+            }
+        }
         return res;
     }
     __DEVICE_TAG__ rect        shifted(const vec<T, Dim> &idx_shift)const
@@ -125,8 +192,23 @@ struct rect
         return false;
     }
 
-    //ISSUE what about names (_-prefix)??
-    //this pair is more for for-style bypass (t_idx i = r.bypass_start();r.is_own(i);r.bypass_step(i))
+    //this pair is more for for-style bypass (auto i = r.range_start();r.is_own(i);r.range_step(i))
+    __DEVICE_TAG__ vec<T, Dim>    range_start()const
+    {
+        return i1;
+    }
+    __DEVICE_TAG__ void           range_step(vec<T, Dim> &idx)const
+    {
+        for (int j = Dim-1;j >= 0;--j) {
+            ++(idx[j]);
+            if (idx[j] < i2[j]) return;
+            if (j == 0) return;  //we are over rect, so we leave idx[0] to be out of range which can be checked by is_own(idx)
+            idx[j] = i1[j];
+        }
+        //we are never not here
+    }
+
+    //WARNING this version is for backward compability only and MUST NOT be used; use range_start/range_step instead
     __DEVICE_TAG__ vec<T, Dim>    _bypass_start()const
     {
         return i1;
@@ -142,7 +224,62 @@ struct rect
         //we are never not here
     }
 
+    class iterator 
+    {
+    public:
+        __DEVICE_TAG__ iterator(rect r, vec_type idx): r_(r), idx_(idx) {}
+        __DEVICE_TAG__ iterator operator++() 
+        { 
+            r_.range_step(idx_); 
+            return *this; 
+        }
+        __DEVICE_TAG__ bool operator!=(const iterator & other) const 
+        { 
+            //TODO
+            //if (r_ != other.r_) return false;  /// TODO think its more like exception with logic
+            return idx_ != other.idx_;  
+        }
+        /// TODO by value ok?
+        __DEVICE_TAG__ vec_type operator*() const { return idx_; }
+    private:
+        rect r_; 
+        vec_type idx_;
+    };
 
+    __DEVICE_TAG__ iterator begin() const 
+    { 
+        return iterator(*this, i1); 
+    }
+    __DEVICE_TAG__ iterator end() const 
+    { 
+        /// according to logic of _bypass_step
+        vec_type end_idx = i1;
+        end_idx[0] = i2[0];
+        return iterator(*this, end_idx); 
+    }
+
+    /**
+     * use this to perform indexed loops over the rect range (for example to use omp):
+     * for (T i = 0;i < r.calc_area();++i)
+     * {
+     *      auto idx = lin_idx_2_nd_idx(i);
+     *      ...
+     * }
+     * NOTE indexing is only c-style for now i.e. last index fast
+     **/
+    __DEVICE_TAG__ vec_type lin_idx_2_nd_idx(T lin_idx)const
+    {
+        vec_type res;
+        //TODO this infact a precondition - should raise error?
+        if (is_empty()) return vec_type::make_zero();
+        for (int j = Dim-1;j >= 0;--j)
+        {
+            T sz_j = calc_size(j);
+            res[j] = i1[j] + lin_idx%sz_j;
+            lin_idx /= sz_j;
+        }
+        return res;
+    }
 };
 
 }
