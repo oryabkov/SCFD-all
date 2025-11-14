@@ -9,6 +9,9 @@ if(CUDA_ENABLED)
   add_executable(test_tensor_array_nd_visible_cuda.bin test_tensor_array_nd_visible.cu)
   target_link_libraries(test_tensor_array_nd_visible_cuda.bin gtest_main)
 
+  add_executable(test_tensor_array_nd_visible_cuda.bin test_custom_index_arranger.cu)
+  target_link_libraries(test_tensor_array_nd_visible_cuda.bin gtest_main)
+  
 endif()
 
 add_compile_options(-I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
@@ -32,6 +35,7 @@ if(CUDA_ENABLED)
   add_test(NAME test_cuda_unified_arrays COMMAND test_cuda_unified_arrays.bin)
   add_test(NAME test_tensor_array_nd_cuda COMMAND test_tensor_array_nd_cuda.bin 10000 100 10)
   add_test(NAME test_tensor_array_nd_visible_cuda COMMAND test_tensor_array_nd_visible_cuda.bin)
+  add_test(NAME test_custom_index_arranger_cuda COMMAND test_custom_index_arranger_cuda.bin)
 endif()
 
 add_test(NAME test_tensor_host COMMAND test_tensor_host.bin)
