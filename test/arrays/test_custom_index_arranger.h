@@ -35,8 +35,6 @@
 
 
 
-
-
 namespace scfd
 {
 
@@ -60,8 +58,6 @@ struct copy_work
     }
 
 };
-
-
 
 }
 

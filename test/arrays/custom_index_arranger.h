@@ -82,12 +82,34 @@ struct custom_index_arranger<Dim0,Dim1,Dim2,First, Second, Third> : public arran
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
         printf("TODO! Implement on demand!");
         exit(0);
-        return                              ((i2 - this->template get_index0<2>())*
+        return ((i2 - this->template get_index0<2>())*
                 this->template get_dim<1>() + i1 - this->template get_index0<1>())*
                 this->template get_dim<0>() + i0 - this->template get_index0<0>();
 #else
  
         return axis_size<First>::get(i0, i1, i2) + axis_size<First>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>() )*( axis_size<Second>::get(i0, i1, i2) +  axis_size<Second>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>() )* axis_size<Third>::get(i0, i1, i2) );
+        // return  ((i2)*this->template get_dim<1>() + i1)*this->template get_dim<0>() + i0;
+#endif
+    }
+};
+
+
+
+template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type First, ordinal_type Second, ordinal_type Third, ordinal_type Forth>
+struct custom_index_arranger<Dim0, Dim1, Dim2, Dim3, First, Second, Third, Forth> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3>
+{
+    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
+                                               ordinal_type i1, 
+                                               ordinal_type i2,
+                                               ordinal_type i3)const
+    {
+#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+        printf("TODO! Implement on demand!");
+        exit(0);
+        return ;
+#else
+ 
+        return axis_size<First>::get(i0, i1, i2, i3) + axis_size<First>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>(), this->template get_dim<3>() )*( axis_size<Second>::get(i0, i1, i2, i3) +  axis_size<Second>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>(), this->template get_dim<3>()  )*( axis_size<Third>::get(i0, i1, i2, i3) +  axis_size<Third>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>(), this->template get_dim<3>())*axis_size<Forth>::get(i0, i1, i2, i3)  ) );
         // return  ((i2)*this->template get_dim<1>() + i1)*this->template get_dim<0>() + i0;
 #endif
     }
