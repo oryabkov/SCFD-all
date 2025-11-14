@@ -38,7 +38,7 @@ struct cuda_timer_event : public timer_event
     }
     virtual void    record()
     {
-        cudaEventRecord( e_, 0 );
+        CUDA_SAFE_CALL( cudaEventRecord( e_, 0 ) );
     }
     virtual double  elapsed_time(const timer_event &e0)const
     {
@@ -47,12 +47,12 @@ struct cuda_timer_event : public timer_event
             throw std::logic_error("cuda_timer_event::elapsed_time: try to calc time from different type of timer (non-cuda)");
         }
         float   res;
-        cudaEventSynchronize( e_ );
-        cudaEventElapsedTime( &res, cuda_event->e_, e_ );
+        CUDA_SAFE_CALL( cudaEventSynchronize( e_ ) );
+        CUDA_SAFE_CALL( cudaEventElapsedTime( &res, cuda_event->e_, e_ ) );
         return (double)res;
     };
 
-    virtual ~cuda_timer_event()
+    virtual ~cuda_timer_event() noexcept
     {
         cudaEventDestroy( e_ );
     }
