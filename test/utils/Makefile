@@ -31,3 +31,6 @@ test_log_std_singleton.bin: test_log_std_singleton.cpp
 	g++ -std=c++11 -I$(SCFD_INCLUDE) test_log_std_singleton.cpp -o test_log_std_singleton.bin
 test_format_json.bin: test_format_json.cpp
 	g++ -std=c++11 -I$(SCFD_INCLUDE) -I$(NLOHMANN_JSON_INCLUDE) test_format_json.cpp -o test_format_json.bin
+test_todo:
+	g++ -std=c++11 -I$(SCFD_INCLUDE) test_todo.cpp -o test_todo.bin
+	nvcc -std=c++14 -I$(SCFD_INCLUDE) test_todo.cu -o test_todo_cuda.bin
