@@ -27,6 +27,9 @@
 #include "detail/tensor_base_nd_gen.h"
 #include "detail/has_subscript_operator.h"
 #include "detail/default_arranger_chooser.h"
+#include "detail/nested_initializer_list_gen.h"
+#include "detail/nested_initializer_list_fill.h"
+#include "detail/nested_initializer_list_dims.h"
 
 namespace scfd
 {
@@ -85,10 +88,46 @@ private:
         typedef vec<T,vec_2_dim_<Args...>::value> type;
     };
 
+    void                            init1_by_initializer_list_(std::initializer_list<typename detail::nested_initializer_list_gen<T,arranger_type::dims_num>::type> il)
+    {
+        vec<ordinal_type,arranger_type::dynamic_dims_num> dyn_dims;
+        vec<ordinal_type,arranger_type::dims_num> il_dims, template_dims = parent_t::get_template_dims_vec();
+        detail::nested_initializer_list_dims<T,arranger_type::dims_num>::calc(il,il_dims);
+        if (!detail::nested_initializer_list_dims<T,arranger_type::dims_num>::check_if_square(il,il_dims))
+        {
+            throw std::logic_error("tensor_array_nd::initializer list is not rect (some dims on one level differ)");
+        }
+        for (ordinal_type i = 0, dyn_i = 0;i < arranger_type::dims_num;++i)
+        {
+            if (template_dims[i] == dyn_dim)
+            {
+                dyn_dims[dyn_i++] = il_dims[i];
+            }
+            else
+            {
+                if (template_dims[i] != il_dims[i])
+                {
+                    throw std::logic_error("tensor_array_nd::initializer list dim does not coincide with static one for i == " + std::to_string(i));
+                }
+            }
+        }
+        parent_t::init1_(dyn_dims);
+        tensor_array_nd<T,ND,typename Memory::host_memory_type,Arranger,TensorDims...> host_buf;
+        host_buf.init_alike(*this);
+        vec<ordinal_type,arranger_type::dims_num> idx;
+        detail::nested_initializer_list_fill<T,arranger_type::dims_num>::fill(il,host_buf,idx);
+        Memory::copy_from_host(sizeof(T)*arranger_type::total_size(), host_buf.raw_ptr(), this->raw_ptr());
+    }
+
 public:
     __DEVICE_TAG__                  tensor_array_nd();
     __DEVICE_TAG__                  tensor_array_nd(const tensor_array_nd &);
     __DEVICE_TAG__                  tensor_array_nd(tensor_array_nd &&t);
+
+    tensor_array_nd(std::initializer_list<typename detail::nested_initializer_list_gen<T,arranger_type::dims_num>::type> il)
+    {
+        init1_by_initializer_list_(il);
+    }
 
     template<class... Args,
              #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
@@ -146,6 +185,13 @@ public:
 
     __DEVICE_TAG__ tensor_array_nd  &operator=(const tensor_array_nd &t);
     __DEVICE_TAG__ tensor_array_nd  &operator=(tensor_array_nd &&t);
+
+    tensor_array_nd  &operator=(std::initializer_list<typename detail::nested_initializer_list_gen<T,arranger_type::dims_num>::type> il)
+    {
+        if (!parent_t::is_free() && parent_t::is_own()) parent_t::free();
+        init1_by_initializer_list_(il);
+        return *this;
+    }
 
     using                           parent_t::init;
     template<class SizeVec, class... Args,
@@ -314,8 +360,6 @@ public:
         return res;
     }
 #endif
-
-    pointer_type                    raw_ptr()const { return this->d_; }
 
     view_type                       create_view(bool sync_from_array_ = true)const;
 
