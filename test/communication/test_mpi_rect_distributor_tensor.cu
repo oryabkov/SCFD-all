@@ -19,7 +19,7 @@
 #include <scfd/memory/host.h>
 #include <scfd/memory/cuda.h>
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-#include <scfd/arrays/array_nd.h>
+#include <scfd/arrays/tensorN_array_nd.h>
 #include <scfd/for_each/serial_cpu_nd.h>
 #include <scfd/for_each/cuda_nd.h>
 #include <scfd/communication/mpi_wrap.h>
@@ -34,6 +34,7 @@ using ordinal = int;
 using big_ordinal = long int;
 using value_t = unsigned int;
 static const int dim = 3;
+static const int tensor_dim = 4;
 using comm_t = communication::mpi_wrap;
 using part_t = communication::rect_partitioner<dim,ordinal,big_ordinal>;
 using idx_t = static_vec::vec<ordinal,dim>;
@@ -43,7 +44,7 @@ using big_idx_t = static_vec::vec<big_ordinal,dim>;
 using big_rect_t = static_vec::rect<big_ordinal,dim>;
 using for_each_t = for_each::serial_cpu_nd<dim,ordinal>;
 using mem_t = memory::host;
-using array_t = arrays::array_nd<value_t,dim,mem_t>;
+using array_t = arrays::tensor1_array_nd<value_t,dim,mem_t,tensor_dim>;
 using dist_t = communication::mpi_rect_distributor<value_t,dim,mem_t,for_each_t,ordinal,big_ordinal>;
 
 big_idx_t periodic_rem(periodic_flags_t periodic_flags, big_idx_t dom_sz, big_idx_t idx)
@@ -58,14 +59,14 @@ big_idx_t periodic_rem(periodic_flags_t periodic_flags, big_idx_t dom_sz, big_id
     return res;
 }
 
-value_t ref_value(periodic_flags_t periodic_flags, big_idx_t dom_sz, big_idx_t idx)
+value_t ref_value(periodic_flags_t periodic_flags, big_idx_t dom_sz, big_idx_t idx, big_ordinal tensor_idx)
 {
     idx = periodic_rem(periodic_flags,dom_sz,idx);
     if (big_rect_t(dom_sz).is_own(idx))
     {
         return 
             static_cast<value_t>(
-                idx[0]*dom_sz[1]*dom_sz[2] + idx[1]*dom_sz[2] + idx[2]
+                tensor_idx*dom_sz[0]*dom_sz[1]*dom_sz[2] + idx[0]*dom_sz[1]*dom_sz[2] + idx[1]*dom_sz[2] + idx[2]
             );
     }
     return static_cast<value_t>(-1); //TODO use type traits max_value
@@ -109,7 +110,7 @@ int main(int argc, char *args[])
     periodic_flags_t periodic_flags(periodic_flag_x,periodic_flag_y,periodic_flag_z);
     dist_t      dist;
     log.info_all("init distributor");
-    dist.init(part,periodic_flags,stencil,max_stencil_order);
+    dist.init_for_tensors(tensor_dim,part,periodic_flags,stencil,max_stencil_order);
 
     big_rect_t  my_own_glob_rect = part.proc_rects[comm.data.myid];
     rect_t      my_own_loc_rect = rect_t(idx_t::make_zero(), my_own_glob_rect.calc_size());
@@ -129,7 +130,8 @@ int main(int argc, char *args[])
     for (ordinal iy = my_loc_rect.i1[1];iy < my_loc_rect.i2[1];++iy)
     for (ordinal iz = my_loc_rect.i1[2];iz < my_loc_rect.i2[2];++iz)
     {
-        data_view1(ix,iy,iz) = static_cast<value_t>(-1);
+        for (big_ordinal tensor_idx = 0;tensor_idx < tensor_dim;++tensor_idx)
+            data_view1(ix,iy,iz,tensor_idx) = static_cast<value_t>(-1);
     }
     //fill own data using global linear index with mostly handwritten functions
     for (ordinal ix = my_own_loc_rect.i1[0];ix < my_own_loc_rect.i2[0];++ix)
@@ -137,7 +139,8 @@ int main(int argc, char *args[])
     for (ordinal iz = my_own_loc_rect.i1[2];iz < my_own_loc_rect.i2[2];++iz)
     {
         big_idx_t idx = big_idx_t(ix,iy,iz) + my_own_glob_rect.i1;
-        data_view1(ix,iy,iz) = ref_value(periodic_flags, dom_sz, idx);
+        for (big_ordinal tensor_idx = 0;tensor_idx < tensor_dim;++tensor_idx)
+            data_view1(ix,iy,iz,tensor_idx) = ref_value(periodic_flags, dom_sz, idx, tensor_idx);
     }
     data_view1.release(true);
 
@@ -153,11 +156,14 @@ int main(int argc, char *args[])
     {
         big_idx_t idx = big_idx_t(ix,iy,iz) + my_own_glob_rect.i1;
         if (stencil_order(my_own_glob_rect, idx) > max_stencil_order) continue;
-        auto expected_val = ref_value(periodic_flags, dom_sz, idx);
-        if (data_view2(ix,iy,iz) != expected_val)
+        for (big_ordinal tensor_idx = 0;tensor_idx < tensor_dim;++tensor_idx)
         {
-            log.error_f("value mistmatch at index %d,%d,%d : expected %u got %u",ix,iy,iz,expected_val,data_view2(ix,iy,iz));
-            error_flag = 1;
+            auto expected_val = ref_value(periodic_flags, dom_sz, idx, tensor_idx);
+            if (data_view2(ix,iy,iz,tensor_idx) != expected_val)
+            {
+                log.error_f("value mistmatch at index %d,%d,%d tensor_idx = %d: expected %u got %u",ix,iy,iz,tensor_idx,expected_val,data_view2(ix,iy,iz,tensor_idx));
+                error_flag = 1;
+            }
         }
     }
     data_view2.release(false);

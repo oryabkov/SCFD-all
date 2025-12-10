@@ -53,6 +53,8 @@ typedef scfd::arrays::tensor1_array_nd<float,NDIM,mem_t,3>                array1
 typedef array1_nd_t::view_type                                            array1_nd_view_t;
 typedef scfd::arrays::tensor1_array_nd<float,NDIM,mem_t,scfd::arrays::dyn_dim>  array1_nd_dyn_t;
 typedef array1_nd_dyn_t::view_type                                        array1_nd_dyn_view_t;
+typedef scfd::arrays::tensor0_array_nd<float,NDIM,mem_t>                  array0_nd_t;
+typedef array0_nd_t::view_type                                            array0_nd_view_t;
 
 //global test array size parameters
 int     sz1 = 100, sz2 = 100, reps_n = 10;
@@ -197,6 +199,23 @@ __global__ void test_ker_ptr4(float *data, int sz1)
     }
 }
 
+__global__ void test_ker_array0_nd(array0_nd_t f)
+{
+    int     i1 = blockIdx.x * blockDim.x + threadIdx.x + f.get_index0<0>(),
+            i2 = blockIdx.y * blockDim.y + threadIdx.y + f.get_index0<1>();
+    if (!((i1-f.get_index0<0>() < f.get_dim<0>())&&
+          (i2-f.get_index0<1>() < f.get_dim<1>()))) return;
+    f(idx_nd_t(i1,i2)) += 1;    
+}
+
+__global__ void test_ker_ptr0_nd(float *data, int sz1, int sz2, int shift1, int shift2)
+{
+    int     i1 = blockIdx.x * blockDim.x + threadIdx.x + shift1,
+            i2 = blockIdx.y * blockDim.y + threadIdx.y + shift2;
+    if (!((i1-shift1 < sz1)&&(i2-shift2 < sz2))) return;
+    data[i1-shift1 + (i2-shift2)*sz1] += 1;
+}
+
 __global__ void test_ker_array1_nd_1(array1_nd_t f)
 {
     int     i1 = blockIdx.x * blockDim.x + threadIdx.x + f.get_index0<0>(),
@@ -295,6 +314,24 @@ bool    test_array0()
     }
     view2.release();
 
+    array0_t            f_il = {10.f,20.f,30.f,40.f};
+    if (f_il.size() != 4) {
+        printf("test_array0(il): f_il.size() != 4 \n");
+        result = false;
+    } else {
+        auto            view_il = f_il.create_view(true);
+        for (int i = 0;i < 4;++i) {
+            if (view_il(i) != (1+i)*10) {
+                printf("test_array0(il): i = %d: %f != %f \n", i, view_il(i), float((1+i)*10));
+                result = false;
+            }
+#ifdef DO_RESULTS_OUTPUT
+            printf("%d, %f\n", i, view_il(i));
+#endif
+        }
+        view_il.release();
+    }
+
     return result;
 }
 
@@ -356,6 +393,60 @@ bool    test_array1()
 #endif
     }
     view2.release();
+
+    array1_t            f_il = {{10.f,20.f,30.f},{41.f,51.f,61.f}};
+    if (f_il.size() != 2) {
+        printf("test_array1(il): f_il.size() != 2 \n");
+        result = false;
+    } else if (f_il.total_size() != 6) {
+        printf("test_array1(il): f_il.total_size() != 6 \n");
+        result = false;
+    } else {
+        auto            view_il = f_il.create_view(true);
+        for (int i = 0;i < 3;++i) {
+            if (view_il(0,i) != (1+i)*10) {
+                printf("test_array1(il): row0: i = %d: %f != %f \n", i, view_il(0,i), float((1+i)*10));
+                result = false;
+            }
+            if (view_il(1,i) != 1+(4+i)*10) {
+                printf("test_array1(il): row1: i = %d: %f != %f \n", i, view_il(1,i), float(1+(4+i)*10));
+                result = false;
+            }
+#ifdef DO_RESULTS_OUTPUT
+            printf("%d, row0: %f row1: %f\n", i, view_il(0,i), view_il(1,i));
+#endif
+        }
+        view_il.release();
+    }
+
+    f_il = {{1.f,2.f,3.f},{4.f,5.f,6.f},{7.f,8.f,9.f}};
+    if (f_il.size() != 3) {
+        printf("test_array1(il): f_il.size() != 3 \n");
+        result = false;
+    } else if (f_il.total_size() != 9) {
+        printf("test_array1(il): f_il.total_size() != 9 \n");
+        result = false;
+    } else {
+        auto            view_il = f_il.create_view(true);
+        for (int i = 0;i < 3;++i) {
+            if (view_il(0,i) != (1+i)) {
+                printf("test_array1(il): row0: i = %d: %f != %f \n", i, view_il(0,i), float((1+i)));
+                result = false;
+            }
+            if (view_il(1,i) != (4+i)) {
+                printf("test_array1(il): row1: i = %d: %f != %f \n", i, view_il(1,i), float((4+i)));
+                result = false;
+            }
+            if (view_il(2,i) != (7+i)) {
+                printf("test_array1(il): row2: i = %d: %f != %f \n", i, view_il(2,i), float((7+i)));
+                result = false;
+            }
+#ifdef DO_RESULTS_OUTPUT
+            printf("%d, row0: %f row1: %f\n row2: %f\n", i, view_il(0,i), view_il(1,i), view_il(2,i));
+#endif
+        }
+        view_il.release();
+    }
 
     return result;
 }
@@ -672,6 +763,85 @@ bool    test_assign_operator()
     return false;
 }
 
+bool    test_array0_nd(int shift1, int shift2)
+{
+    array0_nd_t f;
+    timer_event_t   e1,e2,e3,e4;
+    dim3            dimBlock(block2_sz1,block2_sz2);
+    dim3            dimGrid((sz1/block2_sz1)+1,(sz2/block2_sz2)+1);
+    if ((shift1 == 0)&&(shift2 == 0))
+        f.init(idx_nd_t(sz1,sz2));
+    else
+        f.init(idx_nd_t(sz1,sz2), idx_nd_t(shift1,shift2));
+
+    //test time with array
+    e1.record();
+    for (int rep = 0;rep < reps_n;++rep) {
+        test_ker_array0_nd<<<dimGrid, dimBlock>>>(f);
+    }
+    e2.record();
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    printf("test_array0_nd: array time = %f ms\n", e2.elapsed_time(e1)/reps_n);
+
+    //test time with c kernel
+    e3.record();
+    for (int rep = 0;rep < reps_n;++rep) {
+        test_ker_ptr0_nd<<<dimGrid, dimBlock>>>(f.raw_ptr(), sz1, sz2, shift1, shift2);
+    }
+    e4.record();
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    printf("test_array0_nd: plain c kernel time = %f ms\n", e4.elapsed_time(e3)/reps_n);
+
+    array0_nd_view_t    view(f, false);
+    for (int i = shift1;i < sz1+shift1;++i)
+    for (int j = shift2;j < sz2+shift2;++j) {
+        view(idx_nd_t(i,j)) = i;
+    }
+    view.release();
+
+    //call some kernel
+    test_ker_array0_nd<<<dimGrid, dimBlock>>>(f);
+
+    bool    result = true;
+
+    array0_nd_view_t    view2(f, true);
+    for (int i = shift1;i < sz1+shift1;++i)
+    for (int j = shift2;j < sz2+shift2;++j) {
+        if (view2(idx_nd_t(i,j)) != i+1) {
+            printf("test_array0_nd: i = %d, j = %d, i0 = 0: %f != %f \n", i, j, view2(idx_nd_t(i,j)), float(i+1));
+            result = false;
+        }
+#ifdef DO_RESULTS_OUTPUT
+        printf("%d, %d, %f\n", i, j, view2(idx_nd_t(i,j)));
+#endif
+    }
+    view2.release();
+
+    array0_nd_t            f_il = {{10.f,20.f,30.f,40.f},{41.f,51.f,61.f,71.f}};
+    if (f_il.size() != 8) {
+        printf("test_array0_nd(il): f_il.size() != 8 \n");
+        result = false;
+    } else {
+        auto            view_il = f_il.create_view(true);
+        for (int i = 0;i < 4;++i) {
+            if (view_il(0,i) != (1+i)*10) {
+                printf("test_array0_nd(il): row0: i = %d: %f != %f \n", i, view_il(0,i), float((1+i)*10));
+                result = false;
+            }
+            if (view_il(1,i) != 1+(4+i)*10) {
+                printf("test_array0_nd(il): row1: i = %d: %f != %f \n", i, view_il(1,i), float(1+(4+i)*10));
+                result = false;
+            }
+#ifdef DO_RESULTS_OUTPUT
+            printf("%d, row0: %f row1: %f\n", i, view_il(0,i), view_il(1,i));
+#endif
+        }
+        view_il.release();
+    }
+
+    return result;
+}
+
 bool    test_array1_nd_1(int shift1, int shift2)
 {
     array1_nd_t     f;
@@ -870,6 +1040,13 @@ int main(int argc, char **args)
         printf("test_assign_operator seems to be OK\n");
     } else {
         printf("test_assign_operator failed\n");
+        err_code = 2;
+    }
+
+    if (test_array0_nd(2,2)) {
+        printf("test_array0_nd seems to be OK\n");
+    } else {
+        printf("test_array0_nd failed\n");
         err_code = 2;
     }
 

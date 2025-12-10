@@ -22,6 +22,7 @@
 #include <cassert>
 #include <type_traits>
 #include <stdexcept>
+#include <initializer_list>
 #include <scfd/utils/device_tag.h>
 #include <scfd/static_vec/vec.h>
 #include "placeholder.h"
@@ -32,6 +33,7 @@
 #include "detail/placeholder_get_helper.h"
 #include "detail/template_arg_search.h"
 #include "detail/has_subscript_operator.h"
+#include "detail/template_dims_vec_getter.h"
 
 namespace scfd
 {
@@ -93,6 +95,8 @@ protected:
 #endif
         assert((!is_free() || (arranger_type::total_size() == 0)) && !own_);
     }
+
+    
 
     __DEVICE_TAG__ void             assign(const tensor_base &t)
     {
@@ -266,6 +270,13 @@ protected:
         }
     }
 
+    vec<ordinal_type,sizeof...(Dims)> get_template_dims_vec()const
+    {
+        vec<ordinal_type,sizeof...(Dims)> res;
+        detail::template_dims_vec_getter<ordinal_type,Dims...>::get(res);
+        return res;
+    }
+
 public:
     __DEVICE_TAG__                  tensor_base() : d_(NULL)
     {
@@ -282,6 +293,8 @@ public:
     tensor_base                     &operator=(const tensor_base &t) { assign(t); return *this; }
     tensor_base                     &operator=(tensor_base &&t) { move(std::move(t)); return *this; }
     #endif
+
+    pointer_type                    raw_ptr()const { return this->d_; }
 
     __DEVICE_TAG__ bool             is_free()const { return d_ == NULL; }
     __DEVICE_TAG__ bool             is_own()const { return own_; }
