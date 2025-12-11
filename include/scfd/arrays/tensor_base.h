@@ -285,12 +285,11 @@ public:
         arranger_type::set_zero_dyn_indexes0();
 #endif
     }
-    #ifndef __CUDA_ARCH__
+
+    #if !(defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__))
     tensor_base(const tensor_base &t) { assign(t); }
     tensor_base(tensor_base &&t) { move(std::move(t)); }
-    #endif
 
-    #ifndef __CUDA_ARCH__
     tensor_base                     &operator=(const tensor_base &t) { assign(t); return *this; }
     tensor_base                     &operator=(tensor_base &&t) { move(std::move(t)); return *this; }
     #endif

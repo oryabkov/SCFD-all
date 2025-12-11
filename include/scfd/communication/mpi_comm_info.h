@@ -234,10 +234,12 @@ class mpi_comm;
 
 struct mpi_comm_info
 {
+    using mpi_comm_type = mpi_comm;
 
     MPI_Comm comm;
     int num_procs;
     int myid;
+    int provided_threads;
 
     void barrier()const
     {

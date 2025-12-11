@@ -22,8 +22,6 @@
 #include "mpi_comm_info.h"
 
 
-
-
 namespace scfd
 {
 namespace communication
@@ -31,6 +29,8 @@ namespace communication
 
 struct mpi_comm
 {
+    using mpi_comm_info_type = mpi_comm_info;
+    
     mpi_comm(MPI_Comm comm) : comm_(comm)
     {
         if (comm_ == MPI_COMM_NULL) 

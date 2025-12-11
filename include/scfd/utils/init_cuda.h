@@ -50,7 +50,7 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
     int count = 0;
     int i = 0;
 
-    cudaGetDeviceCount(&count);
+    CUDA_SAFE_CALL( cudaGetDeviceCount(&count) );
     if(count == 0)
     {
         throw std::runtime_error("init_cuda: There is no compartable device found\n");
@@ -65,7 +65,7 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
             for (i = 0; i < count; i++) 
             {
                 cudaDeviceProp device_prop;
-                cudaGetDeviceProperties(&device_prop, i);
+                CUDA_SAFE_CALL(cudaGetDeviceProperties(&device_prop, i) );
                 //printf( "#%i:   %s, pci-bus id:%i %i %i \n", i, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
                 log.info_f(log_lev, "init_cuda: #%i:   %s, pci-bus id:%i %i %i ", i, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
             }            
@@ -78,7 +78,7 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
         {
             res_dev_num = dev_num;
             cudaDeviceProp device_prop;
-            cudaGetDeviceProperties(&device_prop, res_dev_num);
+            CUDA_SAFE_CALL( cudaGetDeviceProperties(&device_prop, res_dev_num) );
 
             //printf("Using #%i:   %s@[%i:%i:%i]\n",res_dev_num,(char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
             log.info_f(log_lev, "init_cuda: Using #%i:   %s@[%i:%i:%i]",res_dev_num,(char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
@@ -89,7 +89,7 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
             bool found = false;
             for (int j=0;j<count;j++)
             {
-                cudaGetDeviceProperties(&device_prop, j);
+                CUDA_SAFE_CALL( cudaGetDeviceProperties(&device_prop, j) );
                 if (device_prop.pciBusID==pci_id)
                 {
                     res_dev_num = j;
@@ -113,7 +113,7 @@ inline int init_cuda(int log_lev, Log &log, int pci_id, int dev_num = -2)
     else
     {
         cudaDeviceProp device_prop;
-        cudaGetDeviceProperties(&device_prop, res_dev_num);
+        CUDA_SAFE_CALL( cudaGetDeviceProperties(&device_prop, res_dev_num) );
         /*printf("init_cuda: There is only one compartable CUDA device. It will be used regardless of preference.\n");
         printf( "#%i:   %s, pci-bus id:%i %i %i \n", res_dev_num, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
         printf( "       using it...\n");*/
