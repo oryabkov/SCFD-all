@@ -15,104 +15,165 @@
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // 
-#ifndef __SCFD_CUSTOM_INDEX_ARRANGER_H__
-#define __SCFD_CUSTOM_INDEX_ARRANGER_H__
+#ifndef __SCFD_ARRAYS_CUSTOM_INDEX_FAST_ARRANGER_H__
+#define __SCFD_ARRAYS_CUSTOM_INDEX_FAST_ARRANGER_H__
 
 #include <scfd/static_vec/vec.h>
 #include <scfd/arrays/arranger_base.h>
 #include <scfd/utils/device_tag.h>
-#include <tuple>
+#include <scfd/utils/todo.h>
 
 namespace scfd
 {
 namespace arrays
 {
+
 using static_vec::vec;
 
+namespace detail
+{
 
-//Usage of constexpr in kernels:
-// https://stackoverflow.com/questions/40742242/does-cuda-c-not-have-tuples-in-device-code
-// I've just tried this out and tuple metaprogramming with std:: (std::tuple, std::get, etc ...) will work in device code with C++14 and expt-relaxed-constexpr enabled (CUDA8+) during compilation (e.g. nvcc -std=c++14 xxxx.cu -o yyyyy --expt-relaxed-constexpr) - CUDA 9 required for C++14, but basic std::tuple should work in CUDA 8 if you are limited to that. Thrust/tuple works but has some drawbacks: limited to 10 items and lacking in some of the std::tuple helper functions (e.g. std::tuple_cat). Because tuples and their related functions are compile-time, expt-relaxed-constexpr should enable your std::tuple to "just work". 
-template<size_t I>
+template<ordinal_type I>
 struct axis_size 
 {
     template<typename... Ts>
-    __DEVICE_TAG__ static size_t get(const Ts&... sizes) 
+    __DEVICE_TAG__ static ordinal_type get(const Ts&... sizes) 
     {
-        return std::get<I>(std::forward_as_tuple(sizes...) ); 
+        SCFD_ATODO("TODO! Implement on demand!");
     }
 };
+
+template<>
+struct axis_size<0>
+{
+    template<typename... Ts>
+    __DEVICE_TAG__ static ordinal_type get(ordinal_type i0, const Ts&... index_tail) 
+    {
+        return i0; 
+    }
+};
+
+template<>
+struct axis_size<1>
+{
+    template<typename... Ts>
+    __DEVICE_TAG__ static ordinal_type get(ordinal_type i0, ordinal_type i1, const Ts&... index_tail) 
+    {
+        return i1; 
+    }
+};
+
+template<>
+struct axis_size<2>
+{
+    template<typename... Ts>
+    __DEVICE_TAG__ static ordinal_type get(ordinal_type i0, ordinal_type i1, ordinal_type i2, const Ts&... index_tail) 
+    {
+        return i2; 
+    }
+};
+
+template<>
+struct axis_size<3>
+{
+    template<typename... Ts>
+    __DEVICE_TAG__ static ordinal_type get(ordinal_type i0, ordinal_type i1, ordinal_type i2, ordinal_type i3, const Ts&... index_tail) 
+    {
+        return i3; 
+    }
+};
+
+}
 
 
 template<ordinal_type... Dims>
-struct custom_index_arranger : public arranger_base<ordinal_type,Dims...>
+struct custom_index_fast_arranger /*: public arranger_base<ordinal_type,Dims...>*/
 {
 };
 
-
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type First, ordinal_type Second>
-struct custom_index_arranger<Dim0, Dim1, First, Second> : public arranger_base<ordinal_type,Dim0,Dim1>
+template<ordinal_type First, ordinal_type Second>
+struct custom_index_fast_arranger<First, Second>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1)const
+    template<ordinal_type Dim0, ordinal_type Dim1>
+    struct type : public arranger_base<ordinal_type,Dim0,Dim1>
     {
+        __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
+                                                   ordinal_type i1)const
+        {
 
-        
-        #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-                
-                const auto first_axis = axis_size<First>::get( this->template get_dim<0>(), this->template get_dim<1>() );
-                return first_axis*axis_size<First>::get(i0 - this->template get_index0<0>(), i1 - this->template get_index0<1>()) + axis_size<Second>::get(i0, i1); //(i0 - this->template get_index0<0>())*this->template get_dim<1>() + i1 - this->template get_index0<1>();
-
-
-        #else
-                const auto first_axis = axis_size<Second>::get( this->template get_dim<0>(), this->template get_dim<1>() );
-                return first_axis*axis_size<First>::get(i0, i1) + axis_size<Second>::get(i0, i1); //(i0)*this->template get_dim<1>() + i1;
-        #endif
-        
-    }
+            
+            #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT   
+                SCFD_ATODO("TODO! Implement TEST on demand!");             
+                const auto first_axis_size = this->template get_dim<First>();
+                return detail::axis_size<First>::get(i0, i1) - this->template get_index0<First>() + 
+                       first_axis_size*(detail::axis_size<Second>::get(i0, i1) - this->template get_index0<Second>());
+            #else
+                const auto first_axis_size = this->template get_dim<First>();
+                return detail::axis_size<First>::get(i0, i1) + first_axis_size*detail::axis_size<Second>::get(i0, i1);
+            #endif
+            
+        }
+    };
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type First, ordinal_type Second, ordinal_type Third>
-struct custom_index_arranger<Dim0,Dim1,Dim2,First, Second, Third> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2>
+template<ordinal_type First, ordinal_type Second, ordinal_type Third>
+struct custom_index_fast_arranger<First, Second, Third>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2)const
+    template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2>
+    struct type : public arranger_base<ordinal_type,Dim0,Dim1,Dim2>
     {
-#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        printf("TODO! Implement on demand!");
-        exit(0);
-        return ((i2 - this->template get_index0<2>())*
-                this->template get_dim<1>() + i1 - this->template get_index0<1>())*
-                this->template get_dim<0>() + i0 - this->template get_index0<0>();
-#else
- 
-        return axis_size<First>::get(i0, i1, i2) + axis_size<First>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>() )*( axis_size<Second>::get(i0, i1, i2) +  axis_size<Second>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>() )* axis_size<Third>::get(i0, i1, i2) );
-        // return  ((i2)*this->template get_dim<1>() + i1)*this->template get_dim<0>() + i0;
-#endif
-    }
+        __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
+                                                   ordinal_type i1, 
+                                                   ordinal_type i2)const
+        {
+            #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+
+            SCFD_ATODO("TODO! Implement TEST on demand!");
+            return detail::axis_size<First>::get(i0, i1, i2) - this->template get_index0<First>()  + 
+                   this->template get_dim<First>()*( (detail::axis_size<Second>::get(i0, i1, i2) - this->template get_index0<Second>()) +  
+                   this->template get_dim<Second>() * (detail::axis_size<Third>::get(i0, i1, i2) - this->template get_index0<Third>()) );
+
+            #else
+     
+            return detail::axis_size<First>::get(i0, i1, i2)  + 
+                   this->template get_dim<First>()*( detail::axis_size<Second>::get(i0, i1, i2) +  
+                   this->template get_dim<Second>() * detail::axis_size<Third>::get(i0, i1, i2) );
+
+            #endif
+        }
+    };
 };
 
 
-
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type First, ordinal_type Second, ordinal_type Third, ordinal_type Forth>
-struct custom_index_arranger<Dim0, Dim1, Dim2, Dim3, First, Second, Third, Forth> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3>
+template<ordinal_type First, ordinal_type Second, ordinal_type Third, ordinal_type Forth>
+struct custom_index_fast_arranger<First, Second, Third, Forth>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2,
-                                               ordinal_type i3)const
+    template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3>
+    struct type : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3>
     {
-#ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        printf("TODO! Implement on demand!");
-        exit(0);
-        return ;
-#else
- 
-        return axis_size<First>::get(i0, i1, i2, i3) + axis_size<First>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>(), this->template get_dim<3>() )*( axis_size<Second>::get(i0, i1, i2, i3) +  axis_size<Second>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>(), this->template get_dim<3>()  )*( axis_size<Third>::get(i0, i1, i2, i3) +  axis_size<Third>::get( this->template get_dim<0>(), this->template get_dim<1>(), this->template get_dim<2>(), this->template get_dim<3>())*axis_size<Forth>::get(i0, i1, i2, i3)  ) );
-        // return  ((i2)*this->template get_dim<1>() + i1)*this->template get_dim<0>() + i0;
-#endif
-    }
+        __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
+                                                   ordinal_type i1, 
+                                                   ordinal_type i2,
+                                                   ordinal_type i3)const
+        {
+            #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+
+            SCFD_ATODO("TODO! Implement TEST on demand!");
+            return detail::axis_size<First>::get(i0, i1, i2, i3) - this->template get_index0<First>() + 
+                   this->template get_dim<First>()*( (detail::axis_size<Second>::get(i0, i1, i2, i3) - this->template get_index0<Second>()) +  
+                   this->template get_dim<Second>()*( (detail::axis_size<Third>::get(i0, i1, i2, i3) - this->template get_index0<Third>()) +  
+                   this->template get_dim<Third>()*(detail::axis_size<Forth>::get(i0, i1, i2, i3) - this->template get_index0<Forth>()  )) );
+
+            #else
+     
+            return detail::axis_size<First>::get(i0, i1, i2, i3) + 
+                   this->template get_dim<First>()*( detail::axis_size<Second>::get(i0, i1, i2, i3) +  
+                   this->template get_dim<Second>()*( detail::axis_size<Third>::get(i0, i1, i2, i3) +  
+                   this->template get_dim<Third>()*detail::axis_size<Forth>::get(i0, i1, i2, i3)  ) );
+
+            #endif
+        }
+    };
 };
 
 }

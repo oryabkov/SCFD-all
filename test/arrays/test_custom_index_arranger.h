@@ -63,35 +63,37 @@ struct copy_work
 
 
 
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1>
-using custom_arranger_01_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, 0, 1 >;
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1>
-using custom_arranger_10_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, 1, 0 >;
+//template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1>
+//using custom_arranger_01_t = scfd::arrays::custom_index_fast_arranger<0, 1 >::type<Dim0, Dim1>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_01_t = scfd::arrays::custom_index_fast_arranger<0, 1 >::type<Dims...>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_10_t = scfd::arrays::custom_index_fast_arranger<1, 0 >::type<Dims...>;
 
 
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1, scfd::arrays::ordinal_type Dim2>
-using custom_arranger_012_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, Dim2, 0, 1, 2 >;
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1, scfd::arrays::ordinal_type Dim2>
-using custom_arranger_120_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, Dim2, 1, 2, 0 >;
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1, scfd::arrays::ordinal_type Dim2>
-using custom_arranger_210_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, Dim2, 2, 1, 0 >;
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1, scfd::arrays::ordinal_type Dim2>
-using custom_arranger_102_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, Dim2, 1, 0, 2 >;
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1, scfd::arrays::ordinal_type Dim2>
-using custom_arranger_201_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, Dim2, 2, 0, 1 >;
-template<scfd::arrays::ordinal_type Dim0, scfd::arrays::ordinal_type Dim1, scfd::arrays::ordinal_type Dim2>
-using custom_arranger_021_t = scfd::arrays::custom_index_arranger<Dim0, Dim1, Dim2, 0, 2, 1 >;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_012_t = scfd::arrays::custom_index_fast_arranger<0, 1, 2 >::type<Dims...>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_120_t = scfd::arrays::custom_index_fast_arranger<1, 2, 0 >::type<Dims...>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_210_t = scfd::arrays::custom_index_fast_arranger<2, 1, 0 >::type<Dims...>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_102_t = scfd::arrays::custom_index_fast_arranger<1, 0, 2 >::type<Dims...>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_201_t = scfd::arrays::custom_index_fast_arranger<2, 0, 1 >::type<Dims...>;
+template<scfd::arrays::ordinal_type ...Dims>
+using custom_arranger_021_t = scfd::arrays::custom_index_fast_arranger<0, 2, 1 >::type<Dims...>;
 
 
 // template<int I>
 // std::size_t ss(int Nx, int Ny, int Nz)
 // {
-//     return scfd::arrays::axis_size<I>::get(Ny*Nz, Nx*Nz, Nx*Ny);
+//     return scfd::arrays::detail::axis_size<I>::get(Ny*Nz, Nx*Nz, Nx*Ny);
 // };
 template<int I>
 std::size_t ff(int Nx, int Ny, int Nz)
 {
-     return scfd::arrays::axis_size<I>::get(Nx,Ny,Nz);
+     return scfd::arrays::detail::axis_size<I>::get(Nx,Ny,Nz);
 }
 
 
@@ -108,7 +110,7 @@ int check()
     std::cout << "tuple extraction 1: " << std::get<1>( std::forward_as_tuple(9, 10, 'A') ) << std::endl;
     std::cout << "tuple extraction 2: " << std::get<2>( std::forward_as_tuple(9, 10, 'A') ) << std::endl;
 
-    std::cout << "checking for custom_index_arranger by hand: " << std::endl;
+    std::cout << "checking for custom_index_fast_arranger by hand: " << std::endl;
 
     Nx = 3; Ny = 5; Nz = 2;
     std::cout << "Nx: " << Nx << ", Ny: " << Ny << ", Nz: " << Nz << std::endl;
@@ -128,18 +130,18 @@ int check()
     auto idx_req = ff<idx0>(2,3,1) + ff<idx0>(Nx,Ny,Nz)*(ff<idx1>(2,3,1) + ff<idx1>(Nx,Ny,Nz)*ff<idx2>(2,3,1));
     std::cout << "req (2,3,1): " << idx_req << ", correct:" << 3+Ny*(1 + Nz*2) << std::endl;
 
-    std::cout << "==== 2D custom_index_arranger by hand ====" << std::endl;
+    std::cout << "==== 2D custom_index_fast_arranger by hand ====" << std::endl;
     //test calling of custom arangers
-    scfd::arrays::custom_index_arranger<10,10, 0, 1> test2_01;
-    scfd::arrays::custom_index_arranger<10,10, 1, 0> test2_10;
+    scfd::arrays::custom_index_fast_arranger<0, 1>::type<10,10> test2_01;
+    scfd::arrays::custom_index_fast_arranger<1, 0>::type<10,10> test2_10;
 
-    scfd::arrays::custom_index_arranger<10,9,8, 0, 1, 2> test3_012;
-    scfd::arrays::custom_index_arranger<10,9,8, 1, 2, 0> test3_120;
-    scfd::arrays::custom_index_arranger<10,9,8, 2, 0, 1> test3_201;    
+    scfd::arrays::custom_index_fast_arranger<0, 1, 2>::type<10,9,8> test3_012;
+    scfd::arrays::custom_index_fast_arranger<1, 2, 0>::type<10,9,8> test3_120;
+    scfd::arrays::custom_index_fast_arranger<2, 0, 1>::type<10,9,8> test3_201;    
 
 
-    // scfd::arrays::custom_index_arranger<10,10,5> test3;
-    // scfd::arrays::custom_index_arranger<10,10,5,6> test4;
+    // scfd::arrays::custom_index_fast_arranger<10,10,5> test3;
+    // scfd::arrays::custom_index_fast_arranger<10,10,5,6> test4;
 
     std::cout << test2_01.calc_lin_index(0,0) << " " << test2_01.calc_lin_index(10,0) << " " << test2_01.calc_lin_index(5,5) << " " << test2_01.calc_lin_index(0,10) << std::endl;
     std::cout << test2_10.calc_lin_index(0,0) << " " << test2_10.calc_lin_index(10,0) << " " << test2_10.calc_lin_index(5,5) << " " << test2_10.calc_lin_index(0,10) << std::endl;
@@ -152,13 +154,14 @@ int check()
 
 
     scfd::arrays::tensor_array_nd<T, 2, memory_t, custom_arranger_01_t> array01;
-    scfd::arrays::tensor_array_nd<T, 2, memory_t, custom_arranger_01_t> array10;
+    //scfd::arrays::tensor_array_nd<T, 2, memory_t, scfd::arrays::custom_index_fast_arranger<0, 1 >::type> array01;
+    scfd::arrays::tensor_array_nd<T, 2, memory_t, custom_arranger_10_t> array10;
 
     Nx = 10; Ny = 20;
     array01.init(Nx, Ny);
     array10.init(Nx, Ny);
     typename decltype(array01)::view_type array01_view(array01);
-    typename decltype(array01)::view_type array10_view(array10);
+    typename decltype(array10)::view_type array10_view(array10);
     std::vector<T> vec_check(Nx*Ny, 0);
 
     for(int j=0;j<Nx;j++)
@@ -261,7 +264,7 @@ int check()
     array201_view.init(array201);
     array021_view.init(array021);
 
-    auto check_diff = [](const std::vector<int>& idxs, auto& v1, auto& v2, const std::string& name, bool& ok_flag)
+    auto check_diff = [](const std::vector<int>& idxs, T v1, T v2, const std::string& name, bool& ok_flag)
     {
         auto diff = std::abs(v1 - v2);
         if(diff > std::numeric_limits<T>::epsilon() )

@@ -8,13 +8,9 @@ if(CUDA_ENABLED)
 
   add_executable(test_tensor_array_nd_visible_cuda.bin test_tensor_array_nd_visible.cu)
   target_link_libraries(test_tensor_array_nd_visible_cuda.bin gtest_main)
-  target_compile_features(test_tensor_array_nd_visible_cuda.bin PRIVATE cxx_std_14)
-  target_compile_options(test_tensor_array_nd_visible_cuda.bin PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler=-fopenmp> --expt-relaxed-constexpr)
-
+  
   add_executable(test_custom_index_arranger_cuda.bin test_custom_index_arranger.cu)
   target_link_libraries(test_custom_index_arranger_cuda.bin gtest_main)
-  target_compile_features(test_custom_index_arranger_cuda.bin PRIVATE cxx_std_14)
-  target_compile_options(test_custom_index_arranger_cuda.bin PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler=-fopenmp> --expt-relaxed-constexpr)  
 endif()
 
 add_compile_options(-I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
