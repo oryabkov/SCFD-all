@@ -30,7 +30,7 @@
 #include <scfd/arrays/tensor_array_nd.h>
 #include <scfd/arrays/arrays_config.h>
 
-#include "custom_index_arranger.h"
+#include "custom_index_fast_arranger.h"
 
 
 
