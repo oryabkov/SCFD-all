@@ -225,7 +225,7 @@ __DEVICE_TAG__ vec<T,Dim>   operator*(T mul, const vec<T,Dim> &v)
 }*/
 
 template<class T,class T2,int Dim,class X = typename std::enable_if<std::is_convertible<T2,T>::value>::type>
-vec<T,Dim> operator*(T2 mul, const vec<T,Dim> &v)
+__DEVICE_TAG__ vec<T,Dim> operator*(T2 mul, const vec<T,Dim> &v)
 {
     return v*T(mul);
 }
