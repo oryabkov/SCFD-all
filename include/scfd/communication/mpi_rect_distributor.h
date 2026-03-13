@@ -111,37 +111,42 @@ void copy_array1_nd_rect(
     );
 }
 
-template<class T,int Dim,class Memory>
-int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory> &array)
+template<class OrdinalType>
+struct array_converions
 {
-    return 1;
-}
 
-template<class T,int Dim,class Memory,int TensorDim>
-int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim> &array)
-{
-    //TODO add get_tensor_dim<0> into array?
-    return array.template get_dim<Dim>();
-}
+    template<class T,int Dim,class Memory, template<OrdinalType ... > class Arranger>
+    static int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory,Arranger> &array)
+    {
+	return 1;
+    }
 
-template<class T,int Dim,class Memory>
-arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory> &array)
-{
-    //TODO add corresponding constructor into arrays
-    arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
-    res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
-    return res;
-}
+    template<class T,int Dim,class Memory,int TensorDim, template<OrdinalType ...> class Arranger>
+    static int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,Arranger> &array)
+    {
+	//TODO add get_tensor_dim<0> into array?
+	return array.template get_dim<Dim>();
+    }
 
-//TODO seems we dont need separate implementations as implementation is the same. use Array template mb?
+    template<class T,int Dim,class Memory, template<OrdinalType ...> class Arranger>
+    static arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory, Arranger> &array)
+    {
+	//TODO add corresponding constructor into arrays
+	arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
+	res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
+	return res;
+    }
 
-template<class T,int Dim,class Memory,int TensorDim>
-arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim> &array)
-{
-    arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
-    res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
-    return res;
-}
+    //TODO seems we dont need separate implementations as implementation is the same. use Array template mb?
+
+    template<class T,int Dim,class Memory,int TensorDim, template<OrdinalType ...> class Arranger>
+    static arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,Arranger> &array)
+    {
+	arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
+	res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
+	return res;
+    }
+};
 
 } // namespace detail
 
@@ -346,6 +351,8 @@ private:
         /// TODO Would be nice to have unique_array's
         std::unique_ptr<buf_array_type>  data_buf;
 
+        using a_c_t = detail::array_converions<Ord>;
+
         packet_bucket(const ord_rect_t &loc_rect_p, Ord tensor_max_dim) : 
           loc_rect(loc_rect_p),
           data_buf(std::make_unique<buf_array_type>())
@@ -375,11 +382,12 @@ private:
         template<class Array>
         void        sync_from_array(const ForEach &for_each, const Array &array)const
         {
-            if (detail::get_array_tensor_dim(array) > detail::get_array_tensor_dim(buf_array_device()))
+	    
+	    if (a_c_t::get_array_tensor_dim(array) > a_c_t::get_array_tensor_dim( buf_array_device() ))
                 throw std::logic_error("mpi_rect_distributor::packet_bucket::sync_from_array: array tensor dir exceeds buffer tensor dim - incorrect distributor initialization");
 
             detail::copy_array1_nd_rect(
-                for_each, detail::get_array_tensor_dim(array), detail::array_as_tensor1_array(array), loc_rect, buf_array_device()
+                for_each, a_c_t::get_array_tensor_dim(array), a_c_t::array_as_tensor1_array(array), loc_rect, buf_array_device()
             );
             #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
             data_buf->sync_from_array();
@@ -388,7 +396,7 @@ private:
         template<class Array>
         void        sync_to_array(const ForEach &for_each, const Array &array)const
         {
-            if (detail::get_array_tensor_dim(array) > detail::get_array_tensor_dim(buf_array_device()))
+            if (a_c_t::get_array_tensor_dim(array) > a_c_t::get_array_tensor_dim(buf_array_device()))
                 throw std::logic_error("mpi_rect_distributor::packet_bucket::sync_to_array: array tensor dir exceeds buffer tensor dim - incorrect distributor initialization");
 
             #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
@@ -403,7 +411,7 @@ private:
             //std::cout << "loc_rect: i1 = " << i1[0] << "," << i1[1] << "," << i1[2] << std::endl;
             //std::cout << "loc_rect: i2 = " << i2[0] << "," << i2[1] << "," << i2[2] << std::endl;
             detail::copy_array1_nd_rect(
-                for_each, detail::get_array_tensor_dim(array), buf_array_device(), loc_rect, detail::array_as_tensor1_array(array)
+                for_each, a_c_t::get_array_tensor_dim(array), buf_array_device(), loc_rect, a_c_t::array_as_tensor1_array(array)
             );
         }
     };
