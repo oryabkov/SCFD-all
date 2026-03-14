@@ -115,37 +115,61 @@ template<class OrdinalType>
 struct array_converions
 {
 
-    template<class T,int Dim,class Memory, template<OrdinalType ... > class Arranger>
+#if __cplusplus >= 201703L
+    template<class T,int Dim,class Memory, template<OrdinalType ...> class Arranger>
     static int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory,Arranger> &array)
     {
-	return 1;
+#else
+    template<class T,int Dim,class Memory>
+    static int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory> &array)
+    {
+#endif            
+       return 1;
     }
 
+#if __cplusplus >= 201703L
     template<class T,int Dim,class Memory,int TensorDim, template<OrdinalType ...> class Arranger>
     static int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,Arranger> &array)
+#else
+    template<class T,int Dim,class Memory,int TensorDim>
+    static int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim> &array)    
+#endif    
     {
-	//TODO add get_tensor_dim<0> into array?
-	return array.template get_dim<Dim>();
+        //TODO add get_tensor_dim<0> into array?
+        return array.template get_dim<Dim>();
     }
 
+
+#if __cplusplus >= 201703L
     template<class T,int Dim,class Memory, template<OrdinalType ...> class Arranger>
     static arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory, Arranger> &array)
     {
-	//TODO add corresponding constructor into arrays
-	arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
-	res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
-	return res;
+#else
+    template<class T,int Dim,class Memory>
+    static arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory> &array)
+    {
+#endif        
+        //TODO add corresponding constructor into arrays
+        arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
+        res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
+        return res;
     }
 
     //TODO seems we dont need separate implementations as implementation is the same. use Array template mb?
-
+#if __cplusplus >= 201703L
     template<class T,int Dim,class Memory,int TensorDim, template<OrdinalType ...> class Arranger>
     static arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,Arranger> &array)
     {
-	arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
-	res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
-	return res;
+#else        
+    template<class T,int Dim,class Memory,int TensorDim>
+    static arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim> &array)
+    {        
+#endif
+        arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
+        res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
+        return res;
     }
+
 };
 
 } // namespace detail
@@ -382,8 +406,8 @@ private:
         template<class Array>
         void        sync_from_array(const ForEach &for_each, const Array &array)const
         {
-	    
-	    if (a_c_t::get_array_tensor_dim(array) > a_c_t::get_array_tensor_dim( buf_array_device() ))
+        
+        if (a_c_t::get_array_tensor_dim(array) > a_c_t::get_array_tensor_dim( buf_array_device() ))
                 throw std::logic_error("mpi_rect_distributor::packet_bucket::sync_from_array: array tensor dir exceeds buffer tensor dim - incorrect distributor initialization");
 
             detail::copy_array1_nd_rect(
