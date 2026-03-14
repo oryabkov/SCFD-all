@@ -40,6 +40,7 @@
 //5.need to avoid extra data send when actual synced array dimension is lesser then max tensor dim during initialization
 //6.ideally adaptive enlargment of buffers tensor size should be added
 //7.tensor2/3/4 support should be added
+//8.get_array_tensor_dim and array_as_tensor1_array should be implemented in convinient way in arrays directly
 
 namespace scfd
 {
@@ -112,20 +113,20 @@ void copy_array1_nd_rect(
 }
 
 template<class T,int Dim,class Memory>
-int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory> &array)
+int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
 {
     return 1;
 }
 
 template<class T,int Dim,class Memory,int TensorDim>
-int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim> &array)
+int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
 {
     //TODO add get_tensor_dim<0> into array?
     return array.template get_dim<Dim>();
 }
 
 template<class T,int Dim,class Memory>
-arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory> &array)
+arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
 {
     //TODO add corresponding constructor into arrays
     arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
@@ -136,7 +137,7 @@ arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(co
 //TODO seems we dont need separate implementations as implementation is the same. use Array template mb?
 
 template<class T,int Dim,class Memory,int TensorDim>
-arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim> &array)
+arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
 {
     arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
     res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
