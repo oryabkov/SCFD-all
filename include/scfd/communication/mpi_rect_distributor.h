@@ -112,21 +112,21 @@ void copy_array1_nd_rect(
     );
 }
 
-template<class T,int Dim,class Memory>
-int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
+template<class T,arrays::ordinal_type Dim,class Memory,template <arrays::ordinal_type...> class Arranger>
+int get_array_tensor_dim(const arrays::array_nd<T,Dim,Memory,Arranger> &array)
 {
     return 1;
 }
 
-template<class T,int Dim,class Memory,int TensorDim>
-int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
+template<class T,arrays::ordinal_type Dim,class Memory,arrays::ordinal_type TensorDim,template <arrays::ordinal_type...> class Arranger>
+int get_array_tensor_dim(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,Arranger> &array)
 {
     //TODO add get_tensor_dim<0> into array?
     return array.template get_dim<Dim>();
 }
 
-template<class T,int Dim,class Memory>
-arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
+template<class T,arrays::ordinal_type Dim,class Memory,template <arrays::ordinal_type...> class Arranger>
+arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::array_nd<T,Dim,Memory,Arranger> &array)
 {
     //TODO add corresponding constructor into arrays
     arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
@@ -136,8 +136,8 @@ arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(co
 
 //TODO seems we dont need separate implementations as implementation is the same. use Array template mb?
 
-template<class T,int Dim,class Memory,int TensorDim>
-arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,arrays::detail::default_arranger_chooser<Memory>::template arranger> &array)
+template<class T,arrays::ordinal_type Dim,class Memory,arrays::ordinal_type TensorDim,template <arrays::ordinal_type...> class Arranger>
+arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> array_as_tensor1_array(const arrays::tensor1_array_nd<T,Dim,Memory,TensorDim,Arranger> &array)
 {
     arrays::tensor1_array_nd<T,Dim,Memory,arrays::dyn_dim> res;
     res.init_by_raw_data(array.raw_ptr(),array.rect_nd(),get_array_tensor_dim(array));
