@@ -6,5 +6,5 @@
 
 #find foo/bar/ -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i
 
-find include/ -iname '*.h' -o -iname '*.cpp' -o -iname '*.cu' | xargs clang-format-15 -i
-find test/ -iname '*.h' -o -iname '*.cpp' -o -iname '*.cu' | xargs clang-format-15 -i
+find include/ -iname '*.h' -o -iname '*.cpp' -o -iname '*.cu' -o -iname '*.cuh' | xargs clang-format-15 -i
+find test/ -iname '*.h' -o -iname '*.cpp' -o -iname '*.cu' -o -iname '*.cuh' | xargs clang-format-15 -i
