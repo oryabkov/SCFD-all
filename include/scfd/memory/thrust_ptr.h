@@ -6,15 +6,15 @@ namespace scfd
 namespace memory
 {
 
-template<class Memory, class T>
+template <class Memory, class T>
 struct thrust_ptr
 {
 };
 
-template<class Memory, class T>
-typename thrust_ptr<Memory,T>::type thrust_ptr_cast(T *p)
+template <class Memory, class T>
+typename thrust_ptr<Memory, T>::type thrust_ptr_cast( T *p )
 {
-    return thrust_ptr<Memory,T>::cast(p);
+    return thrust_ptr<Memory, T>::cast( p );
 }
 
 } /// namespace memory

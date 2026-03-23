@@ -39,71 +39,74 @@ namespace scfd
 namespace arrays
 {
 
-template<class T, class Memory, 
-         template <ordinal_type... Dims> class Arranger>
+template <class T, class Memory, template <ordinal_type... Dims> class Arranger>
 class objects_array_view;
 
-template<class T, class Memory, 
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, class Memory,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 class objects_array
 {
-    typedef unsigned int                                storage_t;
-    static_assert(sizeof(T)%sizeof(storage_t) == 0, "objects_array: sizeof(storage_t) is not multiplier of sizeof(T)");
-    typedef struct 
+    typedef unsigned int storage_t;
+    static_assert(
+        sizeof( T ) % sizeof( storage_t ) == 0, "objects_array: sizeof(storage_t) is not multiplier of sizeof(T)"
+    );
+    typedef struct
     {
-        storage_t   d[sizeof(T)/sizeof(storage_t)];
-    }                                                   value_ref_t;
-    typedef tensor1_array<storage_t,Memory,
-                          sizeof(T)/sizeof(storage_t),
-                          Arranger>                     storage_arr_t;
+        storage_t d[sizeof( T ) / sizeof( storage_t )];
+    } value_ref_t;
+    typedef tensor1_array<storage_t, Memory, sizeof( T ) / sizeof( storage_t ), Arranger> storage_arr_t;
+
 public:
     typedef T                                       value_type;
     typedef Memory                                  memory_type;
-    typedef objects_array_view<T,Memory,Arranger>   view_type;
+    typedef objects_array_view<T, Memory, Arranger> view_type;
 
 public:
-    void init(ordinal_type sz)
+    void init( ordinal_type sz )
     {
-        storage_arr_.init(sz);
+        storage_arr_.init( sz );
     }
     void free()
     {
         storage_arr_.free();
     }
 
-    bool is_free()const
+    bool is_free() const
     {
         return storage_arr_.is_free();
     }
 
-    view_type           create_view(bool sync_from_array_ = true)const;
+    view_type create_view( bool sync_from_array_ = true ) const;
 
     /// obj is a first arg to be consistent with get_vec method of array
-    __DEVICE_TAG__ void get(T &obj, ordinal_type i)const
+    __DEVICE_TAG__ void get( T &obj, ordinal_type i ) const
     {
-        value_ref_t &obj_ref = reinterpret_cast<value_ref_t&>(obj);
-        #pragma unroll
-        for (ordinal_type ii = 0;ii < sizeof(T)/sizeof(storage_t);++ii)
+        value_ref_t &obj_ref = reinterpret_cast<value_ref_t &>( obj );
+#pragma unroll
+        for ( ordinal_type ii = 0; ii < sizeof( T ) / sizeof( storage_t ); ++ii )
         {
-            obj_ref.d[ii] = storage_arr_(i,ii);
+            obj_ref.d[ii] = storage_arr_( i, ii );
         }
     }
-    __DEVICE_TAG__ void set(const T &obj, ordinal_type i)const
+    __DEVICE_TAG__ void set( const T &obj, ordinal_type i ) const
     {
-        const value_ref_t &obj_ref = reinterpret_cast<const value_ref_t&>(obj);
-        #pragma unroll
-        for (ordinal_type ii = 0;ii < sizeof(T)/sizeof(storage_t);++ii)
+        const value_ref_t &obj_ref = reinterpret_cast<const value_ref_t &>( obj );
+#pragma unroll
+        for ( ordinal_type ii = 0; ii < sizeof( T ) / sizeof( storage_t ); ++ii )
         {
-            storage_arr_(i,ii) = obj_ref.d[ii];
+            storage_arr_( i, ii ) = obj_ref.d[ii];
         }
     }
 
     /// ISSUE needed for view, but think it's a bad idea. mb, use friend instead?
-    __DEVICE_TAG__ const storage_arr_t   &storage_arr()const { return storage_arr_; }
+    __DEVICE_TAG__ const storage_arr_t &storage_arr() const
+    {
+        return storage_arr_;
+    }
 
 private:
-    storage_arr_t   storage_arr_;
-
+    storage_arr_t storage_arr_;
 };
 
 }

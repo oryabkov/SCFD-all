@@ -17,8 +17,8 @@
 #ifndef __SCFD_BACKEND_H__
 #define __SCFD_BACKEND_H__
 
-#if  defined(PLATFORM_SERIAL_CPU)
-#include "serial_cpu.h"
+#if defined( PLATFORM_SERIAL_CPU )
+#    include "serial_cpu.h"
 namespace scfd
 {
 namespace backend
@@ -27,8 +27,8 @@ using current = serial_cpu;
 }
 }
 
-#elif defined(PLATFORM_OMP)
-#include "omp.h"
+#elif defined( PLATFORM_OMP )
+#    include "omp.h"
 namespace scfd
 {
 namespace backend
@@ -37,8 +37,8 @@ using current = omp;
 }
 }
 
-#elif defined(PLATFORM_CUDA)
-#include "cuda.h"
+#elif defined( PLATFORM_CUDA )
+#    include "cuda.h"
 namespace scfd
 {
 namespace backend
@@ -47,8 +47,8 @@ using current = cuda;
 }
 }
 
-#elif defined(PLATFORM_HIP)
-#include "hip.h"
+#elif defined( PLATFORM_HIP )
+#    include "hip.h"
 namespace scfd
 {
 namespace backend
@@ -57,8 +57,8 @@ using current = hip;
 }
 }
 
-#elif defined(PLATFORM_SYCL)
-#include "sycl.h"
+#elif defined( PLATFORM_SYCL )
+#    include "sycl.h"
 namespace scfd
 {
 namespace backend
@@ -68,7 +68,7 @@ using current = sycl;
 }
 
 #else
-#error "No platform has been chosen for backend"
+#    error "No platform has been chosen for backend"
 
 #endif
 
@@ -77,9 +77,9 @@ namespace scfd
 namespace backend
 {
 // usefull aliases
-using memory      = current::memory_type;
+using memory = current::memory_type;
 template <class Ordinal = int>
-using for_each    = current::for_each_type<Ordinal>;
+using for_each = current::for_each_type<Ordinal>;
 template <int Dim, class Ordinal = int>
 using for_each_nd = current::for_each_nd_type<Dim, Ordinal>;
 using reduce      = current::reduce_type;

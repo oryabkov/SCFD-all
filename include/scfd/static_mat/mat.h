@@ -24,143 +24,163 @@
 
 namespace scfd
 {
-namespace static_mat 
+namespace static_mat
 {
 
-template<class T,int Dim1,int Dim2>
+template <class T, int Dim1, int Dim2>
 class mat
 {
-    template<class X>using help_t = T;
-public:
+    template <class X>
+    using help_t = T;
 
+public:
     T d[Dim1][Dim2];
 
-    typedef T                   value_type;
-    static const int            dim1 = Dim1;
-    static const int            dim2 = Dim2;
+    typedef T        value_type;
+    static const int dim1 = Dim1;
+    static const int dim2 = Dim2;
 
-    __DEVICE_TAG__                      mat();
-    __DEVICE_TAG__                      mat(const mat &v);
-    template<typename... Args,
-             class = typename std::enable_if<sizeof...(Args) == Dim1*Dim2>::type,
-             class = typename std::enable_if<
-                                  detail::check_all_are_true< 
-                                      std::is_convertible<Args,help_t<Args> >::value... 
-                                  >::value
-                              >::type>
-    __DEVICE_TAG__                      mat(const Args&... args) : d{static_cast<T>(args)...}
+    __DEVICE_TAG__ mat();
+    __DEVICE_TAG__ mat( const mat &v );
+    template <
+        typename... Args, class = typename std::enable_if<sizeof...( Args ) == Dim1 * Dim2>::type,
+        class = typename std::enable_if<
+            detail::check_all_are_true<std::is_convertible<Args, help_t<Args>>::value...>::value>::type>
+    __DEVICE_TAG__ mat( const Args &...args ) : d{ static_cast<T>( args )... }
     {
     }
 
-    __DEVICE_TAG__ mat                  operator*(value_type mul)const
+    __DEVICE_TAG__ mat operator*( value_type mul ) const
     {
         mat res;
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
-                res.d[i][j] = d[i][j]*mul;
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
+                res.d[i][j] = d[i][j] * mul;
         }
         return res;
     }
-    __DEVICE_TAG__ mat                  operator/(value_type x)const
+    __DEVICE_TAG__ mat operator/( value_type x ) const
     {
-        return operator*(value_type(1)/x);
+        return operator*( value_type( 1 ) / x );
     }
-    __DEVICE_TAG__ mat                  operator+(const mat &x)const
+    __DEVICE_TAG__ mat operator+( const mat &x ) const
     {
         mat res;
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 res.d[i][j] = d[i][j] + x.d[i][j];
         }
         return res;
     }
-    __DEVICE_TAG__ mat                  operator-(const mat &x)const
+    __DEVICE_TAG__ mat operator-( const mat &x ) const
     {
         mat res;
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 res.d[i][j] = d[i][j] - x.d[i][j];
         }
         return res;
     }
-    __DEVICE_TAG__ value_type            &operator()(int i,int j) { return d[i][j]; }
-    __DEVICE_TAG__ const value_type      &operator()(int i,int j)const { return d[i][j]; }
-    template<int I,int J>
-    __DEVICE_TAG__ value_type            &get() { return d[I][J]; }
-    template<int I,int J>
-    __DEVICE_TAG__ const value_type      &get()const { return d[I][J]; }
+    __DEVICE_TAG__ value_type &operator()( int i, int j )
+    {
+        return d[i][j];
+    }
+    __DEVICE_TAG__ const value_type &operator()( int i, int j ) const
+    {
+        return d[i][j];
+    }
+    template <int I, int J>
+    __DEVICE_TAG__ value_type &get()
+    {
+        return d[I][J];
+    }
+    template <int I, int J>
+    __DEVICE_TAG__ const value_type &get() const
+    {
+        return d[I][J];
+    }
 
-    static __DEVICE_TAG__ mat            make_zero()
+    static __DEVICE_TAG__ mat make_zero()
     {
         mat res;
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
-                res.d[i][j] = value_type(0);
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
+                res.d[i][j] = value_type( 0 );
         }
         return res;
     }
-    
-    __DEVICE_TAG__ mat                   &operator=(const mat &v);
-    __DEVICE_TAG__ mat                   &operator+=(const mat &v)
+
+    __DEVICE_TAG__ mat &operator=( const mat &v );
+    __DEVICE_TAG__ mat &operator+=( const mat &v )
     {
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 d[i][j] += v.d[i][j];
         }
         return *this;
     }
     //TODO check size (statically)
-    __DEVICE_TAG__ mat                   &operator-=(const mat &v)
+    __DEVICE_TAG__ mat &operator-=( const mat &v )
     {
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 d[i][j] -= v.d[i][j];
         }
         return *this;
     }
-    __DEVICE_TAG__ mat                   &operator*=(const value_type &mul)
+    __DEVICE_TAG__ mat &operator*=( const value_type &mul )
     {
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 d[i][j] *= mul;
         }
         return *this;
     }
-    __DEVICE_TAG__ mat                   &operator/=(const value_type &mul)
+    __DEVICE_TAG__ mat &operator/=( const value_type &mul )
     {
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 d[i][j] /= mul;
         }
         return *this;
     }
 
-    __DEVICE_TAG__ static_vec::vec<T,Dim1> operator*(const static_vec::vec<T,Dim2> &v)const
+    __DEVICE_TAG__ static_vec::vec<T, Dim1> operator*( const static_vec::vec<T, Dim2> &v ) const
     {
-        static_vec::vec<T,Dim1> res;
+        static_vec::vec<T, Dim1> res;
 
-        #pragma unroll
-        for (int i = 0;i < Dim1;++i) {
-            T sum = T(0);
-            #pragma unroll
-            for (int l = 0; l < Dim2; ++l) {
-                sum += d[i][l]*v[l];
+#pragma unroll
+        for ( int i = 0; i < Dim1; ++i )
+        {
+            T sum = T( 0 );
+#pragma unroll
+            for ( int l = 0; l < Dim2; ++l )
+            {
+                sum += d[i][l] * v[l];
             }
             res[i] = sum;
         }
@@ -168,19 +188,22 @@ public:
         return res;
     }
 
-    template<int Dim3>
-    __DEVICE_TAG__ mat<T,Dim1,Dim3>      operator*(const mat<T,Dim2,Dim3> &m)const
+    template <int Dim3>
+    __DEVICE_TAG__ mat<T, Dim1, Dim3> operator*( const mat<T, Dim2, Dim3> &m ) const
     {
-        mat<T,Dim1,Dim3> res;
+        mat<T, Dim1, Dim3> res;
 
-        #pragma unroll
-        for (int i = 0;i < Dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < Dim3;++j) {
-                T sum = T(0);
-                #pragma unroll
-                for (int l = 0; l < Dim2; ++l) {
-                    sum += d[i][l]*m.d[l][j];
+#pragma unroll
+        for ( int i = 0; i < Dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < Dim3; ++j )
+            {
+                T sum = T( 0 );
+#pragma unroll
+                for ( int l = 0; l < Dim2; ++l )
+                {
+                    sum += d[i][l] * m.d[l][j];
                 }
                 res.d[i][j] = sum;
             }
@@ -188,128 +211,129 @@ public:
 
         return res;
     }
-    __DEVICE_TAG__ mat<T,Dim2,Dim1>      transposed()const
+    __DEVICE_TAG__ mat<T, Dim2, Dim1> transposed() const
     {
-        mat<T,Dim2,Dim1> res;
-        #pragma unroll
-        for (int i = 0;i < dim1;++i) {
-            #pragma unroll
-            for (int j = 0;j < dim2;++j)
+        mat<T, Dim2, Dim1> res;
+#pragma unroll
+        for ( int i = 0; i < dim1; ++i )
+        {
+#pragma unroll
+            for ( int j = 0; j < dim2; ++j )
                 res.d[j][i] = d[i][j];
         }
         return res;
     }
-    __DEVICE_TAG__ T                     trace()const
+    __DEVICE_TAG__ T trace() const
     {
-        T res(0);
-        #pragma unroll
-        for (int i = 0;i < (dim1 < dim2?dim1:dim2);++i) {
+        T res( 0 );
+#pragma unroll
+        for ( int i = 0; i < ( dim1 < dim2 ? dim1 : dim2 ); ++i )
+        {
             res += d[i][i];
         }
         return res;
     }
 };
 
-template<class T,int Dim1,int Dim2>
-__DEVICE_TAG__ mat<T,Dim1,Dim2>::mat() = default;
+template <class T, int Dim1, int Dim2>
+__DEVICE_TAG__ mat<T, Dim1, Dim2>::mat() = default;
 
-template<class T,int Dim1,int Dim2>
-__DEVICE_TAG__ mat<T,Dim1,Dim2>::mat(const mat &v) = default;
+template <class T, int Dim1, int Dim2>
+__DEVICE_TAG__ mat<T, Dim1, Dim2>::mat( const mat &v ) = default;
 
-template<class T,int Dim1,int Dim2>
-__DEVICE_TAG__ mat<T,Dim1,Dim2>                &mat<T,Dim1,Dim2>::operator=(const mat &v) = default;
+template <class T, int Dim1, int Dim2>
+__DEVICE_TAG__ mat<T, Dim1, Dim2> &mat<T, Dim1, Dim2>::operator=( const mat &v ) = default;
 
 
-template<class T,int Dim1,int Dim2>
-__DEVICE_TAG__ mat<T,Dim1,Dim2> operator*(T mul, const mat<T,Dim1,Dim2> &m)
+template <class T, int Dim1, int Dim2>
+__DEVICE_TAG__ mat<T, Dim1, Dim2> operator*( T mul, const mat<T, Dim1, Dim2> &m )
 {
-    return m*mul;
+    return m * mul;
 }
 
 namespace detail
 {
 
-template<class T,int Dim>
+template <class T, int Dim>
 struct det_calc
 {
-    static __DEVICE_TAG__ T calc(const mat<T,Dim,Dim> &m)
+    static __DEVICE_TAG__ T calc( const mat<T, Dim, Dim> &m )
     {
         /// TODO general implementation or error
     }
 };
 
-template<class T>
-struct det_calc<T,2>
+template <class T>
+struct det_calc<T, 2>
 {
-    static __DEVICE_TAG__ T calc(const mat<T,2,2> &m)
+    static __DEVICE_TAG__ T calc( const mat<T, 2, 2> &m )
     {
-        return m(0, 0) * m(1, 1) - m(0, 1) * m(1, 0);
+        return m( 0, 0 ) * m( 1, 1 ) - m( 0, 1 ) * m( 1, 0 );
     }
 };
 
-template<class T>
-struct det_calc<T,3>
+template <class T>
+struct det_calc<T, 3>
 {
-    static __DEVICE_TAG__ T calc(const mat<T,3,3> &m)
+    static __DEVICE_TAG__ T calc( const mat<T, 3, 3> &m )
     {
-        return  
-            m(0, 0) * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) -
-            m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0)) +
-            m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+        return m( 0, 0 ) * ( m( 1, 1 ) * m( 2, 2 ) - m( 2, 1 ) * m( 1, 2 ) ) -
+               m( 0, 1 ) * ( m( 1, 0 ) * m( 2, 2 ) - m( 1, 2 ) * m( 2, 0 ) ) +
+               m( 0, 2 ) * ( m( 1, 0 ) * m( 2, 1 ) - m( 1, 1 ) * m( 2, 0 ) );
     }
 };
 
-template<class T,int Dim>
+template <class T, int Dim>
 struct inv_calc
 {
-    static __DEVICE_TAG__ mat<T,Dim,Dim> calc(const mat<T,Dim,Dim> &m)
+    static __DEVICE_TAG__ mat<T, Dim, Dim> calc( const mat<T, Dim, Dim> &m )
     {
         /// TODO general implementation or error
     }
 };
 
-template<class T>
-struct inv_calc<T,2>
+template <class T>
+struct inv_calc<T, 2>
 {
     // taken from https://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
-    static __DEVICE_TAG__ mat<T,2,2> calc(const mat<T,2,2> &m)
+    static __DEVICE_TAG__ mat<T, 2, 2> calc( const mat<T, 2, 2> &m )
     {
-        T det = m(0, 0) * m(1, 1) - m(0, 1) * m(1, 0);
+        T det = m( 0, 0 ) * m( 1, 1 ) - m( 0, 1 ) * m( 1, 0 );
 
-        T invdet = T(1) / det;
+        T invdet = T( 1 ) / det;
 
-        mat<T,2,2> minv; // inverse of matrix m
-        minv(0, 0) =  m(1, 1) * invdet;
-        minv(0, 1) = -m(0, 1) * invdet;
-        minv(1, 0) = -m(1, 0) * invdet;
-        minv(1, 1) =  m(0, 0) * invdet;
+        mat<T, 2, 2> minv; // inverse of matrix m
+        minv( 0, 0 ) = m( 1, 1 ) * invdet;
+        minv( 0, 1 ) = -m( 0, 1 ) * invdet;
+        minv( 1, 0 ) = -m( 1, 0 ) * invdet;
+        minv( 1, 1 ) = m( 0, 0 ) * invdet;
 
         return minv;
     }
 };
 
-template<class T>
-struct inv_calc<T,3>
+template <class T>
+struct inv_calc<T, 3>
 {
     // taken from https://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
-    static __DEVICE_TAG__ mat<T,3,3> calc(const mat<T,3,3> &m)
+    static __DEVICE_TAG__ mat<T, 3, 3> calc( const mat<T, 3, 3> &m )
     {
-        T det = m(0, 0) * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) -
-                m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0)) +
-                m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+        T det = m( 0, 0 ) * ( m( 1, 1 ) * m( 2, 2 ) - m( 2, 1 ) * m( 1, 2 ) ) -
+                m( 0, 1 ) * ( m( 1, 0 ) * m( 2, 2 ) - m( 1, 2 ) * m( 2, 0 ) ) +
+                m( 0, 2 ) * ( m( 1, 0 ) * m( 2, 1 ) - m( 1, 1 ) * m( 2, 0 ) );
 
-        T invdet = T(1) / det;
+        T invdet = T( 1 ) / det;
 
-        mat<T,3,3> minv; // inverse of matrix m
-        minv(0, 0) = (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2)) * invdet;
-        minv(0, 1) = (m(0, 2) * m(2, 1) - m(0, 1) * m(2, 2)) * invdet;
-        minv(0, 2) = (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1)) * invdet;
-        minv(1, 0) = (m(1, 2) * m(2, 0) - m(1, 0) * m(2, 2)) * invdet;
-        minv(1, 1) = (m(0, 0) * m(2, 2) - m(0, 2) * m(2, 0)) * invdet;
-        minv(1, 2) = (m(1, 0) * m(0, 2) - m(0, 0) * m(1, 2)) * invdet;
-        minv(2, 0) = (m(1, 0) * m(2, 1) - m(2, 0) * m(1, 1)) * invdet;
-        minv(2, 1) = (m(2, 0) * m(0, 1) - m(0, 0) * m(2, 1)) * invdet;
-        minv(2, 2) = (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1)) * invdet;
+        mat<T, 3, 3> minv; // inverse of matrix m
+        minv( 0, 0 ) = ( m( 1, 1 ) * m( 2, 2 ) - m( 2, 1 ) * m( 1, 2 ) ) * invdet;
+        minv( 0, 1 ) = ( m( 0, 2 ) * m( 2, 1 ) - m( 0, 1 ) * m( 2, 2 ) ) * invdet;
+        minv( 0, 2 ) = ( m( 0, 1 ) * m( 1, 2 ) - m( 0, 2 ) * m( 1, 1 ) ) * invdet;
+        minv( 1, 0 ) = ( m( 1, 2 ) * m( 2, 0 ) - m( 1, 0 ) * m( 2, 2 ) ) * invdet;
+        minv( 1, 1 ) = ( m( 0, 0 ) * m( 2, 2 ) - m( 0, 2 ) * m( 2, 0 ) ) * invdet;
+        minv( 1, 2 ) = ( m( 1, 0 ) * m( 0, 2 ) - m( 0, 0 ) * m( 1, 2 ) ) * invdet;
+        minv( 2, 0 ) = ( m( 1, 0 ) * m( 2, 1 ) - m( 2, 0 ) * m( 1, 1 ) ) * invdet;
+        minv( 2, 1 ) = ( m( 2, 0 ) * m( 0, 1 ) - m( 0, 0 ) * m( 2, 1 ) ) * invdet;
+        minv( 2, 2 ) = ( m( 0, 0 ) * m( 1, 1 ) - m( 1, 0 ) * m( 0, 1 ) ) * invdet;
 
         return minv;
     }
@@ -317,24 +341,24 @@ struct inv_calc<T,3>
 
 }
 
-template<class T,int Dim>
-__DEVICE_TAG__ T det(const mat<T,Dim,Dim> &m)
+template <class T, int Dim>
+__DEVICE_TAG__ T det( const mat<T, Dim, Dim> &m )
 {
-    return detail::det_calc<T,Dim>::calc(m);
+    return detail::det_calc<T, Dim>::calc( m );
 }
 
-template<class T,int Dim>
-__DEVICE_TAG__ mat<T,Dim,Dim> inv(const mat<T,Dim,Dim> &m)
+template <class T, int Dim>
+__DEVICE_TAG__ mat<T, Dim, Dim> inv( const mat<T, Dim, Dim> &m )
 {
-    return detail::inv_calc<T,Dim>::calc(m);
+    return detail::inv_calc<T, Dim>::calc( m );
 }
 
 // TODO temporal solution
 // computes the inverse of a matrix m
-template<class T>
-__DEVICE_TAG__ mat<T,3,3> inv33(const mat<T,3,3> &m)
+template <class T>
+__DEVICE_TAG__ mat<T, 3, 3> inv33( const mat<T, 3, 3> &m )
 {
-    return inv(m);
+    return inv( m );
 }
 
 }

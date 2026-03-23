@@ -30,56 +30,56 @@ struct cuda_host;
 
 struct cuda_device
 {
-    typedef     cuda_host       host_memory_type;
-    typedef     void*           pointer_type;
-    typedef     const void*     const_pointer_type;
+    typedef cuda_host   host_memory_type;
+    typedef void       *pointer_type;
+    typedef const void *const_pointer_type;
 
-    static const bool           is_host_visible = false;
-    static const bool           prefer_array_of_structs = false;
+    static const bool is_host_visible         = false;
+    static const bool prefer_array_of_structs = false;
 
     /// NOTE: cudaMalloc returns NULL for size==0 without error,
     /// however it's not stated explicitly in documentation
-    static void    malloc(pointer_type* p, size_t size)
+    static void malloc( pointer_type *p, size_t size )
     {
-        CUDA_SAFE_CALL(cudaMalloc(p, size));
+        CUDA_SAFE_CALL( cudaMalloc( p, size ) );
     }
     /// NOTE: cudaFree returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
-    static void    free(pointer_type p)
+    static void free( pointer_type p )
     {
-        CUDA_SAFE_CALL(cudaFree(p));
+        CUDA_SAFE_CALL( cudaFree( p ) );
     }
 
-    static void    copy_to_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost) );
+        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToHost ) );
     }
-    static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice) );
+        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToDevice ) );
     }
-    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice) );
+        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToDevice ) );
     }
 };
 
 struct cuda_host
 {
-    typedef     cuda_host       host_memory_type;
-    typedef     void*           pointer_type;
-    typedef     const void*     const_pointer_type;
-    static const bool           is_host_visible = true;
-    static const bool           prefer_array_of_structs = false;
+    typedef cuda_host   host_memory_type;
+    typedef void       *pointer_type;
+    typedef const void *const_pointer_type;
+    static const bool   is_host_visible         = true;
+    static const bool   prefer_array_of_structs = false;
 
-    /// NOTE: cudaMallocHost DOES NOT returns NULL for size==0 
+    /// NOTE: cudaMallocHost DOES NOT returns NULL for size==0
     /// (it does not change ptr without generating error),
     /// and this behaviour is not stated explicitly in documentation
-    static void    malloc(pointer_type* p, size_t size)
+    static void malloc( pointer_type *p, size_t size )
     {
-        if (size != 0)
+        if ( size != 0 )
         {
-            CUDA_SAFE_CALL(cudaMallocHost(p, size,cudaHostAllocDefault));
+            CUDA_SAFE_CALL( cudaMallocHost( p, size, cudaHostAllocDefault ) );
         }
         else
         {
@@ -88,22 +88,22 @@ struct cuda_host
     }
     /// NOTE: cudaFreeHost returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
-    static void    free(pointer_type p)
+    static void free( pointer_type p )
     {
-        CUDA_SAFE_CALL(cudaFreeHost(p));
+        CUDA_SAFE_CALL( cudaFreeHost( p ) );
     }
 
-    static void    copy_to_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToHost) );
+        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
     }
-    static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToHost) );
+        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
     }
-    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy(dst, src, size, cudaMemcpyHostToHost) );
+        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
     }
 };
 

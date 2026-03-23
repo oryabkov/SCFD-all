@@ -24,8 +24,9 @@ namespace scfd
 namespace arrays
 {
 
-template<class T, class Memory, 
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, class Memory,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 using array_view = tensor_array_nd_view<T, 1, Memory, Arranger>;
 
 }

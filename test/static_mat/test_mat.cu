@@ -20,28 +20,27 @@
 
 using namespace scfd::static_mat;
 
-template<typename T, class T_mat>
-__host__ __device__ T some_func(T_mat& m2)
+template <typename T, class T_mat>
+__host__ __device__ T some_func( T_mat &m2 )
 {
-    return (m2(0,0)+m2(1,1));
-
-
+    return ( m2( 0, 0 ) + m2( 1, 1 ) );
 }
 
 
-template<typename T, class Mat1,class Mat2>
-__global__ void ket_test(Mat1 m1, Mat2 m2)
+template <typename T, class Mat1, class Mat2>
+__global__ void ket_test( Mat1 m1, Mat2 m2 )
 {
-    auto m3 = m1*m2;
+    auto m3 = m1 * m2;
 
-    for (int i = 0;i < 3;++i) {
-        for (int j = 0;j < 4;++j)
-            printf("%f ", m3(i,j));
-        printf("\n");
+    for ( int i = 0; i < 3; ++i )
+    {
+        for ( int j = 0; j < 4; ++j )
+            printf( "%f ", m3( i, j ) );
+        printf( "\n" );
     }
-    printf("ker = %le \n",some_func<T, Mat2>(m2));
+    printf( "ker = %le \n", some_func<T, Mat2>( m2 ) );
 
-   // printf("test\n");   
+    // printf("test\n");
 }
 
 /*int main(int argc, char const *argv[])

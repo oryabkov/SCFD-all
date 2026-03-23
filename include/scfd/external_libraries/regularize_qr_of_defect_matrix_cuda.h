@@ -27,8 +27,8 @@ namespace scfd
 {
 
 /// A must be results of cusolver.geqrf call with square A passed as system matrix
-template<class T>
-void regularize_qr_of_defect_matrix_cuda(int sz, T* A, bool *diag_degenerate_flags, int defect);
+template <class T>
+void regularize_qr_of_defect_matrix_cuda( int sz, T *A, bool *diag_degenerate_flags, int defect );
 
 } // namespace scfd
 

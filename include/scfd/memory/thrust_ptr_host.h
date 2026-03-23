@@ -9,11 +9,11 @@ namespace scfd
 namespace memory
 {
 
-template<class T>
-struct thrust_ptr<host,T>
+template <class T>
+struct thrust_ptr<host, T>
 {
-    using type = T*;
-    static type cast(T *p)
+    using type = T *;
+    static type cast( T *p )
     {
         return p;
     }

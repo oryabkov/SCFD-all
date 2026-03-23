@@ -22,23 +22,23 @@
 
 using namespace scfd::arrays::detail;
 
-static const int test_Y0 = template_indexer<int, 0,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y1 = template_indexer<int, 1,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y2 = template_indexer<int, 2,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y3 = template_indexer<int, 3,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y4 = template_indexer<int, 4,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y5 = template_indexer<int, 5,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y6 = template_indexer<int, 6,  0,5,1,1,0,0,234,123>::value;
-static const int test_Y7 = template_indexer<int, 7,  0,5,1,1,0,0,234,123>::value;
+static const int test_Y0 = template_indexer<int, 0, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y1 = template_indexer<int, 1, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y2 = template_indexer<int, 2, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y3 = template_indexer<int, 3, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y4 = template_indexer<int, 4, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y5 = template_indexer<int, 5, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y6 = template_indexer<int, 6, 0, 5, 1, 1, 0, 0, 234, 123>::value;
+static const int test_Y7 = template_indexer<int, 7, 0, 5, 1, 1, 0, 0, 234, 123>::value;
 
-TEST(DetailTemplateIndexerTest, ValueMixedTests) 
+TEST( DetailTemplateIndexerTest, ValueMixedTests )
 {
-    ASSERT_EQ(test_Y0, 0);
-    ASSERT_EQ(test_Y1, 5);
-    ASSERT_EQ(test_Y2, 1);
-    ASSERT_EQ(test_Y3, 1);
-    ASSERT_EQ(test_Y4, 0);
-    ASSERT_EQ(test_Y5, 0);
-    ASSERT_EQ(test_Y6, 234);
-    ASSERT_EQ(test_Y7, 123);
+    ASSERT_EQ( test_Y0, 0 );
+    ASSERT_EQ( test_Y1, 5 );
+    ASSERT_EQ( test_Y2, 1 );
+    ASSERT_EQ( test_Y3, 1 );
+    ASSERT_EQ( test_Y4, 0 );
+    ASSERT_EQ( test_Y5, 0 );
+    ASSERT_EQ( test_Y6, 234 );
+    ASSERT_EQ( test_Y7, 123 );
 }

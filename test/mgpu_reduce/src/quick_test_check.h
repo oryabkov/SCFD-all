@@ -26,49 +26,49 @@ namespace tests
 {
 
 
-template<class T>
-std::pair<std::string, bool> check_test_to_eps(const T val)
+template <class T>
+std::pair<std::string, bool> check_test_to_eps( const T val )
 {
-    if( !std::isfinite(val) )
+    if ( !std::isfinite( val ) )
     {
-        return {"\x1B[31mFAIL, NOT FINITE\033[0m", false};
+        return { "\x1B[31mFAIL, NOT FINITE\033[0m", false };
     }
-    else if(std::abs(val)>std::sqrt(std::numeric_limits<T>::epsilon()) )
+    else if ( std::abs( val ) > std::sqrt( std::numeric_limits<T>::epsilon() ) )
     {
-        return {"\x1B[31mFAIL\033[0m", false};
+        return { "\x1B[31mFAIL\033[0m", false };
     }
     else
     {
-        return {"\x1B[32mPASS\033[0m", true};
+        return { "\x1B[32mPASS\033[0m", true };
     }
 }
 
-template<class T>
-std::pair<std::string, bool> check_test_to_zero(const T val)
+template <class T>
+std::pair<std::string, bool> check_test_to_zero( const T val )
 {
-    if( !std::isfinite(val) )
+    if ( !std::isfinite( val ) )
     {
-        return {"\x1B[31mFAIL, NOT FINITE\033[0m", false};
+        return { "\x1B[31mFAIL, NOT FINITE\033[0m", false };
     }
-    else if(std::abs(val) != 0 )
+    else if ( std::abs( val ) != 0 )
     {
-        return {"\x1B[31mFAIL\033[0m", false};
+        return { "\x1B[31mFAIL\033[0m", false };
     }
     else
     {
-        return {"\x1B[32mPASS\033[0m", true};
+        return { "\x1B[32mPASS\033[0m", true };
     }
 }
 
-std::pair<std::string, bool> check_to_bool(const bool val)
+std::pair<std::string, bool> check_to_bool( const bool val )
 {
-    if(!val)
+    if ( !val )
     {
-        return {"\x1B[31mFAIL\033[0m", false};
+        return { "\x1B[31mFAIL\033[0m", false };
     }
     else
     {
-        return {"\x1B[32mPASS\033[0m", true};
+        return { "\x1B[32mPASS\033[0m", true };
     }
 }
 

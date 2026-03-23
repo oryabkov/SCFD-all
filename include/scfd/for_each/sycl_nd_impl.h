@@ -25,40 +25,46 @@
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
-template<int dim, class T>
-template<class FUNC_T>
-void sycl_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
+template <int dim, class T>
+template <class FUNC_T>
+void sycl_nd<dim, T>::operator()( FUNC_T f, const rect<T, dim> &range ) const
 {
     std::size_t total_sz = 1;
-    for (int j = 0;j < dim;++j) total_sz *= (range.i2[j]-range.i1[j]);
-    
-    // FUNC_T must satisfy device copyable 
+    for ( int j = 0; j < dim; ++j )
+        total_sz *= ( range.i2[j] - range.i1[j] );
+
+    // FUNC_T must satisfy device copyable
     // For more detail see spec, 3.13.1. Device copyable
     // https://registry.khronos.org/SYCL/specs/sycl-2020/html/sycl-2020.html
-    sycl_device_queue.parallel_for(sycl::range{total_sz}, [=](sycl::id<1> id)
-    {
-        //printf("%d %d \n", omp_get_thread_num(), omp_get_thread_num());
-        vec<T, dim> idx;
-        T i_tmp = id[0];
-        for (int j = dim-1;j >= 0;--j) {
-            idx[j] = range.i1[j] + i_tmp%(range.i2[j]-range.i1[j]);
-            i_tmp /= (range.i2[j]-range.i1[j]);
-        }
-        f(idx);
-    }).wait(); // assumes iterative execution model
+    sycl_device_queue
+        .parallel_for(
+            sycl::range{ total_sz },
+            [=]( sycl::id<1> id ) {
+                //printf("%d %d \n", omp_get_thread_num(), omp_get_thread_num());
+                vec<T, dim> idx;
+                T           i_tmp = id[0];
+                for ( int j = dim - 1; j >= 0; --j )
+                {
+                    idx[j] = range.i1[j] + i_tmp % ( range.i2[j] - range.i1[j] );
+                    i_tmp /= ( range.i2[j] - range.i1[j] );
+                }
+                f( idx );
+            }
+        )
+        .wait(); // assumes iterative execution model
 }
 
-template<int dim, class T>
-template<class FUNC_T>
-void sycl_nd<dim,T>::operator()(FUNC_T f, const vec<T, dim> &size)const
+template <int dim, class T>
+template <class FUNC_T>
+void sycl_nd<dim, T>::operator()( FUNC_T f, const vec<T, dim> &size ) const
 {
-    this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
+    this->operator()( f, rect<T, dim>( vec<T, dim>::make_zero(), size ) );
 }
-template<int dim, class T>
-void sycl_nd<dim,T>::wait()const
+template <int dim, class T>
+void sycl_nd<dim, T>::wait() const
 {
     //void function to sync with cuda
 }

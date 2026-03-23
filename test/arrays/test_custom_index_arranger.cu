@@ -28,9 +28,9 @@
 #include <scfd/for_each/cuda_nd_impl.cuh>
 #include "test_custom_index_arranger.h"
 
-int main(int argc, char const *argv[])
+int main( int argc, char const *argv[] )
 {
-    using memory_t = scfd::memory::cuda_device;
+    using memory_t     = scfd::memory::cuda_device;
     using for_each_3_t = scfd::for_each::cuda_nd<3>;
     scfd::utils::init_cuda_persistent();
     auto ret_code = scfd::tests::check<memory_t, for_each_3_t>();

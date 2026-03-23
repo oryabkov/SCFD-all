@@ -27,27 +27,27 @@ namespace scfd
 namespace utils
 {
 
-void print_nested_exception(std::ostream &os, const std::exception& e, int level =  0)
+void print_nested_exception( std::ostream &os, const std::exception &e, int level = 0 )
 {
-    os << std::string(2*level, ' ') << e.what();
+    os << std::string( 2 * level, ' ' ) << e.what();
     try
     {
-        std::rethrow_if_nested(e);
+        std::rethrow_if_nested( e );
     }
-    catch (const std::exception& nested_exception)
+    catch ( const std::exception &nested_exception )
     {
         os << std::endl;
-        print_nested_exception(os, nested_exception, level + 1);
+        print_nested_exception( os, nested_exception, level + 1 );
     }
-    catch (...) 
+    catch ( ... )
     {
     }
 }
 
-std::string nested_exception_to_multistring(const std::exception& e)
+std::string nested_exception_to_multistring( const std::exception &e )
 {
     std::stringstream str_stream;
-    print_nested_exception(str_stream, e);
+    print_nested_exception( str_stream, e );
     return str_stream.str();
 }
 

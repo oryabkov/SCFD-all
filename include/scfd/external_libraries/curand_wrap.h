@@ -2,6 +2,4 @@
 #define __CURAND_WRAP_H__
 
 
-
-
 #endif

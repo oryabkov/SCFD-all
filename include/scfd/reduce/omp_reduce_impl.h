@@ -24,20 +24,20 @@
 namespace scfd
 {
 
-template<class Ord>
-template<class T>
-T omp_reduce<Ord>::operator()(Ord size, const T *input, T init_val)const
+template <class Ord>
+template <class T>
+T omp_reduce<Ord>::operator()( Ord size, const T *input, T init_val ) const
 {
-    T   res = init_val;
-    #pragma omp parallel
+    T res = init_val;
+#pragma omp parallel
     {
-        T res_private(0);
-        #pragma omp for nowait
-        for (Ord i = 0;i < size;++i)
-            res_private = res_private+input[i];
-        #pragma omp critical
+        T res_private( 0 );
+#pragma omp for nowait
+        for ( Ord i = 0; i < size; ++i )
+            res_private = res_private + input[i];
+#pragma omp critical
         {
-            res = res+res_private;
+            res = res + res_private;
         }
     }
     return res;

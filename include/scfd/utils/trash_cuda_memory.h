@@ -29,12 +29,12 @@ void trash_cuda_memory()
 {
     size_t free_device_mem;
     size_t total_device_mem;
-    CUDA_SAFE_CALL( cudaMemGetInfo(&free_device_mem, &total_device_mem) );
-    void *all_ptr;
+    CUDA_SAFE_CALL( cudaMemGetInfo( &free_device_mem, &total_device_mem ) );
+    void  *all_ptr;
     size_t trash_device_mem = free_device_mem - 0x1000000;
-    CUDA_SAFE_CALL( cudaMalloc(&all_ptr, trash_device_mem) );
-    CUDA_SAFE_CALL( cudaMemset (all_ptr, 255, trash_device_mem ) );
-    CUDA_SAFE_CALL( cudaFree(all_ptr) );
+    CUDA_SAFE_CALL( cudaMalloc( &all_ptr, trash_device_mem ) );
+    CUDA_SAFE_CALL( cudaMemset( all_ptr, 255, trash_device_mem ) );
+    CUDA_SAFE_CALL( cudaFree( all_ptr ) );
 }
 
 }

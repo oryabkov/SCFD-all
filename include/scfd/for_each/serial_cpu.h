@@ -18,7 +18,7 @@
 #define __SCFD_FOR_EACH_SERIAL_CPU_H__
 
 #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-#include <boost/property_tree/ptree.hpp>
+#    include <boost/property_tree/ptree.hpp>
 #endif
 #include "for_each_config.h"
 
@@ -26,36 +26,38 @@
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
 //T is ordinal type (like int)
 //SERIAL_CPU realization is default
-template<class T = int>
+template <class T = int>
 struct serial_cpu
 {
     //FUNC_T concept:
     //TODO
     //copy-constructable
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T i1, T i2)const
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T i1, T i2 ) const
     {
-        for (T i = i1;i < i2;++i) 
+        for ( T i = i1; i < i2; ++i )
         {
-            f(i);
+            f( i );
         }
     }
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T size)const
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T size ) const
     {
-        this->operator()(f, 0, size);
+        this->operator()( f, 0, size );
     }
-    void    wait()const
+    void wait() const
     {
     }
-    #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-    void init(const boost::property_tree::ptree &cfg) { }
-    #endif
+#ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
+    void init( const boost::property_tree::ptree &cfg )
+    {
+    }
+#endif
 };
 
 }

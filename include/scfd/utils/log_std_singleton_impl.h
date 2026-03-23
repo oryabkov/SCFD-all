@@ -24,7 +24,7 @@ namespace scfd
 namespace utils
 {
 
-template<>
+template <>
 log_std *manual_init_singleton<log_std>::inst_ = nullptr;
 
 }

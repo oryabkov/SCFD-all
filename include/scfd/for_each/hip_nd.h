@@ -28,21 +28,23 @@ namespace scfd
 namespace for_each
 {
 
-using scfd::static_vec::vec;
 using scfd::static_vec::rect;
+using scfd::static_vec::vec;
 
-template<int dim, class T = int>
+template <int dim, class T = int>
 struct hip_nd
 {
     int block_size;
 
-    hip_nd() : block_size(256) {}
+    hip_nd() : block_size( 256 )
+    {
+    }
 
-    template<class FUNC_T>
-    void operator()(const FUNC_T &f, const rect<T, dim> &range)const;
-    template<class FUNC_T>
-    void operator()(const FUNC_T &f, const vec<T, dim> &size)const;
-    void wait()const;
+    template <class FUNC_T>
+    void operator()( const FUNC_T &f, const rect<T, dim> &range ) const;
+    template <class FUNC_T>
+    void operator()( const FUNC_T &f, const vec<T, dim> &size ) const;
+    void wait() const;
 };
 
 }

@@ -25,197 +25,225 @@
 
 namespace scfd
 {
-namespace static_vec 
+namespace static_vec
 {
 
 
-
-template<class T,int Dim>
+template <class T, int Dim>
 class vec
 {
-    template<class X>using help_t = T;
-public:
+    template <class X>
+    using help_t = T;
 
+public:
     T d[Dim];
 
-    typedef T                   value_type;
-    static const int            dim = Dim;
+    typedef T        value_type;
+    static const int dim = Dim;
 
-#if defined(__INTEL_LLVM_COMPILER)
-//icpx only
-    __DEVICE_TAG__                      vec()             = default;
-    __DEVICE_TAG__                      vec(const vec &v) = default;
-    __DEVICE_TAG__ vec           &operator=(const vec &v) = default;
+#if defined( __INTEL_LLVM_COMPILER )
+    //icpx only
+    __DEVICE_TAG__      vec()                     = default;
+    __DEVICE_TAG__      vec( const vec &v )       = default;
+    __DEVICE_TAG__ vec &operator=( const vec &v ) = default;
 #else
-    __DEVICE_TAG__                      vec();
-    __DEVICE_TAG__                      vec(const vec &v);
-    __DEVICE_TAG__ vec           &operator=(const vec &v);
+    __DEVICE_TAG__      vec();
+    __DEVICE_TAG__      vec( const vec &v );
+    __DEVICE_TAG__ vec &operator=( const vec &v );
 #endif
 
     /// ISSUE Still not sure about this static_cast here...
-    template<typename... Args,
-             class = typename std::enable_if<sizeof...(Args) == Dim>::type,
-             class = typename std::enable_if<
-                                  detail::check_all_are_true< 
-                                      std::is_convertible<Args,help_t<Args> >::value... 
-                                  >::value
-                              >::type>
-    __DEVICE_TAG__                      vec(const Args&... args) : d{static_cast<T>(args)...}
+    template <
+        typename... Args, class = typename std::enable_if<sizeof...( Args ) == Dim>::type,
+        class = typename std::enable_if<
+            detail::check_all_are_true<std::is_convertible<Args, help_t<Args>>::value...>::value>::type>
+    __DEVICE_TAG__ vec( const Args &...args ) : d{ static_cast<T>( args )... }
     {
     }
-    template<class Vec, 
-             class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
-    __DEVICE_TAG__                      vec(const Vec &v)
+    template <class Vec, class = typename std::enable_if<detail::has_subscript_operator<Vec, int>::value>::type>
+    __DEVICE_TAG__ vec( const Vec &v )
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] = v[j];
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            d[j] = v[j];
     }
 
-    __DEVICE_TAG__ vec                  operator*(value_type mul)const
+    __DEVICE_TAG__ vec operator*( value_type mul ) const
     {
         vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = d[j]*mul;
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res.d[j] = d[j] * mul;
         return res;
     }
-    __DEVICE_TAG__ vec                  operator/(value_type div)const
+    __DEVICE_TAG__ vec operator/( value_type div ) const
     {
-        return detail::vec_div_scalar(*this, div);
+        return detail::vec_div_scalar( *this, div );
     }
-    __DEVICE_TAG__ vec                  operator+(const vec &x)const
+    __DEVICE_TAG__ vec operator+( const vec &x ) const
     {
         vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = d[j] + x.d[j];
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res.d[j] = d[j] + x.d[j];
         return res;
     }
-    __DEVICE_TAG__ vec                  operator-(const vec &x)const
+    __DEVICE_TAG__ vec operator-( const vec &x ) const
     {
         vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = d[j] - x.d[j];
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res.d[j] = d[j] - x.d[j];
         return res;
     }
-    __DEVICE_TAG__ vec                  operator-()const
+    __DEVICE_TAG__ vec operator-() const
     {
         vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = -d[j];
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res.d[j] = -d[j];
         return res;
     }
-    __DEVICE_TAG__ vec                  inverted()const
+    __DEVICE_TAG__ vec inverted() const
     {
-        return -(*this);
-    }    
-    __DEVICE_TAG__ value_type            &operator[](int j) { return d[j]; }
-    __DEVICE_TAG__ const value_type      &operator[](int j)const { return d[j]; }
-    __DEVICE_TAG__ value_type            &operator()(int j) { return d[j]; }
-    __DEVICE_TAG__ const value_type      &operator()(int j)const { return d[j]; }
-    template<int J>
-    __DEVICE_TAG__ value_type            &get() { return d[J]; }
-    template<int J>
-    __DEVICE_TAG__ const value_type      &get()const { return d[J]; }
+        return -( *this );
+    }
+    __DEVICE_TAG__ value_type &operator[]( int j )
+    {
+        return d[j];
+    }
+    __DEVICE_TAG__ const value_type &operator[]( int j ) const
+    {
+        return d[j];
+    }
+    __DEVICE_TAG__ value_type &operator()( int j )
+    {
+        return d[j];
+    }
+    __DEVICE_TAG__ const value_type &operator()( int j ) const
+    {
+        return d[j];
+    }
+    template <int J>
+    __DEVICE_TAG__ value_type &get()
+    {
+        return d[J];
+    }
+    template <int J>
+    __DEVICE_TAG__ const value_type &get() const
+    {
+        return d[J];
+    }
 
-    __DEVICE_TAG__ value_type            norm2_sq()const
+    __DEVICE_TAG__ value_type norm2_sq() const
     {
-        value_type   res(0.);
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res += d[j]*d[j];
+        value_type res( 0. );
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res += d[j] * d[j];
         return res;
     }
-    __DEVICE_TAG__ value_type            norm2()const
+    __DEVICE_TAG__ value_type norm2() const
     {
-        value_type   res(0.);
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res += d[j]*d[j];
-        return sqrt(res);
+        value_type res( 0. );
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res += d[j] * d[j];
+        return sqrt( res );
     }
 
-    static __DEVICE_TAG__ vec            make_zero()
+    static __DEVICE_TAG__ vec make_zero()
     {
         vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = value_type(0.);
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res.d[j] = value_type( 0. );
         return res;
     }
-    static __DEVICE_TAG__ vec            make_ones()
+    static __DEVICE_TAG__ vec make_ones()
     {
         vec res;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res.d[j] = value_type(1);
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res.d[j] = value_type( 1 );
         return res;
     }
-    static __DEVICE_TAG__ vec            make_unit(int j)
+    static __DEVICE_TAG__ vec make_unit( int j )
     {
         vec res  = make_zero();
-        res.d[j] = value_type(1);
+        res.d[j] = value_type( 1 );
         return res;
     }
 
-    template<class Vec, 
-             class = typename std::enable_if<detail::has_subscript_operator<Vec,int>::value>::type>
-    __DEVICE_TAG__ vec                   &operator=(const Vec &v)
+    template <class Vec, class = typename std::enable_if<detail::has_subscript_operator<Vec, int>::value>::type>
+    __DEVICE_TAG__ vec &operator=( const Vec &v )
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] = v[j];
-        return *this;    
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            d[j] = v[j];
+        return *this;
     }
-    __DEVICE_TAG__ vec                   &operator+=(const vec &v)
+    __DEVICE_TAG__ vec &operator+=( const vec &v )
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] += v.d[j];
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            d[j] += v.d[j];
         return *this;
     }
     //TODO check size (statically)
-    __DEVICE_TAG__ vec                   &operator-=(const vec &v)
+    __DEVICE_TAG__ vec &operator-=( const vec &v )
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] -= v.d[j];
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            d[j] -= v.d[j];
         return *this;
     }
-    __DEVICE_TAG__ vec                   &operator*=(const value_type &mul)
+    __DEVICE_TAG__ vec &operator*=( const value_type &mul )
     {
-        #pragma unroll
-        for (int j = 0;j < dim;++j) d[j] *= mul;
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            d[j] *= mul;
         return *this;
     }
-    __DEVICE_TAG__ vec                   &operator/=(const value_type &div)
+    __DEVICE_TAG__ vec &operator/=( const value_type &div )
     {
-        detail::vec_div_scalar_inplace(div, *this);
+        detail::vec_div_scalar_inplace( div, *this );
         return *this;
     }
-    __DEVICE_TAG__ T                     components_prod()const
+    __DEVICE_TAG__ T components_prod() const
     {
-        T res(1);
-        #pragma unroll
-        for (int j = 0;j < dim;++j) res *= d[j];
+        T res( 1 );
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
+            res *= d[j];
         return res;
     }
-    __DEVICE_TAG__ bool operator==(const vec &x)const
+    __DEVICE_TAG__ bool operator==( const vec &x ) const
     {
         bool res = true;
-        #pragma unroll
-        for (int j = 0;j < dim;++j) 
+#pragma unroll
+        for ( int j = 0; j < dim; ++j )
         {
-            if (d[j] != x.d[j]) res = false;
+            if ( d[j] != x.d[j] )
+                res = false;
         }
         return res;
     }
-    __DEVICE_TAG__ bool operator!=(const vec &x)const
+    __DEVICE_TAG__ bool operator!=( const vec &x ) const
     {
-        return !(*this == x);
+        return !( *this == x );
     }
 };
 
-#if !defined(__INTEL_LLVM_COMPILER)
-template<class T,int Dim>
-__DEVICE_TAG__ vec<T,Dim>::vec() = default;
+#if !defined( __INTEL_LLVM_COMPILER )
+template <class T, int Dim>
+__DEVICE_TAG__ vec<T, Dim>::vec() = default;
 
-template<class T,int Dim>
-__DEVICE_TAG__ vec<T,Dim>::vec(const vec &v) = default;
+template <class T, int Dim>
+__DEVICE_TAG__ vec<T, Dim>::vec( const vec &v ) = default;
 
-template<class T,int Dim>
-__DEVICE_TAG__ vec<T,Dim>                  &vec<T,Dim>::operator=(const vec &v) = default;
+template <class T, int Dim>
+__DEVICE_TAG__ vec<T, Dim> &vec<T, Dim>::operator=( const vec &v ) = default;
 #endif
 
 /*template<class T,int Dim>
@@ -224,48 +252,48 @@ __DEVICE_TAG__ vec<T,Dim>   operator*(T mul, const vec<T,Dim> &v)
     return v*mul;
 }*/
 
-template<class T,class T2,int Dim,class X = typename std::enable_if<std::is_convertible<T2,T>::value>::type>
-__DEVICE_TAG__ vec<T,Dim> operator*(T2 mul, const vec<T,Dim> &v)
+template <class T, class T2, int Dim, class X = typename std::enable_if<std::is_convertible<T2, T>::value>::type>
+__DEVICE_TAG__ vec<T, Dim> operator*( T2 mul, const vec<T, Dim> &v )
 {
-    return v*T(mul);
+    return v * T( mul );
 }
 
-template<class T,int Dim>
-__DEVICE_TAG__ T            scalar_prod(const vec<T,Dim> &v1, const vec<T,Dim> &v2)
+template <class T, int Dim>
+__DEVICE_TAG__ T scalar_prod( const vec<T, Dim> &v1, const vec<T, Dim> &v2 )
 {
-    T   res(0.);
-    #pragma unroll
-    for (int j = 0;j < Dim;++j) res += v1[j]*v2[j];
+    T res( 0. );
+#pragma unroll
+    for ( int j = 0; j < Dim; ++j )
+        res += v1[j] * v2[j];
     return res;
 }
 
-template<class T,int Dim>
-__DEVICE_TAG__ vec<T,Dim>   pointwise_prod(const vec<T,Dim> &v1, const vec<T,Dim> &v2)
+template <class T, int Dim>
+__DEVICE_TAG__ vec<T, Dim> pointwise_prod( const vec<T, Dim> &v1, const vec<T, Dim> &v2 )
 {
-    vec<T,Dim>  res;
-    #pragma unroll
-    for (int j = 0;j < Dim;++j) res[j] = v1[j]*v2[j];
+    vec<T, Dim> res;
+#pragma unroll
+    for ( int j = 0; j < Dim; ++j )
+        res[j] = v1[j] * v2[j];
     return res;
 }
 
-template<class T,int Dim>
-__DEVICE_TAG__ vec<T,Dim>   vector_prod(const vec<T,Dim> &v1, const vec<T,Dim> &v2)
+template <class T, int Dim>
+__DEVICE_TAG__ vec<T, Dim> vector_prod( const vec<T, Dim> &v1, const vec<T, Dim> &v2 )
 {
-    static_assert(Dim==3, "static_vec::vector_prod: trying to apply to non 3d vectors");
-    vec<T,Dim>  res;
-    res[0] =   v1[1]*v2[2] - v1[2]*v2[1];
-    res[1] = -(v1[0]*v2[2] - v1[2]*v2[0]);
-    res[2] =   v1[0]*v2[1] - v1[1]*v2[0];
+    static_assert( Dim == 3, "static_vec::vector_prod: trying to apply to non 3d vectors" );
+    vec<T, Dim> res;
+    res[0] = v1[1] * v2[2] - v1[2] * v2[1];
+    res[1] = -( v1[0] * v2[2] - v1[2] * v2[0] );
+    res[2] = v1[0] * v2[1] - v1[1] * v2[0];
     return res;
 }
 
-template<class T,int Dim>
-__DEVICE_TAG__ T triple_prod(const vec<T,Dim>& x,
-                             const vec<T,Dim>& y,
-                             const vec<T,Dim>& z)
+template <class T, int Dim>
+__DEVICE_TAG__ T triple_prod( const vec<T, Dim> &x, const vec<T, Dim> &y, const vec<T, Dim> &z )
 {
-    static_assert(Dim==3, "static_vec::triple_prod: trying to apply to non 3d vectors");
-    return scalar_prod(x,vector_prod(y,z));
+    static_assert( Dim == 3, "static_vec::triple_prod: trying to apply to non 3d vectors" );
+    return scalar_prod( x, vector_prod( y, z ) );
 }
 
 }

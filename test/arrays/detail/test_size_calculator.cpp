@@ -35,9 +35,9 @@ bool perform_test(int test_n, scfd::static_vec::vec<int,Sz> &dyn_sizes, int corr
     return answer == correct_aswer;
 }*/
 
-TEST(DetailSizeCalculatorTest, GetOnlyTest) 
+TEST( DetailSizeCalculatorTest, GetOnlyTest )
 {
-    scfd::static_vec::vec<int,3>   dyn_sizes = {10,20,30};
+    scfd::static_vec::vec<int, 3> dyn_sizes = { 10, 20, 30 };
 
-    ASSERT_EQ((size_calculator<int, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)),863460000);
+    ASSERT_EQ( ( size_calculator<int, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 863460000 );
 }

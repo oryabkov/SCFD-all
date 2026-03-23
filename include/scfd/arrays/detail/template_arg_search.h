@@ -26,33 +26,33 @@ namespace arrays
 namespace detail
 {
 
-template<class Ord, bool Found, class C, class... Args>
+template <class Ord, bool Found, class C, class... Args>
 struct template_arg_search_
 {
 };
 
-template<class Ord, class C, class... Args>
-struct template_arg_search_<Ord,true,C,Args...>
+template <class Ord, class C, class... Args>
+struct template_arg_search_<Ord, true, C, Args...>
 {
     static const Ord value = 0;
 };
 
-template<class Ord, class C, class Head1, class Head2, class... Tail>
-struct template_arg_search_<Ord,false,C,Head1,Head2,Tail...>
+template <class Ord, class C, class Head1, class Head2, class... Tail>
+struct template_arg_search_<Ord, false, C, Head1, Head2, Tail...>
 {
-    static const Ord value = 1 + template_arg_search_<Ord,std::is_same<C,Head2>::value,C,Head2,Tail...>::value;
+    static const Ord value = 1 + template_arg_search_<Ord, std::is_same<C, Head2>::value, C, Head2, Tail...>::value;
 };
 
-template<class Ord, class C, class Head1>
-struct template_arg_search_<Ord,false,C,Head1>
+template <class Ord, class C, class Head1>
+struct template_arg_search_<Ord, false, C, Head1>
 {
-    static_assert(sizeof(Ord) != sizeof(Ord),"template_arg_search_::seems needed argument is not here");
+    static_assert( sizeof( Ord ) != sizeof( Ord ), "template_arg_search_::seems needed argument is not here" );
 };
 
-template<class Ord, class C, class Head, class... Tail>
+template <class Ord, class C, class Head, class... Tail>
 struct template_arg_search
 {
-    static const Ord value = template_arg_search_<Ord,std::is_same<C,Head>::value,C,Head,Tail...>::value;
+    static const Ord value = template_arg_search_<Ord, std::is_same<C, Head>::value, C, Head, Tail...>::value;
 };
 
 }

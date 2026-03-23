@@ -4,24 +4,28 @@
 #include <scfd/utils/init_cuda.h>
 #include <scfd/utils/cuda_safe_call.h>
 
-int main(int argc, char **argv)
+int main( int argc, char **argv )
 {
-    bool    do_error = false;
-    if ((argc >= 2)&&(std::string(argv[1]) == std::string("1"))) do_error = true;
-    if (do_error) printf("you specified do error on purpose\n");
-    try {
-        scfd::utils::init_cuda_persistent(8000); //using a device that has at lest 8Gb of device mem.
+    bool do_error = false;
+    if ( ( argc >= 2 ) && ( std::string( argv[1] ) == std::string( "1" ) ) )
+        do_error = true;
+    if ( do_error )
+        printf( "you specified do error on purpose\n" );
+    try
+    {
+        scfd::utils::init_cuda_persistent( 8000 ); //using a device that has at lest 8Gb of device mem.
 
-        int     *p;
-        if (!do_error)
-            CUDA_SAFE_CALL( cudaMalloc((void**)&p, sizeof(int)*512) );
+        int *p;
+        if ( !do_error )
+            CUDA_SAFE_CALL( cudaMalloc( (void **)&p, sizeof( int ) * 512 ) );
         else
-            CUDA_SAFE_CALL( cudaMalloc((void**)&p, -100 ) );
+            CUDA_SAFE_CALL( cudaMalloc( (void **)&p, -100 ) );
 
         return 0;
-
-    } catch (std::runtime_error &e) {
-        printf("%s\n", e.what());
+    }
+    catch ( std::runtime_error &e )
+    {
+        printf( "%s\n", e.what() );
 
         return 1;
     }

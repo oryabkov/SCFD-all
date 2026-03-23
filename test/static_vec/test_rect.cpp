@@ -21,12 +21,12 @@
 
 using namespace scfd::static_vec;
 
-typedef vec<int,3>    idx_t;
-typedef rect<int,3>   rect_t;
+typedef vec<int, 3>  idx_t;
+typedef rect<int, 3> rect_t;
 
-TEST(StaticRectTest, CalcArea) 
+TEST( StaticRectTest, CalcArea )
 {
-    rect_t  r(idx_t(0,0,0), idx_t(1,1,1));
+    rect_t r( idx_t( 0, 0, 0 ), idx_t( 1, 1, 1 ) );
 
-    ASSERT_EQ(r.calc_area(), 1);
+    ASSERT_EQ( r.calc_area(), 1 );
 }

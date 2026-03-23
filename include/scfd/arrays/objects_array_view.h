@@ -26,87 +26,85 @@ namespace scfd
 namespace arrays
 {
 
-template<class T, class Memory, 
-         template <ordinal_type... Dims> class Arranger>
+template <class T, class Memory, template <ordinal_type... Dims> class Arranger>
 class objects_array_view
 {
 public:
-    typedef objects_array<T,Memory,Arranger>    array_type;
-    typedef T                                   value_type;
-    typedef typename Memory::host_memory_type   memory_type;
+    typedef objects_array<T, Memory, Arranger> array_type;
+    typedef T                                  value_type;
+    typedef typename Memory::host_memory_type  memory_type;
 
 public:
-    objects_array_view() = default;
-    objects_array_view(const objects_array_view &) = delete;
-    objects_array_view(objects_array_view &&) = default;
-    objects_array_view(const array_type &array, bool sync_from_array_ = true)
+    objects_array_view()                             = default;
+    objects_array_view( const objects_array_view & ) = delete;
+    objects_array_view( objects_array_view && )      = default;
+    objects_array_view( const array_type &array, bool sync_from_array_ = true )
     {
-        init(array, sync_from_array_);
+        init( array, sync_from_array_ );
     }
 
-    void                                init(const array_type &array, bool sync_from_array_ = true) 
+    void init( const array_type &array, bool sync_from_array_ = true )
     {
-        storage_arr_view_.init(array.storage_arr(), sync_from_array_);
+        storage_arr_view_.init( array.storage_arr(), sync_from_array_ );
     }
-    void                                release(bool sync_to_array_ = true)
+    void release( bool sync_to_array_ = true )
     {
-        storage_arr_view_.release(sync_to_array_);
+        storage_arr_view_.release( sync_to_array_ );
     }
-    void                                free()
+    void free()
     {
         storage_arr_view_.free();
     }
 
-    void                                sync_to_array()const
+    void sync_to_array() const
     {
         storage_arr_view_.sync_to_array();
     }
-    void                                sync_from_array()const
+    void sync_from_array() const
     {
         storage_arr_view_.sync_from_array();
     }
 
     /// obj is a first arg to be consistent with get_vec method of array
-    void get(T &obj, ordinal_type i)const
+    void get( T &obj, ordinal_type i ) const
     {
-        value_ref_t &obj_ref = reinterpret_cast<value_ref_t&>(obj);
-        #pragma unroll
-        for (ordinal_type ii = 0;ii < sizeof(T)/sizeof(storage_t);++ii)
+        value_ref_t &obj_ref = reinterpret_cast<value_ref_t &>( obj );
+#pragma unroll
+        for ( ordinal_type ii = 0; ii < sizeof( T ) / sizeof( storage_t ); ++ii )
         {
-            obj_ref.d[ii] = storage_arr_view_(i,ii);
+            obj_ref.d[ii] = storage_arr_view_( i, ii );
         }
     }
-    void set(const T &obj, ordinal_type i)const
+    void set( const T &obj, ordinal_type i ) const
     {
-        const value_ref_t &obj_ref = reinterpret_cast<const value_ref_t&>(obj);
-        #pragma unroll
-        for (ordinal_type ii = 0;ii < sizeof(T)/sizeof(storage_t);++ii)
+        const value_ref_t &obj_ref = reinterpret_cast<const value_ref_t &>( obj );
+#pragma unroll
+        for ( ordinal_type ii = 0; ii < sizeof( T ) / sizeof( storage_t ); ++ii )
         {
-            storage_arr_view_(i,ii) = obj_ref.d[ii];
+            storage_arr_view_( i, ii ) = obj_ref.d[ii];
         }
     }
+
 private:
-    typedef unsigned int                                    storage_t;
-    static_assert(sizeof(T)%sizeof(storage_t) == 0, "objects_array: sizeof(storage_t) is not multiplier of sizeof(T)");
-    typedef struct 
+    typedef unsigned int storage_t;
+    static_assert(
+        sizeof( T ) % sizeof( storage_t ) == 0, "objects_array: sizeof(storage_t) is not multiplier of sizeof(T)"
+    );
+    typedef struct
     {
-        storage_t   d[sizeof(T)/sizeof(storage_t)];
-    }                                                       value_ref_t;
-    typedef tensor1_array_view<storage_t,Memory,
-                               sizeof(T)/sizeof(storage_t),
-                               Arranger>                    storage_arr_view_t;
+        storage_t d[sizeof( T ) / sizeof( storage_t )];
+    } value_ref_t;
+    typedef tensor1_array_view<storage_t, Memory, sizeof( T ) / sizeof( storage_t ), Arranger> storage_arr_view_t;
 
 private:
-    storage_arr_view_t   storage_arr_view_;
-
+    storage_arr_view_t storage_arr_view_;
 };
 
-template<class T, class Memory, 
-         template <ordinal_type... Dims> class Arranger>
-typename objects_array<T,Memory,Arranger>::view_type   
-objects_array<T,Memory,Arranger>::create_view(bool sync_from_array_)const
+template <class T, class Memory, template <ordinal_type... Dims> class Arranger>
+typename objects_array<T, Memory, Arranger>::view_type
+objects_array<T, Memory, Arranger>::create_view( bool sync_from_array_ ) const
 {
-    return view_type(*this, sync_from_array_);
+    return view_type( *this, sync_from_array_ );
 }
 
 }

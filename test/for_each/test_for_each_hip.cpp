@@ -27,60 +27,62 @@
 
 #include <unistd.h>
 
-#define SZ_X    100
+#define SZ_X 100
 
 using for_each_t = scfd::for_each::hip<>;
-using mem_t = scfd::memory::hip_device;
+using mem_t      = scfd::memory::hip_device;
 
 //using scfd::static_vec::rect;
 
-typedef scfd::arrays::tensor0_array<int,mem_t>                t_field0;
-typedef scfd::arrays::tensor0_array_view<int,mem_t>           t_field0_view;
-typedef scfd::arrays::tensor1_array<int,mem_t,3>              t_field1;
-typedef scfd::arrays::tensor1_array_view<int,mem_t,3>         t_field1_view;
+typedef scfd::arrays::tensor0_array<int, mem_t>         t_field0;
+typedef scfd::arrays::tensor0_array_view<int, mem_t>    t_field0_view;
+typedef scfd::arrays::tensor1_array<int, mem_t, 3>      t_field1;
+typedef scfd::arrays::tensor1_array_view<int, mem_t, 3> t_field1_view;
 
 struct func_test_field0
 {
-    func_test_field0(const t_field0 &f_) : f(f_) {}
-    t_field0  f;
-    __device__ __host__ void operator()(const int &idx)
+    func_test_field0( const t_field0 &f_ ) : f( f_ )
     {
-        f(idx) += 1 - idx*idx;
+    }
+    t_field0                 f;
+    __device__ __host__ void operator()( const int &idx )
+    {
+        f( idx ) += 1 - idx * idx;
     }
 };
 
-bool    test_field0()
+bool test_field0()
 {
-    t_field0          f;
-    f.init(SZ_X);
+    t_field0 f;
+    f.init( SZ_X );
 
-    t_field0_view     view;
-    view.init(f, false);
-    for (int i = 0;i < SZ_X;++i)
+    t_field0_view view;
+    view.init( f, false );
+    for ( int i = 0; i < SZ_X; ++i )
     {
-        view(i) = i;
+        view( i ) = i;
     }
     view.release();
 
-    for_each_t             for_each;
+    for_each_t for_each;
     for_each.block_size = 128;
-    for_each(func_test_field0(f), 0, SZ_X);
+    for_each( func_test_field0( f ), 0, SZ_X );
     for_each.wait();
-    
-    bool    result = true;
 
-    t_field0_view     view2;
-    view2.init(f, true);
-    for (int i = 0;i < SZ_X;++i)
+    bool result = true;
+
+    t_field0_view view2;
+    view2.init( f, true );
+    for ( int i = 0; i < SZ_X; ++i )
     {
-        if (view2(i) != i + 1 - i*i) 
+        if ( view2( i ) != i + 1 - i * i )
         {
-            printf("test_field0: i = %d: %d != %d \n", i, view2(i), i + 1 - i*i);
+            printf( "test_field0: i = %d: %d != %d \n", i, view2( i ), i + 1 - i * i );
             result = false;
         }
-        #ifdef DO_RESULTS_OUTPUT
-        printf("%d, %d, %d\n", i, view2(i));
-        #endif
+#ifdef DO_RESULTS_OUTPUT
+        printf( "%d, %d, %d\n", i, view2( i ) );
+#endif
     }
     view2.release();
 
@@ -90,99 +92,102 @@ bool    test_field0()
 
 struct func_test_field1
 {
-    func_test_field1(const t_field1 &f_) : f(f_) {}
-    t_field1  f;
-    __device__ __host__ void operator()(const int &idx)
+    func_test_field1( const t_field1 &f_ ) : f( f_ )
     {
-        f(idx,0) += 1;
-        f(idx,1) -= idx;
-        f(idx,2) -= idx;
+    }
+    t_field1                 f;
+    __device__ __host__ void operator()( const int &idx )
+    {
+        f( idx, 0 ) += 1;
+        f( idx, 1 ) -= idx;
+        f( idx, 2 ) -= idx;
     }
 };
 
-bool    test_field1()
+bool test_field1()
 {
-    t_field1          f;
-    f.init(SZ_X);
+    t_field1 f;
+    f.init( SZ_X );
 
-    t_field1_view     view;
-    view.init(f, false);
-    for (int i = 0;i < SZ_X;++i)
+    t_field1_view view;
+    view.init( f, false );
+    for ( int i = 0; i < SZ_X; ++i )
     {
-        view(i, 0) = i;
-        view(i, 1) = i;
-        view(i, 2) = i*2;
+        view( i, 0 ) = i;
+        view( i, 1 ) = i;
+        view( i, 2 ) = i * 2;
     }
     view.release();
 
-    for_each_t                for_each;
+    for_each_t for_each;
     for_each.block_size = 128;
-    for_each(func_test_field1(f), 0, SZ_X);
+    for_each( func_test_field1( f ), 0, SZ_X );
     for_each.wait();
-    
-    bool    result = true;
 
-    t_field1_view     view2;
-    view2.init(f, true);
-    for (int i = 0;i < SZ_X;++i)
+    bool result = true;
+
+    t_field1_view view2;
+    view2.init( f, true );
+    for ( int i = 0; i < SZ_X; ++i )
     {
-        if (view2(i, 0) != i+1) 
+        if ( view2( i, 0 ) != i + 1 )
         {
-            printf("test_field1: i = %d: %d != %d \n", i, view2(i, 0), i+1);
+            printf( "test_field1: i = %d: %d != %d \n", i, view2( i, 0 ), i + 1 );
             result = false;
         }
-        if (view2(i, 1) != i-i) 
+        if ( view2( i, 1 ) != i - i )
         {
-            printf("test_field1: i = %d: %d != %d \n", i, view2(i, 1), i-i);
+            printf( "test_field1: i = %d: %d != %d \n", i, view2( i, 1 ), i - i );
             result = false;
         }
-        if (view2(i, 2) != i*2-i) 
+        if ( view2( i, 2 ) != i * 2 - i )
         {
-            printf("test_field1: i = %d: %d != %d \n", i, view2(i, 2), i*2-i);
+            printf( "test_field1: i = %d: %d != %d \n", i, view2( i, 2 ), i * 2 - i );
             result = false;
         }
-        #ifdef DO_RESULTS_OUTPUT
-        printf("%d, %d, %d, %d\n", i, view2(i, 0), view2(i, 1), view2(i, 2));
-        #endif
+#ifdef DO_RESULTS_OUTPUT
+        printf( "%d, %d, %d, %d\n", i, view2( i, 0 ), view2( i, 1 ), view2( i, 2 ) );
+#endif
     }
     view2.release();
-    
+
     return result;
 }
 
 int main()
 {
-    try {
-
-    scfd::utils::init_hip_persistent();
-    int err_code = 0;
-
-    if (test_field0()) 
+    try
     {
-        printf("test_field0 seems to be OK\n");
-    } 
-    else 
-    {
-        printf("test_field0 failed\n");
-        err_code = 2;
+
+        scfd::utils::init_hip_persistent();
+        int err_code = 0;
+
+        if ( test_field0() )
+        {
+            printf( "test_field0 seems to be OK\n" );
+        }
+        else
+        {
+            printf( "test_field0 failed\n" );
+            err_code = 2;
+        }
+
+        if ( test_field1() )
+        {
+            printf( "test_field1 seems to be OK\n" );
+        }
+        else
+        {
+            printf( "test_field1 failed\n" );
+            err_code = 2;
+        }
+
+        return err_code;
     }
-
-    if (test_field1()) 
+    catch ( std::exception &e )
     {
-        printf("test_field1 seems to be OK\n");
-    } 
-    else 
-    {
-        printf("test_field1 failed\n");
-        err_code = 2;
-    }
 
-    return err_code;
-    
-    } catch(std::exception& e) {
-
-    printf("exception caught: %s\n", e.what());
-    return 1;
-
+        printf( "exception caught: %s\n", e.what() );
+        return 1;
     }
 }

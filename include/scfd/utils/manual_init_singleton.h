@@ -8,26 +8,27 @@ namespace scfd
 namespace utils
 {
 
-template<class DerivedClass>
+template <class DerivedClass>
 class manual_init_singleton
 {
 public:
     manual_init_singleton() = default;
-    manual_init_singleton(DerivedClass *inst, bool do_set_inst = false)
+    manual_init_singleton( DerivedClass *inst, bool do_set_inst = false )
     {
-        if (do_set_inst)
+        if ( do_set_inst )
         {
-            set_inst(inst);
+            set_inst( inst );
         }
     }
 
-    static void set_inst(DerivedClass *inst)
+    static void set_inst( DerivedClass *inst )
     {
         inst_ = inst;
     }
     static DerivedClass &inst()
     {
-        if (inst_ == nullptr) throw std::logic_error("manual_init_singleton::inst(): sigleton is not inited");
+        if ( inst_ == nullptr )
+            throw std::logic_error( "manual_init_singleton::inst(): sigleton is not inited" );
         return *inst_;
     }
 

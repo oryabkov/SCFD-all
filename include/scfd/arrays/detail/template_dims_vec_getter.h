@@ -24,38 +24,38 @@ namespace arrays
 namespace detail
 {
 
-template<class Ord, Ord Ind, bool End, Ord... Dims>
+template <class Ord, Ord Ind, bool End, Ord... Dims>
 struct template_dims_vec_getter_
 {
 };
 
-template<class Ord, Ord Ind, Ord... Dims>
-struct template_dims_vec_getter_<Ord,Ind,true,Dims...>
+template <class Ord, Ord Ind, Ord... Dims>
+struct template_dims_vec_getter_<Ord, Ind, true, Dims...>
 {
-    template<class Vec>
-    static void get(Vec &sizes)
+    template <class Vec>
+    static void get( Vec &sizes )
     {
     }
 };
 
-template<class Ord, Ord Ind, Ord DimsHead, Ord... DimsTail>
-struct template_dims_vec_getter_<Ord,Ind,false,DimsHead,DimsTail...>
+template <class Ord, Ord Ind, Ord DimsHead, Ord... DimsTail>
+struct template_dims_vec_getter_<Ord, Ind, false, DimsHead, DimsTail...>
 {
-    template<class Vec>
-    static void get(Vec &sizes)
+    template <class Vec>
+    static void get( Vec &sizes )
     {
         sizes[Ind] = DimsHead;
-        template_dims_vec_getter_<Ord,Ind+1,sizeof...(DimsTail)==0,DimsTail...>::get(sizes);
+        template_dims_vec_getter_<Ord, Ind + 1, sizeof...( DimsTail ) == 0, DimsTail...>::get( sizes );
     }
 };
 
-template<class Ord, Ord... Dims>
+template <class Ord, Ord... Dims>
 struct template_dims_vec_getter
 {
-    template<class Vec>
-    static void get(Vec &sizes)
+    template <class Vec>
+    static void get( Vec &sizes )
     {
-        template_dims_vec_getter_<Ord,0,sizeof...(Dims)==0,Dims...>::get(sizes);
+        template_dims_vec_getter_<Ord, 0, sizeof...( Dims ) == 0, Dims...>::get( sizes );
     }
 };
 

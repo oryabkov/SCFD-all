@@ -28,161 +28,167 @@ namespace arrays
 
 using static_vec::vec;
 
-template<ordinal_type... Dims>
-struct first_index_fast_arranger : public arranger_base<ordinal_type,Dims...>
+template <ordinal_type... Dims>
+struct first_index_fast_arranger : public arranger_base<ordinal_type, Dims...>
 {
 };
 
-template<ordinal_type Dim0>
-struct first_index_fast_arranger<Dim0> : public arranger_base<ordinal_type,Dim0>
+template <ordinal_type Dim0>
+struct first_index_fast_arranger<Dim0> : public arranger_base<ordinal_type, Dim0>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0)const
+    __DEVICE_TAG__ ordinal_type calc_lin_index( ordinal_type i0 ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
         return i0 - this->template get_index0<0>();
 #else
-        return i0;   
+        return i0;
 #endif
     }
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1>
-struct first_index_fast_arranger<Dim0,Dim1> : public arranger_base<ordinal_type,Dim0,Dim1>
+template <ordinal_type Dim0, ordinal_type Dim1>
+struct first_index_fast_arranger<Dim0, Dim1> : public arranger_base<ordinal_type, Dim0, Dim1>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1)const
+    __DEVICE_TAG__ ordinal_type calc_lin_index( ordinal_type i0, ordinal_type i1 ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        return                               (i1 - this->template get_index0<1>())*
-                this->template get_dim<0>() + i0 - this->template get_index0<0>();
+        return ( i1 - this->template get_index0<1>() ) * this->template get_dim<0>() + i0 -
+               this->template get_index0<0>();
 #else
-        return                               (i1)*
-                this->template get_dim<0>() + i0;
+        return ( i1 ) * this->template get_dim<0>() + i0;
 #endif
     }
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2>
-struct first_index_fast_arranger<Dim0,Dim1,Dim2> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2>
+template <ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2>
+struct first_index_fast_arranger<Dim0, Dim1, Dim2> : public arranger_base<ordinal_type, Dim0, Dim1, Dim2>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2)const
+    __DEVICE_TAG__ ordinal_type calc_lin_index( ordinal_type i0, ordinal_type i1, ordinal_type i2 ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        return                              ((i2 - this->template get_index0<2>())*
-                this->template get_dim<1>() + i1 - this->template get_index0<1>())*
-                this->template get_dim<0>() + i0 - this->template get_index0<0>();
+        return ( ( i2 - this->template get_index0<2>() ) * this->template get_dim<1>() + i1 -
+                 this->template get_index0<1>() ) *
+                   this->template get_dim<0>() +
+               i0 - this->template get_index0<0>();
 #else
-        return                              ((i2)*
-                this->template get_dim<1>() + i1)*
-                this->template get_dim<0>() + i0;
+        return ( ( i2 ) * this->template get_dim<1>() + i1 ) * this->template get_dim<0>() + i0;
 #endif
     }
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3>
-struct first_index_fast_arranger<Dim0,Dim1,Dim2,Dim3> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3>
+template <ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3>
+struct first_index_fast_arranger<Dim0, Dim1, Dim2, Dim3> : public arranger_base<ordinal_type, Dim0, Dim1, Dim2, Dim3>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2, 
-                                               ordinal_type i3)const
+    __DEVICE_TAG__ ordinal_type
+    calc_lin_index( ordinal_type i0, ordinal_type i1, ordinal_type i2, ordinal_type i3 ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        return                            (((i3 - this->template get_index0<3>())*
-               this->template get_dim<2>() + i2 - this->template get_index0<2>())*
-               this->template get_dim<1>() + i1 - this->template get_index0<1>())*
-               this->template get_dim<0>() + i0 - this->template get_index0<0>();
+        return ( ( ( i3 - this->template get_index0<3>() ) * this->template get_dim<2>() + i2 -
+                   this->template get_index0<2>() ) *
+                     this->template get_dim<1>() +
+                 i1 - this->template get_index0<1>() ) *
+                   this->template get_dim<0>() +
+               i0 - this->template get_index0<0>();
 #else
-        return                            (((i3)*
-               this->template get_dim<2>() + i2)*
-               this->template get_dim<1>() + i1)*
-               this->template get_dim<0>() + i0;
+        return ( ( ( i3 ) * this->template get_dim<2>() + i2 ) * this->template get_dim<1>() + i1 ) *
+                   this->template get_dim<0>() +
+               i0;
 #endif
     }
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type Dim4>
-struct first_index_fast_arranger<Dim0,Dim1,Dim2,Dim3,Dim4> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3,Dim4>
+template <ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type Dim4>
+struct first_index_fast_arranger<Dim0, Dim1, Dim2, Dim3, Dim4>
+    : public arranger_base<ordinal_type, Dim0, Dim1, Dim2, Dim3, Dim4>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2, 
-                                               ordinal_type i3, 
-                                               ordinal_type i4)const
+    __DEVICE_TAG__ ordinal_type
+    calc_lin_index( ordinal_type i0, ordinal_type i1, ordinal_type i2, ordinal_type i3, ordinal_type i4 ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        return                           ((((i4 - this->template get_index0<4>())*
-               this->template get_dim<3>() + i3 - this->template get_index0<3>())*
-               this->template get_dim<2>() + i2 - this->template get_index0<2>())*
-               this->template get_dim<1>() + i1 - this->template get_index0<1>())*
-               this->template get_dim<0>() + i0 - this->template get_index0<0>();
+        return ( ( ( ( i4 - this->template get_index0<4>() ) * this->template get_dim<3>() + i3 -
+                     this->template get_index0<3>() ) *
+                       this->template get_dim<2>() +
+                   i2 - this->template get_index0<2>() ) *
+                     this->template get_dim<1>() +
+                 i1 - this->template get_index0<1>() ) *
+                   this->template get_dim<0>() +
+               i0 - this->template get_index0<0>();
 #else
-        return                           ((((i4)*
-               this->template get_dim<3>() + i3)*
-               this->template get_dim<2>() + i2)*
-               this->template get_dim<1>() + i1)*
-               this->template get_dim<0>() + i0;
+        return ( ( ( ( i4 ) * this->template get_dim<3>() + i3 ) * this->template get_dim<2>() + i2 ) *
+                     this->template get_dim<1>() +
+                 i1 ) *
+                   this->template get_dim<0>() +
+               i0;
 #endif
     }
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type Dim4, ordinal_type Dim5>
-struct first_index_fast_arranger<Dim0,Dim1,Dim2,Dim3,Dim4,Dim5> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3,Dim4,Dim5>
+template <
+    ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type Dim4, ordinal_type Dim5>
+struct first_index_fast_arranger<Dim0, Dim1, Dim2, Dim3, Dim4, Dim5>
+    : public arranger_base<ordinal_type, Dim0, Dim1, Dim2, Dim3, Dim4, Dim5>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2, 
-                                               ordinal_type i3, 
-                                               ordinal_type i4, 
-                                               ordinal_type i5)const
+    __DEVICE_TAG__ ordinal_type calc_lin_index(
+        ordinal_type i0, ordinal_type i1, ordinal_type i2, ordinal_type i3, ordinal_type i4, ordinal_type i5
+    ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        return                          (((((i5 - this->template get_index0<5>())*
-               this->template get_dim<4>() + i4 - this->template get_index0<4>())*
-               this->template get_dim<3>() + i3 - this->template get_index0<3>())*
-               this->template get_dim<2>() + i2 - this->template get_index0<2>())*
-               this->template get_dim<1>() + i1 - this->template get_index0<1>())*
-               this->template get_dim<0>() + i0 - this->template get_index0<0>();
+        return ( ( ( ( ( i5 - this->template get_index0<5>() ) * this->template get_dim<4>() + i4 -
+                       this->template get_index0<4>() ) *
+                         this->template get_dim<3>() +
+                     i3 - this->template get_index0<3>() ) *
+                       this->template get_dim<2>() +
+                   i2 - this->template get_index0<2>() ) *
+                     this->template get_dim<1>() +
+                 i1 - this->template get_index0<1>() ) *
+                   this->template get_dim<0>() +
+               i0 - this->template get_index0<0>();
 #else
-        return                          (((((i5)*
-               this->template get_dim<4>() + i4)*
-               this->template get_dim<3>() + i3)*
-               this->template get_dim<2>() + i2)*
-               this->template get_dim<1>() + i1)*
-               this->template get_dim<0>() + i0;
+        return ( ( ( ( ( i5 ) * this->template get_dim<4>() + i4 ) * this->template get_dim<3>() + i3 ) *
+                       this->template get_dim<2>() +
+                   i2 ) *
+                     this->template get_dim<1>() +
+                 i1 ) *
+                   this->template get_dim<0>() +
+               i0;
 #endif
     }
 };
 
-template<ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type Dim4, ordinal_type Dim5, ordinal_type Dim6>
-struct first_index_fast_arranger<Dim0,Dim1,Dim2,Dim3,Dim4,Dim5,Dim6> : public arranger_base<ordinal_type,Dim0,Dim1,Dim2,Dim3,Dim4,Dim5,Dim6>
+template <
+    ordinal_type Dim0, ordinal_type Dim1, ordinal_type Dim2, ordinal_type Dim3, ordinal_type Dim4, ordinal_type Dim5,
+    ordinal_type Dim6>
+struct first_index_fast_arranger<Dim0, Dim1, Dim2, Dim3, Dim4, Dim5, Dim6>
+    : public arranger_base<ordinal_type, Dim0, Dim1, Dim2, Dim3, Dim4, Dim5, Dim6>
 {
-    __DEVICE_TAG__ ordinal_type calc_lin_index(ordinal_type i0, 
-                                               ordinal_type i1, 
-                                               ordinal_type i2, 
-                                               ordinal_type i3, 
-                                               ordinal_type i4, 
-                                               ordinal_type i5, 
-                                               ordinal_type i6)const
+    __DEVICE_TAG__ ordinal_type calc_lin_index(
+        ordinal_type i0, ordinal_type i1, ordinal_type i2, ordinal_type i3, ordinal_type i4, ordinal_type i5,
+        ordinal_type i6
+    ) const
     {
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-        return                         ((((((i6 - this->template get_index0<6>())*
-               this->template get_dim<5>() + i5 - this->template get_index0<5>())*
-               this->template get_dim<4>() + i4 - this->template get_index0<4>())*
-               this->template get_dim<3>() + i3 - this->template get_index0<3>())*
-               this->template get_dim<2>() + i2 - this->template get_index0<2>())*
-               this->template get_dim<1>() + i1 - this->template get_index0<1>())*
-               this->template get_dim<0>() + i0 - this->template get_index0<0>();
+        return ( ( ( ( ( ( i6 - this->template get_index0<6>() ) * this->template get_dim<5>() + i5 -
+                         this->template get_index0<5>() ) *
+                           this->template get_dim<4>() +
+                       i4 - this->template get_index0<4>() ) *
+                         this->template get_dim<3>() +
+                     i3 - this->template get_index0<3>() ) *
+                       this->template get_dim<2>() +
+                   i2 - this->template get_index0<2>() ) *
+                     this->template get_dim<1>() +
+                 i1 - this->template get_index0<1>() ) *
+                   this->template get_dim<0>() +
+               i0 - this->template get_index0<0>();
 #else
-        return                         ((((((i6)*
-               this->template get_dim<5>() + i5)*
-               this->template get_dim<4>() + i4)*
-               this->template get_dim<3>() + i3)*
-               this->template get_dim<2>() + i2)*
-               this->template get_dim<1>() + i1)*
-               this->template get_dim<0>() + i0;
+        return ( ( ( ( ( ( i6 ) * this->template get_dim<5>() + i5 ) * this->template get_dim<4>() + i4 ) *
+                         this->template get_dim<3>() +
+                     i3 ) *
+                       this->template get_dim<2>() +
+                   i2 ) *
+                     this->template get_dim<1>() +
+                 i1 ) *
+                   this->template get_dim<0>() +
+               i0;
 #endif
     }
 };

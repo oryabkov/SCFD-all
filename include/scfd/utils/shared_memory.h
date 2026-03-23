@@ -18,9 +18,9 @@
 #define __SCFD_UTILS_SHARED_MEMORY_H__
 
 #ifndef __CUDACC__
-#define __SHARED_MEMORY__
+#    define __SHARED_MEMORY__
 #else
-#define __SHARED_MEMORY__ __shared__
+#    define __SHARED_MEMORY__ __shared__
 #endif
 
 #endif

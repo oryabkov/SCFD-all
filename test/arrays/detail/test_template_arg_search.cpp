@@ -15,7 +15,6 @@
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 #include <iostream>
 #include <scfd/arrays/detail/template_arg_search.h>
 
@@ -35,8 +34,8 @@ bool perform_test(int test_n, static_vec::vec<int,Sz> &dyn_sizes, int correct_as
     return answer == correct_aswer;
 }*/
 
-TEST(DetailTemplateArgSearchTest, ValueOneTest) 
+TEST( DetailTemplateArgSearchTest, ValueOneTest )
 {
-    auto found_index = template_arg_search<int, double, int,int,double>::value;
-    ASSERT_EQ(found_index,2);
+    auto found_index = template_arg_search<int, double, int, int, double>::value;
+    ASSERT_EQ( found_index, 2 );
 }

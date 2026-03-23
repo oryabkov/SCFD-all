@@ -20,34 +20,36 @@
 //for_each implementation for OPENMP case
 
 #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-#include <boost/property_tree/ptree.hpp>
+#    include <boost/property_tree/ptree.hpp>
 #endif
 #include "for_each_config.h"
 #include <omp.h>
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
-template<class T = int>
+template <class T = int>
 struct openmp
 {
-    openmp() : threads_num(-1) {}
+    openmp() : threads_num( -1 )
+    {
+    }
     int threads_num;
 
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T i1, T i2)const;
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T size)const;
-    void wait()const;
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T i1, T i2 ) const;
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T size ) const;
+    void wait() const;
 
-    #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-    void init(const boost::property_tree::ptree &cfg) 
+#ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
+    void init( const boost::property_tree::ptree &cfg )
     {
-        threads_num = cfg.get<int>("threads_num", -1);
+        threads_num = cfg.get<int>( "threads_num", -1 );
     }
-    #endif    
+#endif
 };
 
 }

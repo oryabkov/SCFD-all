@@ -26,19 +26,27 @@ namespace arrays
 namespace detail
 {
 
-template<class Ord, class Index>
-struct placeholder_get_helper { };
-
-template<class Ord>
-struct placeholder_get_helper<Ord,placeholder>
+template <class Ord, class Index>
+struct placeholder_get_helper
 {
-    static Ord get(placeholder index, Ord placeholder_index) { return placeholder_index; }
 };
 
-template<class Ord>
-struct placeholder_get_helper<Ord,Ord>
+template <class Ord>
+struct placeholder_get_helper<Ord, placeholder>
 {
-    static Ord get(Ord index, Ord placeholder_index) { return index; }
+    static Ord get( placeholder index, Ord placeholder_index )
+    {
+        return placeholder_index;
+    }
+};
+
+template <class Ord>
+struct placeholder_get_helper<Ord, Ord>
+{
+    static Ord get( Ord index, Ord placeholder_index )
+    {
+        return index;
+    }
 };
 
 }

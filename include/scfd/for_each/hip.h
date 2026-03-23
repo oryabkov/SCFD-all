@@ -20,7 +20,7 @@
 //for_each implementation for HIP case
 
 #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-#include <boost/property_tree/ptree.hpp>
+#    include <boost/property_tree/ptree.hpp>
 #endif
 #include <hip/hip_runtime.h>
 #include "for_each_config.h"
@@ -30,25 +30,27 @@ namespace scfd
 namespace for_each
 {
 
-template<class T = int>
+template <class T = int>
 struct hip
 {
     T block_size;
 
-    hip() : block_size(256) {}
-
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T i1, T i2)const;
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T size)const;
-    void wait()const;
-
-    #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-    void init(const boost::property_tree::ptree &cfg)
+    hip() : block_size( 256 )
     {
-        block_size = cfg.get<int>("block_size", 256);
     }
-    #endif
+
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T i1, T i2 ) const;
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T size ) const;
+    void wait() const;
+
+#ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
+    void init( const boost::property_tree::ptree &cfg )
+    {
+        block_size = cfg.get<int>( "block_size", 256 );
+    }
+#endif
 };
 
 }

@@ -22,13 +22,13 @@ namespace scfd
 namespace utils
 {
 
-enum class log_msg_type 
-{ 
-    INFO, 
-    /// INFO_ALL refers to multi-process applications (like MPI) and means message, 
+enum class log_msg_type
+{
+    INFO,
+    /// INFO_ALL refers to multi-process applications (like MPI) and means message,
     /// that must be said distintly by each process (like, 'i'm 1st; i'm second etc')
-    INFO_ALL, 
-    WARNING, 
+    INFO_ALL,
+    WARNING,
     ERROR,
     DEBUG
 };

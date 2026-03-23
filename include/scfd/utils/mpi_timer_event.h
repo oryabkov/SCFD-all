@@ -30,20 +30,21 @@ namespace utils
 
 struct mpi_timer_event : public timer_event
 {
-    double  time;
+    double time;
 
     mpi_timer_event() = default;
-    virtual void    record()
+    virtual void record()
     {
         time = MPI_Wtime();
     }
-    virtual double  elapsed_time(const timer_event &e0)const
+    virtual double elapsed_time( const timer_event &e0 ) const
     {
-        const mpi_timer_event *event = dynamic_cast<const mpi_timer_event*>(&e0);
-        if (event == NULL) {
-            throw std::logic_error("mpi_timer_event::elapsed_time: try to calc time from different type of timer");
+        const mpi_timer_event *event = dynamic_cast<const mpi_timer_event *>( &e0 );
+        if ( event == NULL )
+        {
+            throw std::logic_error( "mpi_timer_event::elapsed_time: try to calc time from different type of timer" );
         }
-        return (time - event->time)*1000.;
+        return ( time - event->time ) * 1000.;
     };
     virtual ~mpi_timer_event() = default;
 };

@@ -21,8 +21,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(StaticVecNVCCTest, InitOnHost) 
+TEST( StaticVecNVCCTest, InitOnHost )
 {
-    ASSERT_TRUE(perform_vec_init_tests_on_host_nvcc());
+    ASSERT_TRUE( perform_vec_init_tests_on_host_nvcc() );
 }
-

@@ -23,16 +23,16 @@
 using namespace scfd::arrays;
 using namespace scfd::arrays::detail;
 
-TEST(DetailDimGetterTest, GetMixedTests) 
+TEST( DetailDimGetterTest, GetMixedTests )
 {
-    scfd::static_vec::vec<int,3>   dyn_sizes = {10,20,30};
+    scfd::static_vec::vec<int, 3> dyn_sizes = { 10, 20, 30 };
 
-    ASSERT_EQ((dim_getter<int, 0, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 10);
-    ASSERT_EQ((dim_getter<int, 1, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 5);
-    ASSERT_EQ((dim_getter<int, 2, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 1);
-    ASSERT_EQ((dim_getter<int, 3, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 1);
-    ASSERT_EQ((dim_getter<int, 4, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 20);
-    ASSERT_EQ((dim_getter<int, 5, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 30);
-    ASSERT_EQ((dim_getter<int, 6, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 234);
-    ASSERT_EQ((dim_getter<int, 7, dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::get(dyn_sizes)), 123);
+    ASSERT_EQ( ( dim_getter<int, 0, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 10 );
+    ASSERT_EQ( ( dim_getter<int, 1, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 5 );
+    ASSERT_EQ( ( dim_getter<int, 2, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 1 );
+    ASSERT_EQ( ( dim_getter<int, 3, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 1 );
+    ASSERT_EQ( ( dim_getter<int, 4, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 20 );
+    ASSERT_EQ( ( dim_getter<int, 5, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 30 );
+    ASSERT_EQ( ( dim_getter<int, 6, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 234 );
+    ASSERT_EQ( ( dim_getter<int, 7, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::get( dyn_sizes ) ), 123 );
 }

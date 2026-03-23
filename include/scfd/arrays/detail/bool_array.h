@@ -24,8 +24,14 @@ namespace arrays
 namespace detail
 {
 
-template< bool ... b> struct bool_array{};
-template< bool ... b> struct check_all_are_true: std::is_same< bool_array<b...>, bool_array<(b||true)...> >{};
+template <bool... b>
+struct bool_array
+{
+};
+template <bool... b>
+struct check_all_are_true : std::is_same<bool_array<b...>, bool_array<( b || true )...>>
+{
+};
 
 }
 }

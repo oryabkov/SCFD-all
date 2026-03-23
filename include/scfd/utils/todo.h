@@ -15,22 +15,20 @@
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef __SCFD_UTILS_TODO_H__
-#define __SCFD_UTILS_TODO_H__
+#    define __SCFD_UTILS_TODO_H__
 
-#include <stdexcept>
-#include <string>
+#    include <stdexcept>
+#    include <string>
 
-#define __STR_HELPER(x) #x
-#define __STR(x) __STR_HELPER(x)
+#    define __STR_HELPER( x ) #x
+#    define __STR( x ) __STR_HELPER( x )
 
-#define SCFD_TODO(X)                                                                                                                                                    \
-    do {                                                                                                                                                           \
-        throw std::runtime_error(std::string("TODO: " __FILE__ " " __STR(__LINE__) " : " #X " ")  );                                                        \
-    } while (0)
+#    define SCFD_TODO( X )                                                                                             \
+        do                                                                                                             \
+        {                                                                                                              \
+            throw std::runtime_error( std::string( "TODO: " __FILE__ " " __STR( __LINE__ ) " : " #X " " ) );           \
+        } while ( 0 )
 
 #endif
 
-#define SCFD_ATODO(X) assert(false && #X)
-
-
-    
+#define SCFD_ATODO( X ) assert( false && #X )

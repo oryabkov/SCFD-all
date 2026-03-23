@@ -20,13 +20,13 @@
 namespace scfd
 {
 
-/// r_mat is upper triangular dense square szXsz matrix in col-major format 
+/// r_mat is upper triangular dense square szXsz matrix in col-major format
 /// which will be rewritten by temporal data.
 /// r_mat lower part is irrelevant and also would be ruined
 /// r_inv_mat is matrix of the same size that will contain inv(r_mat)
 /// r_diag_inv, mat_tmp_col_i are temporal buffers for vectors of size sz
-template<class T>
-void invert_upper_triangular_dense_matrix_cuda(int sz, T* r_mat, T* r_diag_inv, T *mat_tmp_col_i, T* r_inv_mat);
+template <class T>
+void invert_upper_triangular_dense_matrix_cuda( int sz, T *r_mat, T *r_diag_inv, T *mat_tmp_col_i, T *r_inv_mat );
 
 } // namespace scfd
 

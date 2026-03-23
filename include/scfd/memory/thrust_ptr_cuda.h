@@ -10,21 +10,21 @@ namespace scfd
 namespace memory
 {
 
-template<class T>
-struct thrust_ptr<cuda_device,T>
+template <class T>
+struct thrust_ptr<cuda_device, T>
 {
     using type = thrust::device_ptr<T>;
-    static type cast(T *p)
+    static type cast( T *p )
     {
-        return ::thrust::device_pointer_cast(p);
+        return ::thrust::device_pointer_cast( p );
     }
 };
 
-template<class T>
-struct thrust_ptr<cuda_host,T>
+template <class T>
+struct thrust_ptr<cuda_host, T>
 {
-    using type = T*;
-    static type cast(T *p)
+    using type = T *;
+    static type cast( T *p )
     {
         return p;
     }

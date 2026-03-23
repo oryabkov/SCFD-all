@@ -25,20 +25,26 @@ namespace scfd
 namespace arrays
 {
 
-template<class T, ordinal_type ND, class Memory,
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, ordinal_type ND, class Memory,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 using tensor0_array_nd = tensor_array_nd<T, ND, Memory, Arranger>;
-template<class T, ordinal_type ND, class Memory, ordinal_type TensorDim0,
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, ordinal_type ND, class Memory, ordinal_type TensorDim0,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 using tensor1_array_nd = tensor_array_nd<T, ND, Memory, Arranger, TensorDim0>;
-template<class T, ordinal_type ND, class Memory, ordinal_type TensorDim0, ordinal_type TensorDim1,
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, ordinal_type ND, class Memory, ordinal_type TensorDim0, ordinal_type TensorDim1,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 using tensor2_array_nd = tensor_array_nd<T, ND, Memory, Arranger, TensorDim0, TensorDim1>;
-template<class T, ordinal_type ND, class Memory, ordinal_type TensorDim0, ordinal_type TensorDim1, ordinal_type TensorDim2,
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, ordinal_type ND, class Memory, ordinal_type TensorDim0, ordinal_type TensorDim1, ordinal_type TensorDim2,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 using tensor3_array_nd = tensor_array_nd<T, ND, Memory, Arranger, TensorDim0, TensorDim1, TensorDim2>;
-template<class T, ordinal_type ND, class Memory, ordinal_type TensorDim0, ordinal_type TensorDim1, ordinal_type TensorDim2, ordinal_type TensorDim3,
-         template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
+template <
+    class T, ordinal_type ND, class Memory, ordinal_type TensorDim0, ordinal_type TensorDim1, ordinal_type TensorDim2,
+    ordinal_type TensorDim3,
+    template <ordinal_type... Dims> class Arranger = detail::default_arranger_chooser<Memory>::template arranger>
 using tensor4_array_nd = tensor_array_nd<T, ND, Memory, Arranger, TensorDim0, TensorDim1, TensorDim2, TensorDim3>;
 
 }

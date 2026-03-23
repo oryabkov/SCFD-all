@@ -25,14 +25,14 @@ namespace scfd
 namespace communication
 {
 
-template<class Ord>
+template <class Ord>
 struct hypre_mpi_communicator
 {
 
 
-    hypre_mpi_communicator(int argc, char *argv[])
+    hypre_mpi_communicator( int argc, char *argv[] )
     {
-        hypre_MPI_Init(&argc, &argv);
+        hypre_MPI_Init( &argc, &argv );
         //int provided;
         //MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
         /*if (provided != MPI_THREAD_FUNNELED)
@@ -40,8 +40,8 @@ struct hypre_mpi_communicator
             std::cout << "WARNING: hypre_mpi_communicator: provided != MPI_THREAD_FUNNELED" << std::endl;
         }*/
         data.comm = hypre_MPI_COMM_WORLD;
-        hypre_MPI_Comm_size(hypre_MPI_COMM_WORLD, &data.num_procs );
-        hypre_MPI_Comm_rank(hypre_MPI_COMM_WORLD, &data.myid );   
+        hypre_MPI_Comm_size( hypre_MPI_COMM_WORLD, &data.num_procs );
+        hypre_MPI_Comm_rank( hypre_MPI_COMM_WORLD, &data.myid );
     }
     ~hypre_mpi_communicator()
     {
@@ -50,8 +50,6 @@ struct hypre_mpi_communicator
     }
 
     mpi_communicator_info<Ord> data;
-    
-
 };
 
 } // namespace communication

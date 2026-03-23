@@ -29,17 +29,17 @@
 namespace scfd
 {
 
-template<class Ord = int>
+template <class Ord = int>
 struct thrust_reduce
 {
-    template<class T>
-    T operator()(Ord size, const T *input, T init_val)const
+    template <class T>
+    T operator()( Ord size, const T *input, T init_val ) const
     {
-        ::thrust::device_ptr<const T>   input_begin  = ::thrust::device_pointer_cast(input),
-                                        input_end = input_begin+size;
-        return ::thrust::reduce(input_begin, input_end, init_val);
+        ::thrust::device_ptr<const T> input_begin = ::thrust::device_pointer_cast( input ),
+                                      input_end   = input_begin + size;
+        return ::thrust::reduce( input_begin, input_end, init_val );
     }
-    void    wait()const
+    void wait() const
     {
     }
 };

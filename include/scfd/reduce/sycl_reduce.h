@@ -24,12 +24,12 @@
 namespace scfd
 {
 
-template<class Ord = int>
+template <class Ord = int>
 struct sycl_reduce
 {
-    template<class T>
-    T operator()(Ord size, const T *input, T init_val)const;
-    void    wait()const
+    template <class T>
+    T    operator()( Ord size, const T *input, T init_val ) const;
+    void wait() const
     {
     }
 };

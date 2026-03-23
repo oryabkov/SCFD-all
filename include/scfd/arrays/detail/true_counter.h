@@ -24,18 +24,21 @@ namespace arrays
 namespace detail
 {
 
-template< bool ... b> struct true_counter
+template <bool... b>
+struct true_counter
 {
 };
 
-template<> struct true_counter<>
+template <>
+struct true_counter<>
 {
     static const int value = 0;
 };
 
-template<bool head, bool ... tail> struct true_counter<head,tail...>
+template <bool head, bool... tail>
+struct true_counter<head, tail...>
 {
-    static const int value = true_counter<tail...>::value + (head ? 1 : 0);
+    static const int value = true_counter<tail...>::value + ( head ? 1 : 0 );
 };
 
 }

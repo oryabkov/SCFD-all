@@ -27,28 +27,31 @@ namespace utils
 class cuda_stream_wrap
 {
 public:
-    cuda_stream_wrap(bool do_init = false) 
+    cuda_stream_wrap( bool do_init = false )
     {
         is_inited_ = false;
-        if (do_init) init();
+        if ( do_init )
+            init();
     }
-    cuda_stream_wrap(const cuda_stream_wrap &s) = delete;
-    cuda_stream_wrap(cuda_stream_wrap &&s)
+    cuda_stream_wrap( const cuda_stream_wrap &s ) = delete;
+    cuda_stream_wrap( cuda_stream_wrap &&s )
     {
         is_inited_ = s.is_inited_;
-        if (s.is_inited_) stream_ = s.stream_;
+        if ( s.is_inited_ )
+            stream_ = s.stream_;
         s.is_inited_ = false;
     }
 
-    cuda_stream_wrap &opeartor=(const cuda_stream_wrap &s) = delete;
-    cuda_stream_wrap &opeartor=(cuda_stream_wrap &&s)
+    cuda_stream_wrap &opeartor = ( const cuda_stream_wrap &s ) = delete;
+    cuda_stream_wrap &opeartor                                 = ( cuda_stream_wrap && s )
     {
         free();
 
         /// TODO a little code duplication with constructor - can create distinct method move
         is_inited_ = s.is_inited_;
-        if (s.is_inited_) stream_ = s.stream_;
-        s.is_inited_ = false;   
+        if ( s.is_inited_ )
+            stream_ = s.stream_;
+        s.is_inited_ = false;
 
         return *this;
     }
@@ -58,27 +61,35 @@ public:
         free();
     }
 
-    bool            is_inited()const { return is_inited_; }
-    cudaStream_t    stream()const { assert(is_inited_); return stream_; }
-
-    void            init()
+    bool is_inited() const
     {
-        assert(!is_inited_);
-        CUDA_SAFE_CALL( cudaStreamCreate(stream_) );
+        return is_inited_;
+    }
+    cudaStream_t stream() const
+    {
+        assert( is_inited_ );
+        return stream_;
+    }
+
+    void init()
+    {
+        assert( !is_inited_ );
+        CUDA_SAFE_CALL( cudaStreamCreate( stream_ ) );
         is_inited_ = true;
     }
     /// NOTE exception here means in fact logic error
-    void            free()
+    void free()
     {
-        if (!is_inited_) return;
+        if ( !is_inited_ )
+            return;
         is_inited_ = false;
-        CUDA_SAFE_CALL( cudaStreamDestroy(stream_) );
+        CUDA_SAFE_CALL( cudaStreamDestroy( stream_ ) );
     }
 
 private:
-    bool            is_inited_;
+    bool is_inited_;
     /// stream_ only has meaning if is_inited_==true
-    cudaStream_t    stream_;
+    cudaStream_t stream_;
 };
 
 }

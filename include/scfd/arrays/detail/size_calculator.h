@@ -29,38 +29,39 @@ namespace detail
 
 using static_vec::vec;
 
-template<class Ord, Ord Ind, bool End, Ord... Dims>
+template <class Ord, Ord Ind, bool End, Ord... Dims>
 struct size_calculator_
 {
 };
 
-template<class Ord, Ord Ind, Ord... Dims>
-struct size_calculator_<Ord,Ind,true,Dims...>
+template <class Ord, Ord Ind, Ord... Dims>
+struct size_calculator_<Ord, Ind, true, Dims...>
 {
-    template<Ord sz>
-    static Ord get(const vec<Ord,sz> &dyn_sizes)
+    template <Ord sz>
+    static Ord get( const vec<Ord, sz> &dyn_sizes )
     {
         return 1;
     }
 };
 
-template<class Ord, Ord Ind, Ord... Dims>
-struct size_calculator_<Ord,Ind,false,Dims...>
+template <class Ord, Ord Ind, Ord... Dims>
+struct size_calculator_<Ord, Ind, false, Dims...>
 {
-    template<Ord sz>
-    static Ord get(const vec<Ord,sz> &dyn_sizes)
+    template <Ord sz>
+    static Ord get( const vec<Ord, sz> &dyn_sizes )
     {
-        return dim_getter<Ord,Ind,Dims...>::template get<sz>(dyn_sizes)*size_calculator_<Ord,Ind+1,sizeof...(Dims)==Ind+1,Dims...>::template get<sz>(dyn_sizes);
+        return dim_getter<Ord, Ind, Dims...>::template get<sz>( dyn_sizes ) *
+               size_calculator_<Ord, Ind + 1, sizeof...( Dims ) == Ind + 1, Dims...>::template get<sz>( dyn_sizes );
     }
 };
 
-template<class Ord, Ord... Dims>
+template <class Ord, Ord... Dims>
 struct size_calculator
 {
-    template<Ord sz>
-    static Ord get(const vec<Ord,sz> &dyn_sizes)
+    template <Ord sz>
+    static Ord get( const vec<Ord, sz> &dyn_sizes )
     {
-        return size_calculator_<Ord,0,sizeof...(Dims)==0,Dims...>::template get<sz>(dyn_sizes);
+        return size_calculator_<Ord, 0, sizeof...( Dims ) == 0, Dims...>::template get<sz>( dyn_sizes );
     }
 };
 

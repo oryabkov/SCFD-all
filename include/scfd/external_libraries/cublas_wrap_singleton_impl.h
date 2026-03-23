@@ -6,7 +6,7 @@
 namespace scfd
 {
 
-template<>
+template <>
 cublas_wrap *utils::manual_init_singleton<cublas_wrap>::inst_ = nullptr;
 
 }

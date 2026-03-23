@@ -24,9 +24,9 @@
 #include <stdexcept>
 #include <iostream>
 #include "log_msg_type.h"
-#if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE==1
-#include <mutex>
-#include <atomic>
+#if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE == 1
+#    include <mutex>
+#    include <atomic>
 #endif
 
 namespace scfd
@@ -40,40 +40,46 @@ public:
     using log_msg_type = utils::log_msg_type;
 
 public:
-    log_std_basic() : log_lev(1) {}
-
-    void msg(const std::string &s, log_msg_type mt = log_msg_type::INFO, int _log_lev = 1)
+    log_std_basic() : log_lev( 1 )
     {
-        if ((mt != log_msg_type::ERROR)&&(_log_lev > log_lev)) return;
+    }
 
-        #if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE==1
-        std::lock_guard<std::mutex> locker(mtx_);
-        #endif
+    void msg( const std::string &s, log_msg_type mt = log_msg_type::INFO, int _log_lev = 1 )
+    {
+        if ( ( mt != log_msg_type::ERROR ) && ( _log_lev > log_lev ) )
+            return;
+
+#if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE == 1
+        std::lock_guard<std::mutex> locker( mtx_ );
+#endif
 
         //TODO
-        if ((mt == log_msg_type::INFO)||(mt == log_msg_type::INFO_ALL))
+        if ( ( mt == log_msg_type::INFO ) || ( mt == log_msg_type::INFO_ALL ) )
             std::cout << "INFO:    " << s << std::endl;
-        else if (mt == log_msg_type::WARNING)
+        else if ( mt == log_msg_type::WARNING )
             std::cout << "WARNING: " << s << std::endl;
-        else if (mt == log_msg_type::ERROR)
+        else if ( mt == log_msg_type::ERROR )
             std::cout << "ERROR:   " << s << std::endl;
-        else if (mt == log_msg_type::DEBUG)
+        else if ( mt == log_msg_type::DEBUG )
             std::cout << "DEBUG:   " << s << std::endl;
         else
-            throw std::logic_error("log_std_basic::log: wrong t_msg_type argument");
+            throw std::logic_error( "log_std_basic::log: wrong t_msg_type argument" );
     }
-    void set_verbosity(int _log_lev = 1) { log_lev = _log_lev; }
+    void set_verbosity( int _log_lev = 1 )
+    {
+        log_lev = _log_lev;
+    }
 
 private:
-    /// NOTE we use atomic for verbosity to: 
-    /// 1. garantee thread safety
-    /// 2. don't use mtx_ for log_lev protection (to not slower output more)
-    #if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE==1
-    std::atomic<int>    log_lev;
-    std::mutex          mtx_;
-    #else
-    int                 log_lev;
-    #endif
+/// NOTE we use atomic for verbosity to:
+/// 1. garantee thread safety
+/// 2. don't use mtx_ for log_lev protection (to not slower output more)
+#if SCFD_UTILS_LOG_GARANTEE_THREAD_SAFE == 1
+    std::atomic<int> log_lev;
+    std::mutex       mtx_;
+#else
+    int log_lev;
+#endif
 };
 
 }

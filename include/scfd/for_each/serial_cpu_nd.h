@@ -25,21 +25,23 @@
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
-using scfd::static_vec::vec;
 using scfd::static_vec::rect;
+using scfd::static_vec::vec;
 
 //T is ordinal type (like int)
-template<int dim, class T = int>
+template <int dim, class T = int>
 struct serial_cpu_nd
 {
-    inline bool next(const rect<T, dim> &range, vec<T, dim> &idx)const
+    inline bool next( const rect<T, dim> &range, vec<T, dim> &idx ) const
     {
-        for (int j = dim-1;j >= 0;--j) {
-            ++(idx[j]);
-            if (idx[j] < range.i2[j]) return true;
+        for ( int j = dim - 1; j >= 0; --j )
+        {
+            ++( idx[j] );
+            if ( idx[j] < range.i2[j] )
+                return true;
             idx[j] = range.i1[j];
         }
         return false;
@@ -48,20 +50,21 @@ struct serial_cpu_nd
     //FUNC_T concept:
     //TODO
     //copy-constructable
-    template<class FUNC_T>
-    void operator()(FUNC_T f, const rect<T, dim> &range)const
+    template <class FUNC_T>
+    void operator()( FUNC_T f, const rect<T, dim> &range ) const
     {
         vec<T, dim> idx = range.i1;
-        do {
-            f(idx);
-        } while (next(range, idx));
+        do
+        {
+            f( idx );
+        } while ( next( range, idx ) );
     }
-    template<class FUNC_T>
-    void operator()(FUNC_T f, const vec<T, dim> &size)const
+    template <class FUNC_T>
+    void operator()( FUNC_T f, const vec<T, dim> &size ) const
     {
-        this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
+        this->operator()( f, rect<T, dim>( vec<T, dim>::make_zero(), size ) );
     }
-    void wait()const
+    void wait() const
     {
         //void function to sync with cuda
     }

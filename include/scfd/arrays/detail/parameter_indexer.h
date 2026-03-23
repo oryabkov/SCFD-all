@@ -17,41 +17,44 @@
 #ifndef __SCFD_ARRAYS_PARAMETER_INDEXER_H__
 #define __SCFD_ARRAYS_PARAMETER_INDEXER_H__
 
-template<int Ind, bool End, int... Dims>
+template <int Ind, bool End, int... Dims>
 struct access_index_
 {
 };
 
-template<int Ind, int Dim1, int... DimsTail>
-struct access_index_<Ind,true,Dim1,DimsTail...>
+template <int Ind, int Dim1, int... DimsTail>
+struct access_index_<Ind, true, Dim1, DimsTail...>
 {
-    template<int>using index_t=int;
+    template <int>
+    using index_t = int;
 
-    static int get(int i1, index_t<DimsTail>... is_tail)
+    static int get( int i1, index_t<DimsTail>... is_tail )
     {
         return i1;
     }
 };
 
-template<int Ind, int Dim1, int... DimsTail>
-struct access_index_<Ind,false,Dim1,DimsTail...>
+template <int Ind, int Dim1, int... DimsTail>
+struct access_index_<Ind, false, Dim1, DimsTail...>
 {
-    template<int>using index_t=int;
+    template <int>
+    using index_t = int;
 
-    static int get(int i1, index_t<DimsTail>... is_tail)
+    static int get( int i1, index_t<DimsTail>... is_tail )
     {
-        return access_index_<Ind-1,Ind==1,DimsTail...>::get(is_tail...);
+        return access_index_<Ind - 1, Ind == 1, DimsTail...>::get( is_tail... );
     }
 };
 
-template<int Ind, int... Dims>
+template <int Ind, int... Dims>
 struct access_index
 {
-    template<int>using index_t=int;
+    template <int>
+    using index_t = int;
 
-    static int get(index_t<Dims>... is,int test)
+    static int get( index_t<Dims>... is, int test )
     {
-        return access_index_<Ind,Ind==0,Dims...>::get(is...);
+        return access_index_<Ind, Ind == 0, Dims...>::get( is... );
     }
 };
 

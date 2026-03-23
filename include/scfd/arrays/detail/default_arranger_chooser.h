@@ -27,31 +27,31 @@ namespace arrays
 namespace detail
 {
 
-template<bool ArrayOfStructs>
+template <bool ArrayOfStructs>
 struct default_arranger_chooser_
 {
     //template<ordinal_type... Dims>
     //using arranger = last_index_fast_arranger<Ord,Dims...>;
 };
 
-template<>
+template <>
 struct default_arranger_chooser_<true>
 {
-    template<ordinal_type... Dims>
+    template <ordinal_type... Dims>
     using arranger = last_index_fast_arranger<Dims...>;
 };
 
-template<>
+template <>
 struct default_arranger_chooser_<false>
 {
-    template<ordinal_type... Dims>
+    template <ordinal_type... Dims>
     using arranger = first_index_fast_arranger<Dims...>;
 };
 
-template<class Memory>
+template <class Memory>
 struct default_arranger_chooser
 {
-    template<ordinal_type... Dims>
+    template <ordinal_type... Dims>
     using arranger = typename default_arranger_chooser_<Memory::prefer_array_of_structs>::template arranger<Dims...>;
     //using arranger = default_arranger_chooser_<true>::arranger_<Ord,Dims...>;
 };

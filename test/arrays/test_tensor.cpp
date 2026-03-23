@@ -22,18 +22,17 @@
 
 using namespace scfd::arrays;
 
-typedef scfd::memory::host                            memory_t;
+typedef scfd::memory::host memory_t;
 
 struct Vec
 {
-
 };
 
-int main(int argc, char const *argv[])
+int main( int argc, char const *argv[] )
 {
-    tensor_base<float,memory_t,last_index_fast_arranger,2,2,0,2>    array;
-    Vec     v;
+    tensor_base<float, memory_t, last_index_fast_arranger, 2, 2, 0, 2> array;
+    Vec                                                                v;
     //array.get_(v, 0,placeholder{},2,0);
-    
+
     return 0;
 }

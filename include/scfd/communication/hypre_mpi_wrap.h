@@ -29,9 +29,9 @@ struct hypre_mpi_wrap
 {
 
 
-    hypre_mpi_wrap(int argc, char *argv[])
+    hypre_mpi_wrap( int argc, char *argv[] )
     {
-        hypre_MPI_Init(&argc, &argv);
+        hypre_MPI_Init( &argc, &argv );
         //int provided;
         //MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
         /*if (provided != MPI_THREAD_FUNNELED)
@@ -39,8 +39,8 @@ struct hypre_mpi_wrap
             std::cout << "WARNING: hypre_mpi_wrap: provided != MPI_THREAD_FUNNELED" << std::endl;
         }*/
         data.comm = hypre_MPI_COMM_WORLD;
-        hypre_MPI_Comm_size(hypre_MPI_COMM_WORLD, &data.num_procs );
-        hypre_MPI_Comm_rank(hypre_MPI_COMM_WORLD, &data.myid );   
+        hypre_MPI_Comm_size( hypre_MPI_COMM_WORLD, &data.num_procs );
+        hypre_MPI_Comm_rank( hypre_MPI_COMM_WORLD, &data.myid );
     }
     ~hypre_mpi_wrap()
     {
@@ -49,11 +49,12 @@ struct hypre_mpi_wrap
     }
 
     ///NOTE please use this method instead of data public member
-    mpi_comm_info comm_world()const { return data; }    
+    mpi_comm_info comm_world() const
+    {
+        return data;
+    }
 
     mpi_comm_info data;
-    
-
 };
 
 } // namespace communication

@@ -30,23 +30,26 @@ namespace utils
 
 struct cuda_timer_event : public timer_event
 {
-    cudaEvent_t     e_;
+    cudaEvent_t e_;
 
     cuda_timer_event()
     {
         CUDA_SAFE_CALL( cudaEventCreate( &e_ ) );
     }
-    virtual void    record()
+    virtual void record()
     {
         CUDA_SAFE_CALL( cudaEventRecord( e_, 0 ) );
     }
-    virtual double  elapsed_time(const timer_event &e0)const
+    virtual double elapsed_time( const timer_event &e0 ) const
     {
-        const cuda_timer_event *cuda_event = dynamic_cast<const cuda_timer_event*>(&e0);
-        if (cuda_event == NULL) {
-            throw std::logic_error("cuda_timer_event::elapsed_time: try to calc time from different type of timer (non-cuda)");
+        const cuda_timer_event *cuda_event = dynamic_cast<const cuda_timer_event *>( &e0 );
+        if ( cuda_event == NULL )
+        {
+            throw std::logic_error(
+                "cuda_timer_event::elapsed_time: try to calc time from different type of timer (non-cuda)"
+            );
         }
-        float   res;
+        float res;
         CUDA_SAFE_CALL( cudaEventSynchronize( e_ ) );
         CUDA_SAFE_CALL( cudaEventElapsedTime( &res, cuda_event->e_, e_ ) );
         return (double)res;

@@ -23,8 +23,8 @@ namespace scfd
 /// diag_degenerate_flags must be results of regularize_qr_of_defect_matrix_cuda call.
 /// r_rhs is intermediate RHS of R part of QR matrix decomposition;
 /// it emerges after Q^T matrix application for the RHS of initial linear problem
-template<class T>
-void regularize_qr_r_system_rhs_of_defect_matrix_system_cuda(int sz, const bool *diag_degenerate_flags, T* r_rhs);
+template <class T>
+void regularize_qr_r_system_rhs_of_defect_matrix_system_cuda( int sz, const bool *diag_degenerate_flags, T *r_rhs );
 
 } // namespace scfd
 

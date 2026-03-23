@@ -30,38 +30,40 @@ namespace detail
 
 using static_vec::vec;
 
-template<class Ord, Ord Ind, bool UseStaticDim, Ord... Dims>
+template <class Ord, Ord Ind, bool UseStaticDim, Ord... Dims>
 struct index0_getter_
 {
 };
 
-template<class Ord, Ord Ind, Ord... Dims>
-struct index0_getter_<Ord,Ind,true,Dims...>
+template <class Ord, Ord Ind, Ord... Dims>
+struct index0_getter_<Ord, Ind, true, Dims...>
 {
-    template<Ord sz>
-    static __DEVICE_TAG__ Ord get(const vec<Ord,sz> &dyn_indexes0)
+    template <Ord sz>
+    static __DEVICE_TAG__ Ord get( const vec<Ord, sz> &dyn_indexes0 )
     {
         return 0;
     }
 };
 
-template<class Ord, Ord Ind, Ord... Dims>
-struct index0_getter_<Ord,Ind,false,Dims...>
+template <class Ord, Ord Ind, Ord... Dims>
+struct index0_getter_<Ord, Ind, false, Dims...>
 {
-    template<Ord sz>
-    static __DEVICE_TAG__ Ord get(const vec<Ord,sz> &dyn_indexes0)
+    template <Ord sz>
+    static __DEVICE_TAG__ Ord get( const vec<Ord, sz> &dyn_indexes0 )
     {
-        return dyn_indexes0[dyn_dim_counter<Ord,Ind,Dims...>::value];
+        return dyn_indexes0[dyn_dim_counter<Ord, Ind, Dims...>::value];
     }
 };
 
-template<class Ord, Ord Ind, Ord... Dims>
+template <class Ord, Ord Ind, Ord... Dims>
 struct index0_getter
 {
-    template<Ord sz>
-    static __DEVICE_TAG__ Ord get(const vec<Ord,sz> &dyn_indexes0)
+    template <Ord sz>
+    static __DEVICE_TAG__ Ord get( const vec<Ord, sz> &dyn_indexes0 )
     {
-        return index0_getter_<Ord,Ind,template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::get(dyn_indexes0);
+        return index0_getter_<Ord, Ind, template_indexer<Ord, Ind, Dims...>::value != dyn_dim, Dims...>::get(
+            dyn_indexes0
+        );
     }
 };
 

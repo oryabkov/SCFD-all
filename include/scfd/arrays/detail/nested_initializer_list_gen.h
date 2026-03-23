@@ -29,28 +29,28 @@ namespace arrays
 namespace detail
 {
 
-template<class T, int Lev, bool End>
+template <class T, int Lev, bool End>
 struct nested_initializer_list_gen_
 {
 };
 
-template<class T, int Lev>
-struct nested_initializer_list_gen_<T,Lev,true>
+template <class T, int Lev>
+struct nested_initializer_list_gen_<T, Lev, true>
 {
     typedef T type;
 };
 
-template<class T, int Lev>
-struct nested_initializer_list_gen_<T,Lev,false>
+template <class T, int Lev>
+struct nested_initializer_list_gen_<T, Lev, false>
 {
-    typedef std::initializer_list<typename nested_initializer_list_gen_<T,Lev-1,Lev-1==1>::type> type;
+    typedef std::initializer_list<typename nested_initializer_list_gen_<T, Lev - 1, Lev - 1 == 1>::type> type;
 };
 
 
-template<class T, int Lev>
+template <class T, int Lev>
 struct nested_initializer_list_gen
 {
-    typedef typename nested_initializer_list_gen_<T,Lev,Lev==1>::type type;
+    typedef typename nested_initializer_list_gen_<T, Lev, Lev == 1>::type type;
 };
 
 }

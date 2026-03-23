@@ -23,25 +23,25 @@
 using namespace scfd::arrays;
 using namespace scfd::arrays::detail;
 
-static const int test_X0 = dyn_dim_counter<int, 0,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X1 = dyn_dim_counter<int, 1,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X2 = dyn_dim_counter<int, 2,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X3 = dyn_dim_counter<int, 3,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X4 = dyn_dim_counter<int, 4,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X5 = dyn_dim_counter<int, 5,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X6 = dyn_dim_counter<int, 6,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X7 = dyn_dim_counter<int, 7,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
-static const int test_X8 = dyn_dim_counter<int, 8,  dyn_dim,5,1,1,dyn_dim,dyn_dim,234,123>::value;
+static const int test_X0 = dyn_dim_counter<int, 0, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X1 = dyn_dim_counter<int, 1, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X2 = dyn_dim_counter<int, 2, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X3 = dyn_dim_counter<int, 3, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X4 = dyn_dim_counter<int, 4, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X5 = dyn_dim_counter<int, 5, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X6 = dyn_dim_counter<int, 6, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X7 = dyn_dim_counter<int, 7, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
+static const int test_X8 = dyn_dim_counter<int, 8, dyn_dim, 5, 1, 1, dyn_dim, dyn_dim, 234, 123>::value;
 
-TEST(DynDimCounterTest, ValueMixedTests)
+TEST( DynDimCounterTest, ValueMixedTests )
 {
-    ASSERT_EQ(test_X0, 0);
-    ASSERT_EQ(test_X1, 1);
-    ASSERT_EQ(test_X2, 1);
-    ASSERT_EQ(test_X3, 1);
-    ASSERT_EQ(test_X4, 1);
-    ASSERT_EQ(test_X5, 2);
-    ASSERT_EQ(test_X6, 3);
-    ASSERT_EQ(test_X7, 3);
-    ASSERT_EQ(test_X8, 3);
+    ASSERT_EQ( test_X0, 0 );
+    ASSERT_EQ( test_X1, 1 );
+    ASSERT_EQ( test_X2, 1 );
+    ASSERT_EQ( test_X3, 1 );
+    ASSERT_EQ( test_X4, 1 );
+    ASSERT_EQ( test_X5, 2 );
+    ASSERT_EQ( test_X6, 3 );
+    ASSERT_EQ( test_X7, 3 );
+    ASSERT_EQ( test_X8, 3 );
 }

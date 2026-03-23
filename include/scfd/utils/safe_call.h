@@ -20,17 +20,18 @@
 #include <stdexcept>
 #include <string>
 
-#define __STR_HELPER(x) #x
-#define __STR(x) __STR_HELPER(x)
+#define __STR_HELPER( x ) #x
+#define __STR( x ) __STR_HELPER( x )
 
-#define SCFD_SAFE_CALL(X)                                                                                                                  \
-    try                                                                                                                                    \
-    {                                                                                                                                      \
-        X;                                                                                                                                 \
-    }                                                                                                                                      \
-    catch (...)                                                                                                                            \
-    {                                                                                                                                      \
-        std::throw_with_nested( std::runtime_error(std::string("SCFD_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: ")) );    \
+#define SCFD_SAFE_CALL( X )                                                                                            \
+    try                                                                                                                \
+    {                                                                                                                  \
+        X;                                                                                                             \
+    }                                                                                                                  \
+    catch ( ... )                                                                                                      \
+    {                                                                                                                  \
+        std::throw_with_nested( std::runtime_error( std::string( "SCFD_SAFE_CALL " __FILE__                            \
+                                                                 " " __STR( __LINE__ ) " : " #X " failed: " ) ) );     \
     }
 
 #endif

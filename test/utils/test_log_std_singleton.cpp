@@ -4,12 +4,12 @@
 
 using namespace scfd::utils;
 
-int main(int argc, char const *args[])
+int main( int argc, char const *args[] )
 {
-    log_std  log;
-    log_std::set_inst(&log);
+    log_std log;
+    log_std::set_inst( &log );
 
-    log_std::inst().info_f("test %d", 100);
-    
+    log_std::inst().info_f( "test %d", 100 );
+
     return 0;
 }

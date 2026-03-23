@@ -27,17 +27,17 @@ struct timer_event
 {
     timer_event() = default;
     /// NOTE as I understand it also forbids move semantics as well
-    timer_event(const timer_event &e) = delete;
-    timer_event &operator=(const timer_event &e) = delete;
+    timer_event( const timer_event &e )            = delete;
+    timer_event &operator=( const timer_event &e ) = delete;
 
     virtual ~timer_event() = default;
 
-    virtual void    record() = 0;
-    virtual double  elapsed_time(const timer_event &e0)const = 0;
+    virtual void   record()                                    = 0;
+    virtual double elapsed_time( const timer_event &e0 ) const = 0;
 
     static std::string units()
     {
-        return std::string("ms");
+        return std::string( "ms" );
     }
 };
 

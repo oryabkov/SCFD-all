@@ -19,41 +19,43 @@
 
 namespace scfd
 {
-namespace static_vec 
+namespace static_vec
 {
 
-template<class T,int Dim>
+template <class T, int Dim>
 class vec;
 
 namespace detail
 {
 
-template<class T,int Dim,typename std::enable_if<!std::is_floating_point<T>::value,bool>::type = true>
-inline __DEVICE_TAG__ vec<T,Dim> vec_div_scalar(const vec<T,Dim> &v, T div)
+template <class T, int Dim, typename std::enable_if<!std::is_floating_point<T>::value, bool>::type = true>
+inline __DEVICE_TAG__ vec<T, Dim> vec_div_scalar( const vec<T, Dim> &v, T div )
 {
-    vec<T,Dim> res;
-    #pragma unroll
-    for (int j = 0;j < Dim;++j) res.d[j] = v.d[j]/div;
+    vec<T, Dim> res;
+#pragma unroll
+    for ( int j = 0; j < Dim; ++j )
+        res.d[j] = v.d[j] / div;
     return res;
 }
 
-template<class T,int Dim,typename std::enable_if<std::is_floating_point<T>::value,bool>::type = true>
-inline __DEVICE_TAG__ vec<T,Dim> vec_div_scalar(const vec<T,Dim> &v, T div)
+template <class T, int Dim, typename std::enable_if<std::is_floating_point<T>::value, bool>::type = true>
+inline __DEVICE_TAG__ vec<T, Dim> vec_div_scalar( const vec<T, Dim> &v, T div )
 {
-    return v.operator*(T(1)/div);
+    return v.operator*( T( 1 ) / div );
 }
 
-template<class T,int Dim,typename std::enable_if<!std::is_floating_point<T>::value,bool>::type = true>
-inline __DEVICE_TAG__ void vec_div_scalar_inplace(T div, vec<T,Dim> &v)
+template <class T, int Dim, typename std::enable_if<!std::is_floating_point<T>::value, bool>::type = true>
+inline __DEVICE_TAG__ void vec_div_scalar_inplace( T div, vec<T, Dim> &v )
 {
-    #pragma unroll
-    for (int j = 0;j < Dim;++j) v.d[j] /= div;
+#pragma unroll
+    for ( int j = 0; j < Dim; ++j )
+        v.d[j] /= div;
 }
 
-template<class T,int Dim,typename std::enable_if<std::is_floating_point<T>::value,bool>::type = true>
-inline __DEVICE_TAG__ void vec_div_scalar_inplace(T div, vec<T,Dim> &v)
+template <class T, int Dim, typename std::enable_if<std::is_floating_point<T>::value, bool>::type = true>
+inline __DEVICE_TAG__ void vec_div_scalar_inplace( T div, vec<T, Dim> &v )
 {
-    v.operator*=(T(1)/div);
+    v.operator*=( T( 1 ) / div );
 }
 
 

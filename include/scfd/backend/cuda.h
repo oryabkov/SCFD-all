@@ -13,7 +13,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 #ifndef __SCFD_BACKEND_CUDA_H__
 #define __SCFD_BACKEND_CUDA_H__
 
@@ -31,18 +31,16 @@ namespace backend
 
 struct cuda
 {
-    using memory_type       = scfd::memory::cuda_device;
+    using memory_type = scfd::memory::cuda_device;
     template <class Ordinal = int>
-    using for_each_type     = scfd::for_each::cuda<Ordinal>;
+    using for_each_type = scfd::for_each::cuda<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type  = scfd::for_each::cuda_nd<Dim, Ordinal>;
-    using reduce_type       = scfd::thrust_reduce<>;
+    using for_each_nd_type = scfd::for_each::cuda_nd<Dim, Ordinal>;
+    using reduce_type      = scfd::thrust_reduce<>;
 };
 
 }
 }
-    
-
 
 
 #endif // __SCFD_BACKEND_CUDA_H__

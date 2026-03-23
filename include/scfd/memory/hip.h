@@ -30,56 +30,56 @@ struct hip_host;
 
 struct hip_device
 {
-    typedef     hip_host        host_memory_type;
-    typedef     void*           pointer_type;
-    typedef     const void*     const_pointer_type;
+    typedef hip_host    host_memory_type;
+    typedef void       *pointer_type;
+    typedef const void *const_pointer_type;
 
-    static const bool           is_host_visible = false;
-    static const bool           prefer_array_of_structs = false;
+    static const bool is_host_visible         = false;
+    static const bool prefer_array_of_structs = false;
 
     /// NOTE: hipMalloc returns NULL for size==0 without error,
     /// however it's not stated explicitly in documentation
-    static void    malloc(pointer_type* p, size_t size)
+    static void malloc( pointer_type *p, size_t size )
     {
-        HIP_SAFE_CALL(hipMalloc(p, size));
+        HIP_SAFE_CALL( hipMalloc( p, size ) );
     }
     /// NOTE: hipFree returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
-    static void    free(pointer_type p)
+    static void free( pointer_type p )
     {
-        HIP_SAFE_CALL(hipFree(p));
+        HIP_SAFE_CALL( hipFree( p ) );
     }
 
-    static void    copy_to_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyDeviceToHost) );
+        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyDeviceToHost ) );
     }
-    static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToDevice) );
+        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToDevice ) );
     }
-    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) );
+        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyDeviceToDevice ) );
     }
 };
 
 struct hip_host
 {
-    typedef     hip_host        host_memory_type;
-    typedef     void*           pointer_type;
-    typedef     const void*     const_pointer_type;
-    static const bool           is_host_visible = true;
-    static const bool           prefer_array_of_structs = false;
+    typedef hip_host    host_memory_type;
+    typedef void       *pointer_type;
+    typedef const void *const_pointer_type;
+    static const bool   is_host_visible         = true;
+    static const bool   prefer_array_of_structs = false;
 
     /// NOTE: hipMallocHost DOES NOT returns NULL for size==0
     /// (it does not change ptr without generating error),
     /// and this behaviour is not stated explicitly in documentation
-    static void    malloc(pointer_type* p, size_t size)
+    static void malloc( pointer_type *p, size_t size )
     {
-        if (size != 0)
+        if ( size != 0 )
         {
-            HIP_SAFE_CALL(hipHostMalloc(p, size,0));
+            HIP_SAFE_CALL( hipHostMalloc( p, size, 0 ) );
         }
         else
         {
@@ -88,22 +88,22 @@ struct hip_host
     }
     /// NOTE: hipFreeHost returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
-    static void    free(pointer_type p)
+    static void free( pointer_type p )
     {
-        HIP_SAFE_CALL(hipHostFree(p));
+        HIP_SAFE_CALL( hipHostFree( p ) );
     }
 
-    static void    copy_to_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToHost) );
+        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
     }
-    static void    copy_from_host(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToHost) );
+        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
     }
-    static void    copy(size_t size, const_pointer_type src, pointer_type dst)
+    static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy(dst, src, size, hipMemcpyHostToHost) );
+        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
     }
 };
 

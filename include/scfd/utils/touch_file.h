@@ -22,10 +22,10 @@ namespace scfd
 namespace utils
 {
 
-void touch_file(const char f_name[])
+void touch_file( const char f_name[] )
 {
     FILE *stream = fopen( f_name, "w" );
-    fclose(stream);
+    fclose( stream );
 }
 
 }

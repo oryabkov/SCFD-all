@@ -20,36 +20,38 @@
 //for_each implementation for CUDA case
 
 #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-#include <boost/property_tree/ptree.hpp>
+#    include <boost/property_tree/ptree.hpp>
 #endif
 #include <cuda_runtime.h>
 #include "for_each_config.h"
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
-template<class T = int>
+template <class T = int>
 struct cuda
 {
     //t_rect_tml<T, dim> block_size;        //ISSUE remove from here somehow: we need it just 4 cuda
     T block_size;
 
-    cuda() : block_size(256) {}
-
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T i1, T i2)const;
-    template<class FUNC_T>
-    void operator()(FUNC_T f, T size)const;
-    void wait()const;
-
-    #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
-    void init(const boost::property_tree::ptree &cfg) 
+    cuda() : block_size( 256 )
     {
-        block_size = cfg.get<int>("block_size", 256);
     }
-    #endif
+
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T i1, T i2 ) const;
+    template <class FUNC_T>
+    void operator()( FUNC_T f, T size ) const;
+    void wait() const;
+
+#ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
+    void init( const boost::property_tree::ptree &cfg )
+    {
+        block_size = cfg.get<int>( "block_size", 256 );
+    }
+#endif
 };
 
 }

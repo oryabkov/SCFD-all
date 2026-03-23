@@ -30,64 +30,62 @@ namespace arrays
 namespace detail
 {
 
-template<class T, int DimsNum, int CurrIdx, bool End>
+template <class T, int DimsNum, int CurrIdx, bool End>
 struct nested_initializer_list_fill_
 {
 };
 
-template<class T, int DimsNum, int CurrIdx>
-struct nested_initializer_list_fill_<T,DimsNum,CurrIdx,true>
+template <class T, int DimsNum, int CurrIdx>
+struct nested_initializer_list_fill_<T, DimsNum, CurrIdx, true>
 {
-    template<class OtherArray,class IndexVec,ordinal_type... I>
-    static T   &index_get_(const OtherArray &a, const IndexVec &idx, 
-                           detail::index_sequence<ordinal_type,I...>)
+    template <class OtherArray, class IndexVec, ordinal_type... I>
+    static T &index_get_( const OtherArray &a, const IndexVec &idx, detail::index_sequence<ordinal_type, I...> )
     {
-        return a.operator()(idx[I]...);
+        return a.operator()( idx[I]... );
     }
-    template<class OtherArray,class IndexVec>
-    static void fill(std::initializer_list<T> il, const OtherArray &host_buf, IndexVec &idx)
+    template <class OtherArray, class IndexVec>
+    static void fill( std::initializer_list<T> il, const OtherArray &host_buf, IndexVec &idx )
     {
-        for (ordinal_type i1 = 0;i1 < il.size();++i1)
+        for ( ordinal_type i1 = 0; i1 < il.size(); ++i1 )
         {
-            idx[DimsNum-1] = i1;
-            index_get_(host_buf,idx,detail::make_index_sequence<ordinal_type,DimsNum>{}) = 
-                *(il.begin()+i1);
+            idx[DimsNum - 1]                                                                  = i1;
+            index_get_( host_buf, idx, detail::make_index_sequence<ordinal_type, DimsNum>{} ) = *( il.begin() + i1 );
         }
     }
 };
 
-template<class T, int DimsNum, int CurrIdx>
-struct nested_initializer_list_fill_<T,DimsNum,CurrIdx,false>
+template <class T, int DimsNum, int CurrIdx>
+struct nested_initializer_list_fill_<T, DimsNum, CurrIdx, false>
 {
-    typedef nested_initializer_list_fill_<T,DimsNum,CurrIdx+1,CurrIdx+1==DimsNum-1> next_fill_t;
+    typedef nested_initializer_list_fill_<T, DimsNum, CurrIdx + 1, CurrIdx + 1 == DimsNum - 1> next_fill_t;
 
-    template<class OtherArray,class IndexVec>
+    template <class OtherArray, class IndexVec>
     static void fill(
-        std::initializer_list<typename nested_initializer_list_gen<T,DimsNum-CurrIdx>::type> il,
+        std::initializer_list<typename nested_initializer_list_gen<T, DimsNum - CurrIdx>::type> il,
         const OtherArray &host_buf, IndexVec &idx
     )
     {
-        for (ordinal_type i1 = 0;i1 < il.size();++i1)
+        for ( ordinal_type i1 = 0; i1 < il.size(); ++i1 )
         {
             idx[CurrIdx] = i1;
-            next_fill_t::fill(*(il.begin()+i1),host_buf,idx);
+            next_fill_t::fill( *( il.begin() + i1 ), host_buf, idx );
         }
     }
 };
 
 
-template<class T, int DimsNum>
+template <class T, int DimsNum>
 struct nested_initializer_list_fill
 {
-    typedef nested_initializer_list_fill_<T,DimsNum,0,0==DimsNum-1> fill_t;
+    typedef nested_initializer_list_fill_<T, DimsNum, 0, 0 == DimsNum - 1> fill_t;
 
-    template<class OtherArray,class IndexVec>
+    template <class OtherArray, class IndexVec>
     static void fill(
-        std::initializer_list<typename nested_initializer_list_gen<T,DimsNum>::type> il,
-        const OtherArray &host_buf, IndexVec &idx
+        std::initializer_list<typename nested_initializer_list_gen<T, DimsNum>::type> il, const OtherArray &host_buf,
+        IndexVec &idx
     )
     {
-        fill_t::fill(il,host_buf,idx);
+        fill_t::fill( il, host_buf, idx );
     }
 };
 

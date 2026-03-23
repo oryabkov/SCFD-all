@@ -25,40 +25,44 @@
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
-template<int dim, class T>
-template<class FUNC_T>
-void openmp_nd<dim,T>::operator()(FUNC_T f, const rect<T, dim> &range)const
+template <int dim, class T>
+template <class FUNC_T>
+void openmp_nd<dim, T>::operator()( FUNC_T f, const rect<T, dim> &range ) const
 {
     T total_sz = 1;
-    for (int j = 0;j < dim;++j) total_sz *= (range.i2[j]-range.i1[j]);
-    
-    int real_threads_num = threads_num; //NOLINT
-    if (threads_num < 0) real_threads_num = omp_get_max_threads();
+    for ( int j = 0; j < dim; ++j )
+        total_sz *= ( range.i2[j] - range.i1[j] );
 
-    #pragma omp parallel for num_threads(real_threads_num)
-    for (T i = 0;i < total_sz;++i) {
+    int real_threads_num = threads_num; //NOLINT
+    if ( threads_num < 0 )
+        real_threads_num = omp_get_max_threads();
+
+#pragma omp parallel for num_threads( real_threads_num )
+    for ( T i = 0; i < total_sz; ++i )
+    {
         //printf("%d %d \n", omp_get_thread_num(), omp_get_thread_num());
         vec<T, dim> idx;
-        T       i_tmp = i;
-        for (int j = dim-1;j >= 0;--j) {
-            idx[j] = range.i1[j] + i_tmp%(range.i2[j]-range.i1[j]);
-            i_tmp /= (range.i2[j]-range.i1[j]);
+        T           i_tmp = i;
+        for ( int j = dim - 1; j >= 0; --j )
+        {
+            idx[j] = range.i1[j] + i_tmp % ( range.i2[j] - range.i1[j] );
+            i_tmp /= ( range.i2[j] - range.i1[j] );
         }
-        f(idx);
+        f( idx );
     }
 }
 
-template<int dim, class T>
-template<class FUNC_T>
-void openmp_nd<dim,T>::operator()(FUNC_T f, const vec<T, dim> &size)const
+template <int dim, class T>
+template <class FUNC_T>
+void openmp_nd<dim, T>::operator()( FUNC_T f, const vec<T, dim> &size ) const
 {
-    this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
+    this->operator()( f, rect<T, dim>( vec<T, dim>::make_zero(), size ) );
 }
-template<int dim, class T>
-void openmp_nd<dim,T>::wait()const
+template <int dim, class T>
+void openmp_nd<dim, T>::wait() const
 {
     //void function to sync with cuda
 }

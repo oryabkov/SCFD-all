@@ -26,35 +26,31 @@ namespace arrays
 namespace detail
 {
 
-template<class T, ordinal_type ND, bool End, class Memory, 
-         template <ordinal_type... DimsA> class Arranger, 
-         ordinal_type... Dims>
+template <
+    class T, ordinal_type ND, bool End, class Memory, template <ordinal_type... DimsA> class Arranger,
+    ordinal_type... Dims>
 struct tensor_base_nd_gen_
 {
 };
 
-template<class T, ordinal_type ND, class Memory, 
-         template <ordinal_type... DimsA> class Arranger, 
-         ordinal_type... Dims>
-struct tensor_base_nd_gen_<T,ND,true,Memory,Arranger,Dims...>
+template <class T, ordinal_type ND, class Memory, template <ordinal_type... DimsA> class Arranger, ordinal_type... Dims>
+struct tensor_base_nd_gen_<T, ND, true, Memory, Arranger, Dims...>
 {
-    typedef tensor_base<T,Memory,Arranger,Dims...> type;
+    typedef tensor_base<T, Memory, Arranger, Dims...> type;
 };
 
-template<class T, ordinal_type ND, class Memory, 
-         template <ordinal_type... DimsA> class Arranger, 
-         ordinal_type... Dims>
-struct tensor_base_nd_gen_<T,ND,false,Memory,Arranger,Dims...>
+template <class T, ordinal_type ND, class Memory, template <ordinal_type... DimsA> class Arranger, ordinal_type... Dims>
+struct tensor_base_nd_gen_<T, ND, false, Memory, Arranger, Dims...>
 {
-    typedef typename tensor_base_nd_gen_<T,ND-1,ND-1==0,Memory,Arranger,dyn_dim,Dims...>::type type;
+    typedef typename tensor_base_nd_gen_<T, ND - 1, ND - 1 == 0, Memory, Arranger, dyn_dim, Dims...>::type type;
 };
 
 
-template<class T, ordinal_type ND, class Memory, 
-         template <ordinal_type... DimsA> class Arranger, ordinal_type... TensorDims>
+template <
+    class T, ordinal_type ND, class Memory, template <ordinal_type... DimsA> class Arranger, ordinal_type... TensorDims>
 struct tensor_base_nd_gen
 {
-    typedef typename tensor_base_nd_gen_<T,ND,ND==0,Memory,Arranger,TensorDims...>::type type;
+    typedef typename tensor_base_nd_gen_<T, ND, ND == 0, Memory, Arranger, TensorDims...>::type type;
 };
 
 }

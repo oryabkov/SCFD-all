@@ -20,7 +20,7 @@
 //#define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
 
 #ifndef SCFD_ARRAYS_ORDINAL_TYPE
-#define SCFD_ARRAYS_ORDINAL_TYPE int
+#    define SCFD_ARRAYS_ORDINAL_TYPE int
 #endif
 
 namespace scfd
@@ -35,4 +35,3 @@ static const ordinal_type        dyn_dim = -1;
 }
 
 #endif
-

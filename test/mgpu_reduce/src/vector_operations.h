@@ -23,38 +23,37 @@
 #include <scfd/communication/mpi_comm_info.h>
 
 
-template<class T, class Vec>
+template <class T, class Vec>
 struct vector_operations
 {
     using vector_type = Vec;
-    
-    vector_operations(scfd::communication::mpi_comm_info* mpi): mpi_(mpi)
-    {}
 
-    T all_reduce_sum(const Vec& loc_data)const
+    vector_operations( scfd::communication::mpi_comm_info *mpi ) : mpi_( mpi )
     {
-        std::size_t size_loc = loc_data.size();
-        T res_local = detail::sum_reduce<std::size_t, T, Vec>(size_loc, loc_data);
+    }
+
+    T all_reduce_sum( const Vec &loc_data ) const
+    {
+        std::size_t size_loc  = loc_data.size();
+        T           res_local = detail::sum_reduce<std::size_t, T, Vec>( size_loc, loc_data );
         return mpi_->all_reduce_sum<T>( res_local );
     }
 
-    T all_reduce_max(const Vec& loc_data)const
+    T all_reduce_max( const Vec &loc_data ) const
     {
-        std::size_t size_loc = loc_data.size();
-        T res_local = detail::max_reduce<std::size_t, T, Vec>(size_loc, loc_data);
+        std::size_t size_loc  = loc_data.size();
+        T           res_local = detail::max_reduce<std::size_t, T, Vec>( size_loc, loc_data );
         return mpi_->all_reduce_max<T>( res_local );
-
     }
 
-    T all_reduce_min(const Vec& loc_data)const
+    T all_reduce_min( const Vec &loc_data ) const
     {
-        std::size_t size_loc = loc_data.size();
-        T res_local = detail::min_reduce<std::size_t, T, Vec>(size_loc, loc_data);
+        std::size_t size_loc  = loc_data.size();
+        T           res_local = detail::min_reduce<std::size_t, T, Vec>( size_loc, loc_data );
         return mpi_->all_reduce_min<T>( res_local );
-    }  
+    }
 
-    scfd::communication::mpi_comm_info* mpi_;
-
+    scfd::communication::mpi_comm_info *mpi_;
 };
 
 

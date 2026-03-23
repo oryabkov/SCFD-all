@@ -20,34 +20,26 @@
 
 using namespace scfd::arrays;
 
-int main(int argc, char const *argv[])
+int main( int argc, char const *argv[] )
 {
-    last_index_fast_arranger<10>               test1;
-    last_index_fast_arranger<10,10>            test2;
-    last_index_fast_arranger<10,10,5>          test3;
-    last_index_fast_arranger<10,10,5,6>        test4;
-    last_index_fast_arranger<10,10,5,6,7>      test5;
-    last_index_fast_arranger<10,10,5,6,7,8>    test6;
-    last_index_fast_arranger<10,10,5,6,7,8,9>  test7;
+    last_index_fast_arranger<10>                    test1;
+    last_index_fast_arranger<10, 10>                test2;
+    last_index_fast_arranger<10, 10, 5>             test3;
+    last_index_fast_arranger<10, 10, 5, 6>          test4;
+    last_index_fast_arranger<10, 10, 5, 6, 7>       test5;
+    last_index_fast_arranger<10, 10, 5, 6, 7, 8>    test6;
+    last_index_fast_arranger<10, 10, 5, 6, 7, 8, 9> test7;
 
-    std::cout << test2.calc_lin_index(0,0) << " "
-              << test2.calc_lin_index(1,0) << " "
-              << test2.calc_lin_index(2,0) << " "
-              << test2.calc_lin_index(3,0) << " "
-              << test2.calc_lin_index(4,0) << " " 
-              << test2.calc_lin_index(0,1) << " "
-              << test2.calc_lin_index(0,2) << " "
-              << test2.calc_lin_index(0,3) << " "
-              << test2.calc_lin_index(0,4) << " "
-              << test2.calc_lin_index(1,2) << " "
-              << test2.calc_lin_index(2,2) << " "
-              << test2.calc_lin_index(3,2) << " " << std::endl;
-    
-    std::cout << test3.calc_lin_index(0,0,0) << " "
-              << test4.calc_lin_index(0,0,0,0) << " "
-              << test5.calc_lin_index(0,0,0,0,0) << " "
-              << test6.calc_lin_index(0,0,0,0,0,0) << " "
-              << test7.calc_lin_index(0,0,0,0,0,0,0) << " " << std::endl;
+    std::cout << test2.calc_lin_index( 0, 0 ) << " " << test2.calc_lin_index( 1, 0 ) << " "
+              << test2.calc_lin_index( 2, 0 ) << " " << test2.calc_lin_index( 3, 0 ) << " "
+              << test2.calc_lin_index( 4, 0 ) << " " << test2.calc_lin_index( 0, 1 ) << " "
+              << test2.calc_lin_index( 0, 2 ) << " " << test2.calc_lin_index( 0, 3 ) << " "
+              << test2.calc_lin_index( 0, 4 ) << " " << test2.calc_lin_index( 1, 2 ) << " "
+              << test2.calc_lin_index( 2, 2 ) << " " << test2.calc_lin_index( 3, 2 ) << " " << std::endl;
+
+    std::cout << test3.calc_lin_index( 0, 0, 0 ) << " " << test4.calc_lin_index( 0, 0, 0, 0 ) << " "
+              << test5.calc_lin_index( 0, 0, 0, 0, 0 ) << " " << test6.calc_lin_index( 0, 0, 0, 0, 0, 0 ) << " "
+              << test7.calc_lin_index( 0, 0, 0, 0, 0, 0, 0 ) << " " << std::endl;
 
     return 0;
 }

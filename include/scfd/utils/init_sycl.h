@@ -25,6 +25,6 @@
 namespace dpl = oneapi::dpl;
 
 // TODO: singleton impl, gpu/cpu selection
-inline sycl::queue sycl_device_queue(sycl::gpu_selector_v);
+inline sycl::queue sycl_device_queue( sycl::gpu_selector_v );
 
 #endif

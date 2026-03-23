@@ -30,23 +30,26 @@ namespace utils
 
 struct hip_timer_event : public timer_event
 {
-    hipEvent_t     e_;
+    hipEvent_t e_;
 
     hip_timer_event()
     {
         HIP_SAFE_CALL( hipEventCreate( &e_ ) );
     }
-    virtual void    record()
+    virtual void record()
     {
         hipEventRecord( e_, 0 );
     }
-    virtual double  elapsed_time(const timer_event &e0)const
+    virtual double elapsed_time( const timer_event &e0 ) const
     {
-        const hip_timer_event *hip_event = dynamic_cast<const hip_timer_event*>(&e0);
-        if (hip_event == NULL) {
-            throw std::logic_error("hip_timer_event::elapsed_time: try to calc time from different type of timer (non-hip)");
+        const hip_timer_event *hip_event = dynamic_cast<const hip_timer_event *>( &e0 );
+        if ( hip_event == NULL )
+        {
+            throw std::logic_error(
+                "hip_timer_event::elapsed_time: try to calc time from different type of timer (non-hip)"
+            );
         }
-        float   res;
+        float res;
         hipEventSynchronize( e_ );
         hipEventElapsedTime( &res, hip_event->e_, e_ );
         return (double)res;

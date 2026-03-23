@@ -24,7 +24,7 @@
 namespace scfd
 {
 
-template<class Ord = int>
+template <class Ord = int>
 struct serial_cpu_reduce
 {
     /*void set_max_size(Ord max_size)
@@ -32,21 +32,21 @@ struct serial_cpu_reduce
         max_size_ = max_size;
     }*/
 
-    template<class T>
-    T operator()(Ord size, const T *input, T init_val)const
+    template <class T>
+    T operator()( Ord size, const T *input, T init_val ) const
     {
-        T   res(init_val);
-        for (Ord i = 0;i < size;++i) 
+        T res( init_val );
+        for ( Ord i = 0; i < size; ++i )
         {
             res += input[i];
         }
         return res;
     }
-    void    wait()const
+    void wait() const
     {
     }
 
-    Ord     max_size_;
+    Ord max_size_;
 };
 
 }

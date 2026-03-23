@@ -36,38 +36,53 @@ public:
     using log_msg_type = utils::log_msg_type;
 
 private:
-    int     log_lev;
-    int     comm_rank_, comm_size_;
+    int log_lev;
+    int comm_rank_, comm_size_;
 
 public:
-    log_mpi_basic() : log_lev(1) 
-    {  
-        if (MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank_) != MPI_SUCCESS) throw std::runtime_error("log_mpi_basic::MPI_Comm_rank failed");
-        if (MPI_Comm_size(MPI_COMM_WORLD, &comm_size_) != MPI_SUCCESS) throw std::runtime_error("log_mpi_basic::MPI_Comm_size failed");
-    }
-
-    void msg(const std::string &s, log_msg_type mt = log_msg_type::INFO, int _log_lev = 1)
+    log_mpi_basic() : log_lev( 1 )
     {
-        if ((mt != log_msg_type::ERROR)&&(_log_lev > log_lev)) return;
-        //TODO
-        if (mt == log_msg_type::INFO) {
-            if (comm_rank_ == 0) printf("INFO:         %s\n", s.c_str());
-        } else if (mt == log_msg_type::INFO_ALL) {
-            printf("INFO_ALL(%3d):%s\n", comm_rank_, s.c_str());
-        } else if (mt == log_msg_type::WARNING) {
-            printf("WARNING(%3d): %s\n", comm_rank_, s.c_str());
-        } else if (mt == log_msg_type::ERROR) {
-            printf("ERROR(%3d):   %s\n", comm_rank_, s.c_str());
-        } else 
-            throw std::logic_error("log_mpi_basic::log: wrong t_msg_type argument");
+        if ( MPI_Comm_rank( MPI_COMM_WORLD, &comm_rank_ ) != MPI_SUCCESS )
+            throw std::runtime_error( "log_mpi_basic::MPI_Comm_rank failed" );
+        if ( MPI_Comm_size( MPI_COMM_WORLD, &comm_size_ ) != MPI_SUCCESS )
+            throw std::runtime_error( "log_mpi_basic::MPI_Comm_size failed" );
     }
-    void set_verbosity(int _log_lev = 1) { log_lev = _log_lev; }
 
-    int comm_rank()const
+    void msg( const std::string &s, log_msg_type mt = log_msg_type::INFO, int _log_lev = 1 )
+    {
+        if ( ( mt != log_msg_type::ERROR ) && ( _log_lev > log_lev ) )
+            return;
+        //TODO
+        if ( mt == log_msg_type::INFO )
+        {
+            if ( comm_rank_ == 0 )
+                printf( "INFO:         %s\n", s.c_str() );
+        }
+        else if ( mt == log_msg_type::INFO_ALL )
+        {
+            printf( "INFO_ALL(%3d):%s\n", comm_rank_, s.c_str() );
+        }
+        else if ( mt == log_msg_type::WARNING )
+        {
+            printf( "WARNING(%3d): %s\n", comm_rank_, s.c_str() );
+        }
+        else if ( mt == log_msg_type::ERROR )
+        {
+            printf( "ERROR(%3d):   %s\n", comm_rank_, s.c_str() );
+        }
+        else
+            throw std::logic_error( "log_mpi_basic::log: wrong t_msg_type argument" );
+    }
+    void set_verbosity( int _log_lev = 1 )
+    {
+        log_lev = _log_lev;
+    }
+
+    int comm_rank() const
     {
         return comm_rank_;
     }
-    int comm_size()const
+    int comm_size() const
     {
         return comm_size_;
     }

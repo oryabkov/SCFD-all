@@ -28,41 +28,44 @@ namespace scfd
 namespace for_each
 {
 
-template<class FUNC_T, int dim, class T>
-__global__ void ker_for_each(FUNC_T f, rect<T, dim> range, T total_sz)
+template <class FUNC_T, int dim, class T>
+__global__ void ker_for_each( FUNC_T f, rect<T, dim> range, T total_sz )
 {
-    T i = blockIdx.x*blockDim.x + threadIdx.x;
-    if (!((i >= 0)&&(i < total_sz))) return;
+    T i = blockIdx.x * blockDim.x + threadIdx.x;
+    if ( !( ( i >= 0 ) && ( i < total_sz ) ) )
+        return;
     vec<T, dim> idx;
-    for (int j = 0;j < dim;++j) {
-        idx[j] = range.i1[j] + i%(range.i2[j]-range.i1[j]);
-        i /= (range.i2[j]-range.i1[j]);
+    for ( int j = 0; j < dim; ++j )
+    {
+        idx[j] = range.i1[j] + i % ( range.i2[j] - range.i1[j] );
+        i /= ( range.i2[j] - range.i1[j] );
     }
-    f(idx);
+    f( idx );
 }
 
-template<int dim, class T>
-template<class FUNC_T>
-void hip_nd<dim,T>::operator()(const FUNC_T &f, const rect<T, dim> &range)const
+template <int dim, class T>
+template <class FUNC_T>
+void hip_nd<dim, T>::operator()( const FUNC_T &f, const rect<T, dim> &range ) const
 {
     T total_sz = 1;
-    for (int j = 0;j < dim;++j) total_sz *= (range.i2[j]-range.i1[j]);
+    for ( int j = 0; j < dim; ++j )
+        total_sz *= ( range.i2[j] - range.i1[j] );
 
-    ker_for_each<FUNC_T,dim,T><<<(total_sz/block_size)+1,block_size>>>(f, range, total_sz);
+    ker_for_each<FUNC_T, dim, T><<<( total_sz / block_size ) + 1, block_size>>>( f, range, total_sz );
 }
 
-template<int dim, class T>
-template<class FUNC_T>
-void hip_nd<dim,T>::operator()(const FUNC_T &f, const vec<T, dim> &size)const
+template <int dim, class T>
+template <class FUNC_T>
+void hip_nd<dim, T>::operator()( const FUNC_T &f, const vec<T, dim> &size ) const
 {
-    this->operator()(f,rect<T, dim>(vec<T, dim>::make_zero(),size));
+    this->operator()( f, rect<T, dim>( vec<T, dim>::make_zero(), size ) );
 }
 
-template<int dim, class T>
-void hip_nd<dim,T>::wait()const
+template <int dim, class T>
+void hip_nd<dim, T>::wait() const
 {
     //TODO error check?
-    HIP_SAFE_CALL( hipStreamSynchronize(0) );
+    HIP_SAFE_CALL( hipStreamSynchronize( 0 ) );
 }
 
 }

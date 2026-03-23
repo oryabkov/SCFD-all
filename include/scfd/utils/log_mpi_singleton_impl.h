@@ -24,7 +24,7 @@ namespace scfd
 namespace utils
 {
 
-template<>
+template <>
 log_mpi *manual_init_singleton<log_mpi>::inst_ = nullptr;
 
 }

@@ -24,40 +24,39 @@ namespace scfd
 namespace arrays
 {
 
-namespace detail {
+namespace detail
+{
 
-template<class Array>
+template <class Array>
 class array_thrust_ptr
 {
-    using value_t = typename Array::value_type;
-    using memory_t = typename Array::memory_type;
-    using memory_thrust_ptr_t = scfd::memory::thrust_ptr<memory_t,value_t>;
+    using value_t             = typename Array::value_type;
+    using memory_t            = typename Array::memory_type;
+    using memory_thrust_ptr_t = scfd::memory::thrust_ptr<memory_t, value_t>;
+
 public:
     using type = typename memory_thrust_ptr_t::type;
-    static type cast(value_t *p)
+    static type cast( value_t *p )
     {
-        return memory_thrust_ptr_t::cast(p);
+        return memory_thrust_ptr_t::cast( p );
     }
 };
 
 } /// namespace detail
 
-template<class Array>
-typename detail::array_thrust_ptr<Array>::type
-array_thrust_begin(const Array &array)
+template <class Array>
+typename detail::array_thrust_ptr<Array>::type array_thrust_begin( const Array &array )
 {
-    return detail::array_thrust_ptr<Array>::cast(array.raw_ptr());
+    return detail::array_thrust_ptr<Array>::cast( array.raw_ptr() );
 }
 
-template<class Array>
-typename detail::array_thrust_ptr<Array>::type
-array_thrust_end(const Array &array)
+template <class Array>
+typename detail::array_thrust_ptr<Array>::type array_thrust_end( const Array &array )
 {
-    return detail::array_thrust_ptr<Array>::cast(array.raw_ptr()) + array.total_size();
+    return detail::array_thrust_ptr<Array>::cast( array.raw_ptr() ) + array.total_size();
 }
 
 } /// namespace arrays
 } /// namespace scfd
 
 #endif
-

@@ -21,13 +21,18 @@
 #include <string>
 #include <hip/hip_runtime.h>
 
-#define __STR_HELPER(x) #x
-#define __STR(x) __STR_HELPER(x)
+#define __STR_HELPER( x ) #x
+#define __STR( x ) __STR_HELPER( x )
 
-#define HIP_SAFE_CALL(X)                                                                                                                                                                       \
-    do {                                                                                                                                                                                        \
-        hipError_t hip_res = (X);                                                                                                                                                             \
-        if (hip_res != hipSuccess) throw std::runtime_error(std::string("HIP_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: ") + std::string(hipGetErrorString(hip_res)));    \
-    } while (0)
+#define HIP_SAFE_CALL( X )                                                                                             \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        hipError_t hip_res = ( X );                                                                                    \
+        if ( hip_res != hipSuccess )                                                                                   \
+            throw std::runtime_error(                                                                                  \
+                std::string( "HIP_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " ) +                  \
+                std::string( hipGetErrorString( hip_res ) )                                                            \
+            );                                                                                                         \
+    } while ( 0 )
 
 #endif

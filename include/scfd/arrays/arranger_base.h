@@ -35,60 +35,64 @@ namespace arrays
 
 using static_vec::vec;
 
-template<class Ord, Ord... Dims>
+template <class Ord, Ord... Dims>
 struct arranger_base
 {
 public:
-    static const Ord dynamic_dims_num = detail::dyn_dim_counter<Ord,sizeof...(Dims),Dims...>::value;
-    static const Ord dims_num = sizeof...(Dims);
+    static const Ord dynamic_dims_num = detail::dyn_dim_counter<Ord, sizeof...( Dims ), Dims...>::value;
+    static const Ord dims_num         = sizeof...( Dims );
 
 protected:
-    vec<Ord,dynamic_dims_num>     dyn_dims_;
+    vec<Ord, dynamic_dims_num> dyn_dims_;
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-    vec<Ord,dynamic_dims_num>     dyn_indexes0_;
+    vec<Ord, dynamic_dims_num> dyn_indexes0_;
 #endif
 
-    template<class... Args,
-             class = typename std::enable_if<sizeof...(Args)==dynamic_dims_num>::type,
-             class = typename std::enable_if<detail::check_all_are_true< std::is_integral<Args>::value... >::value>::type>
-    void set_dyn_dims(Args ...args)
+    template <
+        class... Args, class = typename std::enable_if<sizeof...( Args ) == dynamic_dims_num>::type,
+        class = typename std::enable_if<detail::check_all_are_true<std::is_integral<Args>::value...>::value>::type>
+    void set_dyn_dims( Args... args )
     {
-        dyn_dims_ = vec<Ord,dynamic_dims_num>{args...};
+        dyn_dims_ = vec<Ord, dynamic_dims_num>{ args... };
     }
-    template<class DynDimsVec, 
-             class = typename std::enable_if<detail::has_subscript_operator<DynDimsVec,ordinal_type>::value>::type>
-    void set_dyn_dims(const DynDimsVec &dyn_dims)
+    template <
+        class DynDimsVec,
+        class = typename std::enable_if<detail::has_subscript_operator<DynDimsVec, ordinal_type>::value>::type>
+    void set_dyn_dims( const DynDimsVec &dyn_dims )
     {
-        dyn_dims_ = vec<Ord,dynamic_dims_num>(dyn_dims);
+        dyn_dims_ = vec<Ord, dynamic_dims_num>( dyn_dims );
     }
     //TODO not sure about this device tag though
     __DEVICE_TAG__ void set_zero_dyn_dims()
     {
-        #pragma unroll
-        for (Ord j = 0;j < dynamic_dims_num;++j) dyn_dims_[j] = 0;
+#pragma unroll
+        for ( Ord j = 0; j < dynamic_dims_num; ++j )
+            dyn_dims_[j] = 0;
     }
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-    template<class... Args,
-             class = typename std::enable_if<sizeof...(Args)==dynamic_dims_num>::type, 
-             class = typename std::enable_if<detail::check_all_are_true< std::is_integral<Args>::value... >::value>::type>
-    void set_dyn_indexes0(Args ...args)
+    template <
+        class... Args, class = typename std::enable_if<sizeof...( Args ) == dynamic_dims_num>::type,
+        class = typename std::enable_if<detail::check_all_are_true<std::is_integral<Args>::value...>::value>::type>
+    void set_dyn_indexes0( Args... args )
     {
-        dyn_indexes0_ = vec<Ord,dynamic_dims_num>{args...};
+        dyn_indexes0_ = vec<Ord, dynamic_dims_num>{ args... };
     }
-    template<class DynIndexes0Vec, 
-             class = typename std::enable_if<detail::has_subscript_operator<DynIndexes0Vec,ordinal_type>::value>::type>
-    void set_dyn_indexes0(const DynIndexes0Vec &dyn_indexes0)
+    template <
+        class DynIndexes0Vec,
+        class = typename std::enable_if<detail::has_subscript_operator<DynIndexes0Vec, ordinal_type>::value>::type>
+    void set_dyn_indexes0( const DynIndexes0Vec &dyn_indexes0 )
     {
-        dyn_indexes0_ = vec<Ord,dynamic_dims_num>(dyn_indexes0);
+        dyn_indexes0_ = vec<Ord, dynamic_dims_num>( dyn_indexes0 );
     }
     //TODO not sure about this device tag though
     __DEVICE_TAG__ void set_zero_dyn_indexes0()
     {
-        #pragma unroll
-        for (Ord j = 0;j < dynamic_dims_num;++j) dyn_indexes0_[j] = 0;
+#    pragma unroll
+        for ( Ord j = 0; j < dynamic_dims_num; ++j )
+            dyn_indexes0_[j] = 0;
     }
 #endif
-    void copy_dyn_shape(const arranger_base &a)
+    void copy_dyn_shape( const arranger_base &a )
     {
         dyn_dims_ = a.dyn_dims_;
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
@@ -97,21 +101,24 @@ protected:
     }
 
 public:
-    template<Ord Ind>
-    __DEVICE_TAG__ Ord get_dim()const
+    template <Ord Ind>
+    __DEVICE_TAG__ Ord get_dim() const
     {
-        return detail::dim_getter_<Ord,Ind,detail::template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::template get<dynamic_dims_num>(dyn_dims_);
+        return detail::dim_getter_<Ord, Ind, detail::template_indexer<Ord, Ind, Dims...>::value != dyn_dim, Dims...>::
+            template get<dynamic_dims_num>( dyn_dims_ );
     }
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-    template<Ord Ind>
-    __DEVICE_TAG__ Ord get_index0()const
+    template <Ord Ind>
+    __DEVICE_TAG__ Ord get_index0() const
     {
-        return detail::index0_getter_<Ord,Ind,detail::template_indexer<Ord,Ind,Dims...>::value != dyn_dim,Dims...>::template get<dynamic_dims_num>(dyn_indexes0_);
+        return detail::index0_getter_<
+            Ord, Ind, detail::template_indexer<Ord, Ind, Dims...>::value != dyn_dim,
+            Dims...>::template get<dynamic_dims_num>( dyn_indexes0_ );
     }
 #endif
-    Ord                total_size()const
+    Ord total_size() const
     {
-        return detail::size_calculator<Ord,Dims...>::template get<dynamic_dims_num>(dyn_dims_);
+        return detail::size_calculator<Ord, Dims...>::template get<dynamic_dims_num>( dyn_dims_ );
     }
 };
 

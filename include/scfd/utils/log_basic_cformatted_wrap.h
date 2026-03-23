@@ -30,11 +30,11 @@ namespace utils
 {
 
 /// LogBasic concept see in LOG_CONCEPTS.txt
-template<class LogBasic>
+template <class LogBasic>
 class log_basic_cformatted_wrap : public log_cformatted<log_basic_wrap<LogBasic>>
 {
 public:
-    log_basic_cformatted_wrap(LogBasic *log_basic = NULL) : log_cformatted<log_basic_wrap<LogBasic>>(log_basic)
+    log_basic_cformatted_wrap( LogBasic *log_basic = NULL ) : log_cformatted<log_basic_wrap<LogBasic>>( log_basic )
     {
     }
 };

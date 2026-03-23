@@ -13,7 +13,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 
 #ifndef __SCFD_BACKEND_HIP_H__
 #define __SCFD_BACKEND_HIP_H__
@@ -30,12 +30,12 @@ namespace backend
 {
 struct hip
 {
-    using memory_type       = scfd::memory::hip_device;
+    using memory_type = scfd::memory::hip_device;
     template <class Ordinal = int>
-    using for_each_type     = scfd::for_each::hip<Ordinal>;
+    using for_each_type = scfd::for_each::hip<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type  = scfd::for_each::hip_nd<Dim, Ordinal>;
-    using reduce_type       = scfd::thrust_reduce<>;
+    using for_each_nd_type = scfd::for_each::hip_nd<Dim, Ordinal>;
+    using reduce_type      = scfd::thrust_reduce<>;
 };
 }
 }

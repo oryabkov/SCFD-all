@@ -25,16 +25,24 @@ namespace detail
 {
 
 template <class Ord, Ord... I>
-class index_sequence {};
+class index_sequence
+{
+};
 
-template <class Ord, Ord N, bool End, Ord ...I>
-struct make_index_sequence_ : make_index_sequence_<Ord,N-1,N-1==0,N-1,I...> {};
+template <class Ord, Ord N, bool End, Ord... I>
+struct make_index_sequence_ : make_index_sequence_<Ord, N - 1, N - 1 == 0, N - 1, I...>
+{
+};
 
-template <class Ord, Ord N, Ord ...I>
-struct make_index_sequence_<Ord,N,true,I...> : index_sequence<Ord,I...> {};
+template <class Ord, Ord N, Ord... I>
+struct make_index_sequence_<Ord, N, true, I...> : index_sequence<Ord, I...>
+{
+};
 
-template <class Ord, Ord N, Ord ...I>
-struct make_index_sequence : make_index_sequence_<Ord,N,N==0,I...> {};
+template <class Ord, Ord N, Ord... I>
+struct make_index_sequence : make_index_sequence_<Ord, N, N == 0, I...>
+{
+};
 
 }
 }

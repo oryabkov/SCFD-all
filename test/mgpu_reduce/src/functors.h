@@ -29,7 +29,6 @@ namespace kernel
 {
 
 
-
 // template<class Ord, class T>
 // __global__ void fill_values_ker(Ord N, Ord shift, T* array)
 // {
@@ -38,48 +37,47 @@ namespace kernel
 //     array[i] = static_cast<T>(shift);
 // }
 
-template<class Ord, class T, int Dim, class Array>
+template <class Ord, class T, int Dim, class Array>
 struct fill_values
 {
-    fill_values(Ord shift, Array array):
-    array_(array),
-    shift_(shift)
-    {}
-    Array array_;
-    Ord shift_;
-
-    __DEVICE_TAG__ void operator()(const scfd::static_vec::vec<Ord, Dim> &idx)
+    fill_values( Ord shift, Array array ) : array_( array ), shift_( shift )
     {
-        array_(idx) = static_cast<T>(shift_);
+    }
+    Array array_;
+    Ord   shift_;
+
+    __DEVICE_TAG__ void operator()( const scfd::static_vec::vec<Ord, Dim> &idx )
+    {
+        array_( idx ) = static_cast<T>( shift_ );
     }
 };
 
 
-template<class Ord, int Dim, class Array>
+template <class Ord, int Dim, class Array>
 struct make_zero
 {
-    make_zero(Array& output):
-    output_(output)
-    {}
-    Array output_;
-    __DEVICE_TAG__ void operator()(const scfd::static_vec::vec<Ord, Dim> &idx)
+    make_zero( Array &output ) : output_( output )
     {
-        output_(idx) = 0;
+    }
+    Array               output_;
+    __DEVICE_TAG__ void operator()( const scfd::static_vec::vec<Ord, Dim> &idx )
+    {
+        output_( idx ) = 0;
     }
 };
 }
 
 
-template<class ForEach, class Ord, class T, int Dim, class Array>    
-void fill_values( const ForEach &for_each, const scfd::static_vec::rect<Ord,Dim> &rect, Ord shift, Array array )
-{   
-    for_each( kernel::fill_values<Ord, T, Dim, Array>(shift, array), rect);
+template <class ForEach, class Ord, class T, int Dim, class Array>
+void fill_values( const ForEach &for_each, const scfd::static_vec::rect<Ord, Dim> &rect, Ord shift, Array array )
+{
+    for_each( kernel::fill_values<Ord, T, Dim, Array>( shift, array ), rect );
 }
 
 
-// template<class Ord, class T, int Dim, class Array>    
+// template<class Ord, class T, int Dim, class Array>
 // void fill_values_ker(const scfd::static_vec::rect<Ord,Dim> &rect, Ord shift, Array array )
-// {   
+// {
 //     Ord N = rect.calc_area();
 //     Ord BLOCKSIZE = 256;
 //     dim3 dim_block(BLOCKSIZE);
@@ -89,12 +87,11 @@ void fill_values( const ForEach &for_each, const scfd::static_vec::rect<Ord,Dim>
 //     kernel::fill_values_ker<Ord, T><<<dim_grid, dim_block>>>(N, shift, array.raw_ptr() );
 // }
 
-template<class ForEach, class Ord, int Dim, class Array>    
-void make_zero( const ForEach &for_each, const scfd::static_vec::rect<Ord,Dim> &rect, Array output )
-{   
-    for_each( kernel::make_zero<Ord, Dim, Array>(output), rect);
+template <class ForEach, class Ord, int Dim, class Array>
+void make_zero( const ForEach &for_each, const scfd::static_vec::rect<Ord, Dim> &rect, Array output )
+{
+    for_each( kernel::make_zero<Ord, Dim, Array>( output ), rect );
 }
-
 
 
 }

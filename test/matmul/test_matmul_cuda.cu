@@ -35,55 +35,55 @@ constexpr std::size_t K  = N_NUM; // matrix size K x K
 constexpr std::size_t K2 = K * K;
 
 using timer_event_device_t = scfd::utils::cuda_timer_event;
-using timer_event_host_t = scfd::utils::system_timer_event;
+using timer_event_host_t   = scfd::utils::system_timer_event;
 
 using for_each_device_t = scfd::for_each::cuda<>;
-using mem_device_t = scfd::memory::cuda_device;
-using for_each_omp_t = scfd::for_each::openmp<>;
-using mem_host_t = scfd::memory::host;
+using mem_device_t      = scfd::memory::cuda_device;
+using for_each_omp_t    = scfd::for_each::openmp<>;
+using mem_host_t        = scfd::memory::host;
 
 
 using T = REAL;
-template<scfd::arrays::ordinal_type... Dims>
+template <scfd::arrays::ordinal_type... Dims>
 using gpu_arranger_t = scfd::arrays::first_index_fast_arranger<Dims...>;
-template<scfd::arrays::ordinal_type... Dims>
+template <scfd::arrays::ordinal_type... Dims>
 using cpu_arranger_t = scfd::arrays::last_index_fast_arranger<Dims...>;
 
-using array_device_classic_t = scfd::arrays::tensor2_array<T, mem_device_t, K, K>;
+using array_device_classic_t      = scfd::arrays::tensor2_array<T, mem_device_t, K, K>;
 using array_device_classic_view_t = array_device_classic_t::view_type;
 
-using array_device_like_host_t = scfd::arrays::tensor2_array<T, mem_device_t, K, K, cpu_arranger_t>;
+using array_device_like_host_t      = scfd::arrays::tensor2_array<T, mem_device_t, K, K, cpu_arranger_t>;
 using array_device_like_host_view_t = array_device_like_host_t::view_type;
 
 //using array_device_t = array_device_like_host_t;
-using array_device_t = array_device_classic_t;
+using array_device_t      = array_device_classic_t;
 using array_device_view_t = array_device_t::view_type;
 
-using array_host_t = scfd::arrays::tensor2_array<T, mem_host_t, K, K>;
+using array_host_t      = scfd::arrays::tensor2_array<T, mem_host_t, K, K>;
 using array_host_view_t = array_host_t::view_type;
 
 
 const int block_size = 128;
 
-#define IC(idx, i, j) (idx)*(K2)+(i)*(K)+(j)
-#define IG(idx, i, j) (idx)+(N)*((K)*(j)+(i))
+#define IC( idx, i, j ) ( idx ) * ( K2 ) + ( i ) * ( K ) + ( j )
+#define IG( idx, i, j ) ( idx ) + ( N ) * ( ( K ) * ( j ) + ( i ) )
 
 #include "all_kernels.h"
 
-int main(int argc, char const *argv[])
+int main( int argc, char const *argv[] )
 {
 
-    #define __COMMON_PARTS_DEVICE_INIT__ scfd::utils::init_cuda_persistent();
-    #define __COMMON_PARTS_SAFE_CALL__  CUDA_SAFE_CALL
-    #define __COMMON_PARTS_DEVICE_MALLOC__ cudaMalloc
-    #define __COMMON_PARTS_DEVICE_MEMCPY__ cudaMemcpy
-    #define __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ cudaMemcpyHostToDevice
-    #define __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ cudaMemcpyDeviceToHost
-    #define __COMMON_PARTS_DEVICE_SYNCRONIZE__ cudaDeviceSynchronize
-    #define __COMMON_PARTS_DEVICE_FREE__ cudaFree
-    #define __COMMON_PARTS_MEM_GET_INFO__ cudaMemGetInfo
+#define __COMMON_PARTS_DEVICE_INIT__ scfd::utils::init_cuda_persistent();
+#define __COMMON_PARTS_SAFE_CALL__ CUDA_SAFE_CALL
+#define __COMMON_PARTS_DEVICE_MALLOC__ cudaMalloc
+#define __COMMON_PARTS_DEVICE_MEMCPY__ cudaMemcpy
+#define __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ cudaMemcpyHostToDevice
+#define __COMMON_PARTS_DEVICE_MEMCPY_DEVICE_TO_HOST__ cudaMemcpyDeviceToHost
+#define __COMMON_PARTS_DEVICE_SYNCRONIZE__ cudaDeviceSynchronize
+#define __COMMON_PARTS_DEVICE_FREE__ cudaFree
+#define __COMMON_PARTS_MEM_GET_INFO__ cudaMemGetInfo
 
-    #include "common_parts.h"
+#include "common_parts.h"
 
     //return 0;
 }

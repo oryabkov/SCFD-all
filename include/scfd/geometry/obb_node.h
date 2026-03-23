@@ -13,19 +13,19 @@
 
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 #ifndef __SCFD_GEOMETRY_OBB_NODE_H_
 #define __SCFD_GEOMETRY_OBB_NODE_H_
 
 #include <scfd/utils/device_tag.h>
 #include "obb.h"
 
-/// TODO 
+/// TODO
 /// 1) delete right
-/// 2) remake all this gProximity nonsence about 
+/// 2) remake all this gProximity nonsence about
 ///    2 and 5 shift - what's it all about
 /// 3) what about ordinal type? mb, template?
-/// 4) whay get_left_child and get_tri_ind return 
+/// 4) whay get_left_child and get_tri_ind return
 ///    signed value? Is there any logic in this?
 
 namespace scfd
@@ -33,19 +33,19 @@ namespace scfd
 namespace geometry
 {
 
-template<class T>
+template <class T>
 class obb_node
 {
 public:
-    obb<T> bbox;                // bounding box for node
-    unsigned int left,          // pointers to left/right children
-                 right;
-                     
-    __DEVICE_TAG__ bool is_leaf()const
+    obb<T>       bbox; // bounding box for node
+    unsigned int left, // pointers to left/right children
+        right;
+
+    __DEVICE_TAG__ bool is_leaf() const
     {
-        return (left & 3) == 3;
+        return ( left & 3 ) == 3;
     }
-    
+
     __DEVICE_TAG__ int get_left_child() const
     {
         return left >> 5;
