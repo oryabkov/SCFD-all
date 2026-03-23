@@ -25,16 +25,15 @@ namespace scfd
 namespace detail
 {
 
-template<class T>
-__global__ void ker_r_system_rhs_vanish_defect_part(
-    int n, const bool *diag_degenerate_flags, T *r_rhs
-)
+template <class T>
+__global__ void ker_r_system_rhs_vanish_defect_part( int n, const bool *diag_degenerate_flags, T *r_rhs )
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (!(i < n)) return;
-    if (diag_degenerate_flags[i])
+    if ( !( i < n ) )
+        return;
+    if ( diag_degenerate_flags[i] )
     {
-        r_rhs[i] = T(0);
+        r_rhs[i] = T( 0 );
     }
 }
 
@@ -43,10 +42,10 @@ __global__ void ker_r_system_rhs_vanish_defect_part(
 /// diag_degenerate_flags must be results of regularize_qr_of_defect_matrix_cuda call.
 /// r_rhs is intermediate RHS of R part of QR matrix decomposition;
 /// it emerges after Q^T matrix application for the RHS of initial linear problem
-template<class T>
-void regularize_qr_r_system_rhs_of_defect_matrix_system_cuda(int sz, const bool *diag_degenerate_flags, T* r_rhs)
+template <class T>
+void regularize_qr_r_system_rhs_of_defect_matrix_system_cuda( int sz, const bool *diag_degenerate_flags, T *r_rhs )
 {
-    detail::ker_r_system_rhs_vanish_defect_part<<<(sz/256)+1,256>>>(sz, diag_degenerate_flags, r_rhs);
+    detail::ker_r_system_rhs_vanish_defect_part<<<( sz / 256 ) + 1, 256>>>( sz, diag_degenerate_flags, r_rhs );
 }
 
 } // namespace scfd

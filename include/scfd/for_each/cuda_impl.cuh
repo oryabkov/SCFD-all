@@ -25,37 +25,38 @@
 
 namespace scfd
 {
-namespace for_each 
+namespace for_each
 {
 
-template<class FUNC_T, class T>
-__global__ void ker_for_each(FUNC_T f, T i1, T i2)
+template <class FUNC_T, class T>
+__global__ void ker_for_each( FUNC_T f, T i1, T i2 )
 {
-    T i = i1 + blockIdx.x*blockDim.x + threadIdx.x;
-    if (!((i >= i1)&&(i < i2))) return;
-    f(i);
+    T i = i1 + blockIdx.x * blockDim.x + threadIdx.x;
+    if ( !( ( i >= i1 ) && ( i < i2 ) ) )
+        return;
+    f( i );
 }
 
-template<class T>
-template<class FUNC_T>
-void cuda<T>::operator()(FUNC_T f, T i1, T i2)const
+template <class T>
+template <class FUNC_T>
+void cuda<T>::operator()( FUNC_T f, T i1, T i2 ) const
 {
-    T total_sz = i2-i1;
-    ker_for_each<FUNC_T,T><<<(total_sz/block_size)+1,block_size>>>(f, i1, i2);
+    T total_sz = i2 - i1;
+    ker_for_each<FUNC_T, T><<<( total_sz / block_size ) + 1, block_size>>>( f, i1, i2 );
 }
 
-template<class T>
-template<class FUNC_T>
-void cuda<T>::operator()(FUNC_T f, T size)const
+template <class T>
+template <class FUNC_T>
+void cuda<T>::operator()( FUNC_T f, T size ) const
 {
-    this->operator()(f, 0, size);
+    this->operator()( f, 0, size );
 }
 
-template<class T>
-void cuda<T>::wait()const
+template <class T>
+void cuda<T>::wait() const
 {
     //TODO error check?
-    CUDA_SAFE_CALL( cudaStreamSynchronize(0) );
+    CUDA_SAFE_CALL( cudaStreamSynchronize( 0 ) );
 }
 
 }
