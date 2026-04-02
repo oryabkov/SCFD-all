@@ -62,6 +62,10 @@ struct scalar_traits
     {
         return std::pow( x, y );
     }
+    inline __DEVICE_TAG__ static T exp( const T &x )
+    {
+        return std::exp( x );
+    }
     inline __DEVICE_TAG__ static T iconst( const int &i )
     {
         return T( i );
@@ -136,6 +140,14 @@ struct scalar_traits<float>
         return std::pow( x, y );
 #else
         return ::powf( x, y );
+#endif
+    }
+    inline __DEVICE_TAG__ static float exp( const float &x )
+    {
+#ifndef __CUDA_ARCH__
+        return std::exp( x );
+#else
+        return ::expf( x );
 #endif
     }
     inline __DEVICE_TAG__ static float iconst( const int &i )
@@ -229,6 +241,14 @@ struct scalar_traits<double>
         return std::pow( x, y );
 #else
         return ::pow( x, y );
+#endif
+    }
+    inline __DEVICE_TAG__ static double exp( const double &x )
+    {
+#ifndef __CUDA_ARCH__
+        return std::exp( x );
+#else
+        return ::exp( x );
 #endif
     }
     inline __DEVICE_TAG__ static double iconst( const int &i )
