@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <mpi.h>
 
 #define __STR_HELPER( x ) #x
@@ -207,6 +208,129 @@ void all_gatherv( const T *sendbuf, int sendcount, T *recvbuf, const int *recvco
     ) );
 }
 
+template <class T>
+void gatherv(
+    const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs, int root, MPI_Comm comm
+)
+{
+    SCFD_MPI_SAFE_CALL( MPI_Gatherv(
+        static_cast<const void *>( sendbuf ), sendcount, mpi_data_type<T>::mpi_type(), static_cast<void *>( recvbuf ),
+        recvcounts, displs, mpi_data_type<T>::mpi_type(), root, comm
+    ) );
+}
+
+inline void alltoallv(
+    const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+    const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm
+)
+{
+    SCFD_MPI_SAFE_CALL( MPI_Alltoallv(
+        sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm
+    ) );
+}
+
+template <class T>
+void alltoallv(
+    const T *sendbuf, const int *sendcounts, const int *sdispls, T *recvbuf, const int *recvcounts,
+    const int *rdispls, MPI_Comm comm
+)
+{
+    alltoallv(
+        static_cast<const void *>( sendbuf ), sendcounts, sdispls, mpi_data_type<T>::mpi_type(),
+        static_cast<void *>( recvbuf ), recvcounts, rdispls, mpi_data_type<T>::mpi_type(), comm
+    );
+}
+
+inline void alltoallw(
+    const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf,
+    const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPI_Comm comm
+)
+{
+    SCFD_MPI_SAFE_CALL( MPI_Alltoallw(
+        sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm
+    ) );
+}
+
+inline void isend(
+    const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request
+)
+{
+    SCFD_MPI_SAFE_CALL( MPI_Isend( buf, count, datatype, dest, tag, comm, request ) );
+}
+
+template <class T>
+void isend( const T *buf, int count, int dest, int tag, MPI_Comm comm, MPI_Request *request )
+{
+    isend( static_cast<const void *>( buf ), count, mpi_data_type<T>::mpi_type(), dest, tag, comm, request );
+}
+
+inline void irecv( void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype, source, tag, comm, request ) );
+}
+
+template <class T>
+void irecv( T *buf, int count, int source, int tag, MPI_Comm comm, MPI_Request *request )
+{
+    irecv( static_cast<void *>( buf ), count, mpi_data_type<T>::mpi_type(), source, tag, comm, request );
+}
+
+inline void waitall( int count, MPI_Request *requests, MPI_Status *statuses )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Waitall( count, requests, statuses ) );
+}
+
+inline void waitall( int count, MPI_Request *requests )
+{
+    waitall( count, requests, MPI_STATUSES_IGNORE );
+}
+
+inline int waitany( int count, MPI_Request *requests, MPI_Status *status )
+{
+    int index = MPI_UNDEFINED;
+    SCFD_MPI_SAFE_CALL( MPI_Waitany( count, requests, &index, status ) );
+    return index;
+}
+
+inline int waitany( int count, MPI_Request *requests )
+{
+    return waitany( count, requests, MPI_STATUS_IGNORE );
+}
+
+inline MPI_Datatype type_vector( int count, int blocklength, int stride, MPI_Datatype oldtype )
+{
+    MPI_Datatype newtype = MPI_DATATYPE_NULL;
+    SCFD_MPI_SAFE_CALL( MPI_Type_vector( count, blocklength, stride, oldtype, &newtype ) );
+    return newtype;
+}
+
+inline void type_commit( MPI_Datatype *datatype )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Type_commit( datatype ) );
+}
+
+inline void type_commit( MPI_Datatype &datatype )
+{
+    type_commit( &datatype );
+}
+
+inline void type_free( MPI_Datatype *datatype )
+{
+    if ( *datatype == MPI_DATATYPE_NULL )
+        return;
+    SCFD_MPI_SAFE_CALL( MPI_Type_free( datatype ) );
+}
+
+inline void type_free( MPI_Datatype &datatype )
+{
+    type_free( &datatype );
+}
+
+inline double wtime()
+{
+    return MPI_Wtime();
+}
+
 
 template <class T>
 void all_reduce( T *loc_data, T *res_data, int count, MPI_Op op, MPI_Comm communicator )
@@ -312,6 +436,97 @@ struct mpi_comm_info
     void all_gatherv( const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs ) const
     {
         detail::all_gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, comm );
+    }
+    template <class T>
+    void gatherv(
+        const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs, int root
+    ) const
+    {
+        detail::gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, root, comm );
+    }
+
+    void alltoallv(
+        const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+        const int *recvcounts, const int *rdispls, MPI_Datatype recvtype
+    ) const
+    {
+        detail::alltoallv( sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm );
+    }
+    template <class T>
+    void alltoallv(
+        const T *sendbuf, const int *sendcounts, const int *sdispls, T *recvbuf, const int *recvcounts,
+        const int *rdispls
+    ) const
+    {
+        detail::alltoallv( sendbuf, sendcounts, sdispls, recvbuf, recvcounts, rdispls, comm );
+    }
+
+    void alltoallw(
+        const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf,
+        const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes
+    ) const
+    {
+        detail::alltoallw( sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm );
+    }
+
+    void isend(
+        const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Request *request
+    ) const
+    {
+        detail::isend( buf, count, datatype, dest, tag, comm, request );
+    }
+    void isend(
+        const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Request &request
+    ) const
+    {
+        isend( buf, count, datatype, dest, tag, &request );
+    }
+    template <class T>
+    void isend( const T *buf, int count, int dest, int tag, MPI_Request *request ) const
+    {
+        detail::isend( buf, count, dest, tag, comm, request );
+    }
+    template <class T>
+    void isend( const T *buf, int count, int dest, int tag, MPI_Request &request ) const
+    {
+        isend( buf, count, dest, tag, &request );
+    }
+
+    void irecv( void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Request *request ) const
+    {
+        detail::irecv( buf, count, datatype, source, tag, comm, request );
+    }
+    void irecv( void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Request &request ) const
+    {
+        irecv( buf, count, datatype, source, tag, &request );
+    }
+    template <class T>
+    void irecv( T *buf, int count, int source, int tag, MPI_Request *request ) const
+    {
+        detail::irecv( buf, count, source, tag, comm, request );
+    }
+    template <class T>
+    void irecv( T *buf, int count, int source, int tag, MPI_Request &request ) const
+    {
+        irecv( buf, count, source, tag, &request );
+    }
+
+    void waitall( int count, MPI_Request *requests, MPI_Status *statuses ) const
+    {
+        detail::waitall( count, requests, statuses );
+    }
+    void waitall( int count, MPI_Request *requests ) const
+    {
+        detail::waitall( count, requests );
+    }
+
+    int waitany( int count, MPI_Request *requests, MPI_Status *status ) const
+    {
+        return detail::waitany( count, requests, status );
+    }
+    int waitany( int count, MPI_Request *requests ) const
+    {
+        return detail::waitany( count, requests );
     }
 
     template <class T>

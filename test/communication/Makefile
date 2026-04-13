@@ -9,10 +9,14 @@ endif
 SCFD_INCLUDE=../../include
 NVCC = $(CUDA_ROOT_PATH)/bin/nvcc
 MPICC = $(MPI_ROOT_PATH)/bin/mpic++
+MPIRUN = $(MPI_ROOT_PATH)/bin/mpiexec
 LIBPATH = -ldl -L$(CUDA_ROOT_PATH)/lib64 -L${MPI_ROOT_PATH}/lib
 CUDALIBRARIES = -lcudart
 INCLUDE_MPI = -I${MPI_ROOT_PATH}/include
 MPICOMPILER_OPENMP = -fopenmp -lpthread
+MPI_CXXFLAGS = -std=c++14
+MPI_TEST_HOST = localhost:4
+MPI_TEST_PROCS = 4
 
 test_mpi_rect_distributor.bin: test_mpi_rect_distributor.cu
 	$(NVCC) -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 test_mpi_rect_distributor.cu -c -o test_mpi_rect_distributor.o
@@ -48,3 +52,11 @@ test_mpi_comm_split.bin: test_mpi_comm_split.cpp
 	mpiexec --host localhost:8 -n 6 test_mpi_comm_split.bin		
 	mpiexec --host localhost:8 -n 7 test_mpi_comm_split.bin		
 	mpiexec --host localhost:8 -n 8 test_mpi_comm_split.bin
+
+test_mpi_comm_collectives.bin: test_mpi_comm_collectives.cpp
+	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_collectives.cpp -o test_mpi_comm_collectives.bin
+	$(MPIRUN) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_collectives.bin
+
+test_mpi_comm_p2p.bin: test_mpi_comm_p2p.cpp
+	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_p2p.cpp -o test_mpi_comm_p2p.bin
+	$(MPIRUN) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_p2p.bin

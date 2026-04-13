@@ -262,12 +262,10 @@ struct mpi_rect_distributor
             {
                 auto &bucket = pkg.buckets[bucket_i];
                 bucket.sync_from_array( for_each, array );
-                auto mpi_res = MPI_Isend(
-                    bucket.buf(), bucket.buf_size(), MPI_BYTE, pkg.proc_id, bucket_i, comm_info_.comm,
-                    &( isend_requests_[isend_requests_count] )
+                comm_info_.isend(
+                    bucket.buf(), bucket.buf_size(), MPI_BYTE, pkg.proc_id, bucket_i,
+                    isend_requests_[isend_requests_count]
                 );
-                if ( mpi_res != MPI_SUCCESS )
-                    throw std::runtime_error( "mpi_rect_distributor::sync:MPI_Isend failed" );
                 isend_requests_count++;
             }
         }
@@ -280,12 +278,10 @@ struct mpi_rect_distributor
             {
                 auto &bucket = pkg.buckets[bucket_i];
                 //TODO check if bucket_i is actually message tag
-                auto mpi_res = MPI_Irecv(
-                    bucket.buf(), bucket.buf_size(), MPI_BYTE, pkg.proc_id, bucket_i, comm_info_.comm,
-                    &( irecv_requests_[irecv_requests_count] )
+                comm_info_.irecv(
+                    bucket.buf(), bucket.buf_size(), MPI_BYTE, pkg.proc_id, bucket_i,
+                    irecv_requests_[irecv_requests_count]
                 );
-                if ( mpi_res != MPI_SUCCESS )
-                    throw std::runtime_error( "mpi_rect_distributor::sync:MPI_Irecv failed" );
                 irecv_requests_count++;
             }
         }
@@ -296,9 +292,7 @@ struct mpi_rect_distributor
             //std::cout << "ireq = " << ireq << std::endl;
             int        ireq_idx;
             MPI_Status status;
-            auto       mpi_res = MPI_Waitany( irecv_requests_count, irecv_requests_.data(), &ireq_idx, &status );
-            if ( mpi_res != MPI_SUCCESS )
-                throw std::runtime_error( "mpi_rect_distributor::sync:MPI_Waitany failed" );
+            ireq_idx = comm_info_.waitany( irecv_requests_count, irecv_requests_.data(), &status );
             //std::cout << "after wait any ireq = " << ireq << " status.MPI_SOURCE = " << status.MPI_SOURCE << " status.MPI_TAG = " << status.MPI_TAG << std::endl;
             //std::cout << "packets_in_by_rank_[status.MPI_SOURCE] = " << packets_in_by_rank_[status.MPI_SOURCE] << std::endl;
             auto &pkg = *( packets_in_by_rank_[status.MPI_SOURCE] );
@@ -311,8 +305,7 @@ struct mpi_rect_distributor
         }
         //wait all isend
         //std::cout << "wait all isend" << std::endl;
-        if ( MPI_Waitall( isend_requests_count, isend_requests_.data(), MPI_STATUS_IGNORE ) != MPI_SUCCESS )
-            throw std::runtime_error( "mpi_rect_distributor::sync:MPI_Waitall failed" );
+        comm_info_.waitall( isend_requests_count, isend_requests_.data() );
     }
 
 private:

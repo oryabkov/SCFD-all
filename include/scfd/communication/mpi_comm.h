@@ -120,7 +120,7 @@ mpi_comm mpi_comm_info::split( int color ) const
 
 mpi_comm mpi_comm_info::split_type( int type ) const
 {
-    return split( type, myid );
+    return split_type( type, myid );
 }
 
 } // namespace communication
