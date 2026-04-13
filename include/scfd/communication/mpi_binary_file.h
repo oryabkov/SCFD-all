@@ -67,21 +67,40 @@ struct mpi_binary_file
     }
     void write( const T *data, int count ) const
     {
-        SCFD_MPI_SAFE_CALL( MPI_File_write( fh, data, count * sizeof( T ), MPI_BYTE, MPI_STATUS_IGNORE ) );
+        SCFD_MPI_SAFE_CALL(
+            MPI_File_write(
+                fh, data, count * sizeof( T ), detail::mpi_data_type<char>::mpi_type().native(),
+                detail::raw_status( static_cast<detail::mpi_status *>( nullptr ) )
+            )
+        );
     }
     void write_at( MPI_Offset offset, const T *data, int count ) const
     {
         SCFD_MPI_SAFE_CALL(
-            MPI_File_write_at( fh, offset * sizeof( T ), data, count * sizeof( T ), MPI_BYTE, MPI_STATUS_IGNORE )
+            MPI_File_write_at(
+                fh, offset * sizeof( T ), data, count * sizeof( T ),
+                detail::mpi_data_type<char>::mpi_type().native(),
+                detail::raw_status( static_cast<detail::mpi_status *>( nullptr ) )
+            )
         );
     }
     void read( int count, T *data ) const
     {
-        SCFD_MPI_SAFE_CALL( MPI_File_read( fh, data, count * sizeof( T ), MPI_BYTE, MPI_STATUS_IGNORE ) );
+        SCFD_MPI_SAFE_CALL(
+            MPI_File_read(
+                fh, data, count * sizeof( T ), detail::mpi_data_type<char>::mpi_type().native(),
+                detail::raw_status( static_cast<detail::mpi_status *>( nullptr ) )
+            )
+        );
     }
     void read_at( MPI_Offset offset, int count, T *data ) const //WARNING! for some reason it doesn't work as expexted!
     {
-        SCFD_MPI_SAFE_CALL( MPI_File_read_at( fh, offset * sizeof( T ), data, count, MPI_BYTE, MPI_STATUS_IGNORE ) );
+        SCFD_MPI_SAFE_CALL(
+            MPI_File_read_at(
+                fh, offset * sizeof( T ), data, count, detail::mpi_data_type<char>::mpi_type().native(),
+                detail::raw_status( static_cast<detail::mpi_status *>( nullptr ) )
+            )
+        );
     }
 
     MPI_File &handle()

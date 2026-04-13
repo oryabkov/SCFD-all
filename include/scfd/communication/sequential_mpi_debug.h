@@ -49,12 +49,17 @@ public:
         mpi_comm_.barrier();
         if ( mpi_comm_.myid != 0 )
         {
-            MPI_Status  status;
-            MPI_Request request;
+            detail::mpi_status status;
+            detail::mpi_request request;
             int         source = mpi_comm_.myid - 1; //cascading recieve from
 
-            SCFD_MPI_SAFE_CALL( MPI_Irecv( &proc_running, 1, MPI_INT, source, tag, mpi_comm_.comm, &request ) );
-            SCFD_MPI_SAFE_CALL( MPI_Wait( &request, &status ) );
+            SCFD_MPI_SAFE_CALL(
+                MPI_Irecv(
+                    &proc_running, 1, detail::mpi_data_type<int>::mpi_type().native(), source, tag, mpi_comm_.comm,
+                    request.native_ptr()
+                )
+            );
+            detail::waitall( 1, &request, &status );
         }
     }
     //there should be no barriers between start and stop!
@@ -64,7 +69,11 @@ public:
         proc_running++;
         if ( mpi_comm_.myid < mpi_comm_.num_procs - 1 )
         {
-            SCFD_MPI_SAFE_CALL( MPI_Send( &proc_running, 1, MPI_INT, destination, tag, mpi_comm_.comm ) );
+            SCFD_MPI_SAFE_CALL(
+                MPI_Send(
+                    &proc_running, 1, detail::mpi_data_type<int>::mpi_type().native(), destination, tag, mpi_comm_.comm
+                )
+            );
         }
         mpi_comm_.barrier();
     }

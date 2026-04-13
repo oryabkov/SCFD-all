@@ -23,7 +23,7 @@ int main( int argc, char *argv[] )
 {
     scfd::communication::mpi_wrap             mpi_wrap( argc, argv );
     auto                                      mpi_comm = mpi_wrap.comm_world();
-    scfd::communication::sequential_mpi_debug seq_mpi( mpi_comm );
+    scfd::communication::sequential_mpi_debug<decltype( mpi_comm )> seq_mpi( mpi_comm );
 
     //this marks the section which will be executed in sequential order, from 0 to mpi_comm.num_procs
     if ( mpi_comm.myid == 0 )

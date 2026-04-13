@@ -40,6 +40,8 @@ int main( int argc, char *argv[] )
 {
     using mpi_wrap_t = scfd::communication::mpi_wrap;
     using log_t      = scfd::utils::log_mpi;
+    using mpi_request_t = scfd::communication::detail::mpi_request;
+    using mpi_status_t  = scfd::communication::detail::mpi_status;
 
     mpi_wrap_t mpi( argc, argv );
     auto       comm_info = mpi.comm_world();
@@ -74,26 +76,28 @@ int main( int argc, char *argv[] )
         }
     }
 
-    std::vector<MPI_Request> recv_requests( 2, MPI_REQUEST_NULL );
-    std::vector<MPI_Request> send_requests( 2, MPI_REQUEST_NULL );
+    std::vector<mpi_request_t> recv_requests( 2, mpi_request_t() );
+    std::vector<mpi_request_t> send_requests( 2, mpi_request_t() );
 
     comm_info.irecv( recv_tensor.raw_ptr(), payload_size, left, 100, recv_requests[0] );
     comm_info.irecv(
-        static_cast<void *>( recv_tensor.raw_ptr() + payload_size ), payload_size * static_cast<int>( sizeof( value_t ) ),
-        MPI_BYTE, left, 101, recv_requests[1]
+        static_cast<void *>( recv_tensor.raw_ptr() + payload_size ),
+        payload_size * static_cast<int>( sizeof( value_t ) ),
+        scfd::communication::detail::mpi_data_type<char>::mpi_type(), left, 101, recv_requests[1]
     );
 
     comm_info.isend( send_tensor.raw_ptr(), payload_size, right, 100, send_requests[0] );
     comm_info.isend(
         static_cast<const void *>( send_tensor.raw_ptr() + payload_size ),
-        payload_size * static_cast<int>( sizeof( value_t ) ), MPI_BYTE, right, 101, send_requests[1]
+        payload_size * static_cast<int>( sizeof( value_t ) ),
+        scfd::communication::detail::mpi_data_type<char>::mpi_type(), right, 101, send_requests[1]
     );
 
     std::array<int, 2> recv_seen{ 0, 0 };
     for ( int iter = 0; iter < 2; ++iter )
     {
-        MPI_Status status;
-        const int  idx = comm_info.waitany( 2, recv_requests.data(), &status );
+        mpi_status_t status;
+        const int    idx = comm_info.waitany( 2, recv_requests.data(), &status );
         if ( ( idx < 0 ) || ( idx > 1 ) )
         {
             fail( "MPI_Waitany returned invalid index %d on rank %d", idx, myid );
@@ -104,20 +108,20 @@ int main( int argc, char *argv[] )
             fail( "MPI_Waitany returned the same completed request %d twice on rank %d", idx, myid );
         }
         recv_seen[idx] = 1;
-        if ( status.MPI_SOURCE != left )
+        if ( status.source() != left )
         {
             fail(
-                "MPI_Waitany returned unexpected source on rank %d: got %d, expected %d", myid, status.MPI_SOURCE,
+                "MPI_Waitany returned unexpected source on rank %d: got %d, expected %d", myid, status.source(),
                 left
             );
         }
-        if ( status.MPI_TAG != 100 + idx )
+        if ( status.tag() != 100 + idx )
         {
-            fail( "MPI_Waitany returned unexpected tag on rank %d: got %d, expected %d", myid, status.MPI_TAG, 100 + idx );
+            fail( "MPI_Waitany returned unexpected tag on rank %d: got %d, expected %d", myid, status.tag(), 100 + idx );
         }
     }
 
-    std::vector<MPI_Status> send_statuses( 2 );
+    std::vector<mpi_status_t> send_statuses( 2 );
     comm_info.waitall( 2, send_requests.data(), send_statuses.data() );
 
     for ( int message_id = 0; message_id < 2; ++message_id )
@@ -146,8 +150,8 @@ int main( int argc, char *argv[] )
 
     std::array<value_t, 2> send_small{ myid, myid + 100 };
     std::array<value_t, 2> recv_small{ -1, -1 };
-    recv_requests.assign( 2, MPI_REQUEST_NULL );
-    send_requests.assign( 2, MPI_REQUEST_NULL );
+    recv_requests.assign( 2, mpi_request_t() );
+    send_requests.assign( 2, mpi_request_t() );
 
     comm_info.irecv( &recv_small[0], 1, left, 200, recv_requests[0] );
     comm_info.irecv( &recv_small[1], 1, left, 201, recv_requests[1] );

@@ -19,6 +19,7 @@
 #include <string>
 #include <iostream>
 #include <cmath>
+#include <limits>
 #include <scfd/static_vec/vec.h>
 #include <scfd/static_vec/rect.h>
 #include <scfd/communication/mpi_wrap.h>

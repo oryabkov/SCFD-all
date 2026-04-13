@@ -263,7 +263,7 @@ struct mpi_rect_distributor
                 auto &bucket = pkg.buckets[bucket_i];
                 bucket.sync_from_array( for_each, array );
                 comm_info_.isend(
-                    bucket.buf(), bucket.buf_size(), MPI_BYTE, pkg.proc_id, bucket_i,
+                    bucket.buf(), bucket.buf_size(), detail::mpi_data_type<char>::mpi_type(), pkg.proc_id, bucket_i,
                     isend_requests_[isend_requests_count]
                 );
                 isend_requests_count++;
@@ -279,7 +279,7 @@ struct mpi_rect_distributor
                 auto &bucket = pkg.buckets[bucket_i];
                 //TODO check if bucket_i is actually message tag
                 comm_info_.irecv(
-                    bucket.buf(), bucket.buf_size(), MPI_BYTE, pkg.proc_id, bucket_i,
+                    bucket.buf(), bucket.buf_size(), detail::mpi_data_type<char>::mpi_type(), pkg.proc_id, bucket_i,
                     irecv_requests_[irecv_requests_count]
                 );
                 irecv_requests_count++;
@@ -290,14 +290,14 @@ struct mpi_rect_distributor
         for ( Ord ireq = 0; ireq < irecv_requests_count; ++ireq )
         {
             //std::cout << "ireq = " << ireq << std::endl;
-            int        ireq_idx;
-            MPI_Status status;
+            int                ireq_idx;
+            detail::mpi_status status;
             ireq_idx = comm_info_.waitany( irecv_requests_count, irecv_requests_.data(), &status );
             //std::cout << "after wait any ireq = " << ireq << " status.MPI_SOURCE = " << status.MPI_SOURCE << " status.MPI_TAG = " << status.MPI_TAG << std::endl;
             //std::cout << "packets_in_by_rank_[status.MPI_SOURCE] = " << packets_in_by_rank_[status.MPI_SOURCE] << std::endl;
-            auto &pkg = *( packets_in_by_rank_[status.MPI_SOURCE] );
+            auto &pkg = *( packets_in_by_rank_[status.source()] );
             //std::cout << "pkg.buckets.size() = " << pkg.buckets.size() << std::endl;
-            auto &bucket = pkg.buckets[status.MPI_TAG];
+            auto &bucket = pkg.buckets[status.tag()];
             //TODO check for an error MPI_ERROR?
             //std::cout << "before sync_to_array" << std::endl;
             bucket.sync_to_array( for_each, array );
@@ -395,7 +395,7 @@ private:
     std::vector<packet> packets_in_, packets_out_;
     //TODO use indexes here instead of pointers
     std::vector<packet *>            packets_in_by_rank_;
-    mutable std::vector<MPI_Request> isend_requests_, irecv_requests_;
+    mutable std::vector<detail::mpi_request> isend_requests_, irecv_requests_;
 
     void init_packet(
         Ord tensor_max_dim, const rect_partitioner_t &partitioner, const bool_vec_t &periodic_flags,
