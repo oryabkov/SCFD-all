@@ -17,7 +17,9 @@
 #ifndef __SCFD_UTILS_CUDA_STREAM_WRAP_H__
 #define __SCFD_UTILS_CUDA_STREAM_WRAP_H__
 
+#include <cassert>
 #include <cuda_runtime.h>
+#include <scfd/utils/cuda_safe_call.h>
 
 namespace scfd
 {
@@ -42,8 +44,8 @@ public:
         s.is_inited_ = false;
     }
 
-    cuda_stream_wrap &opeartor = ( const cuda_stream_wrap &s ) = delete;
-    cuda_stream_wrap &opeartor                                 = ( cuda_stream_wrap && s )
+    cuda_stream_wrap &operator=( const cuda_stream_wrap &s ) = delete;
+    cuda_stream_wrap &operator=( cuda_stream_wrap &&s )
     {
         free();
 
@@ -74,7 +76,7 @@ public:
     void init()
     {
         assert( !is_inited_ );
-        CUDA_SAFE_CALL( cudaStreamCreate( stream_ ) );
+        CUDA_SAFE_CALL( cudaStreamCreate( &stream_ ) );
         is_inited_ = true;
     }
     /// NOTE exception here means in fact logic error
