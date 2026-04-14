@@ -102,24 +102,7 @@ protected:
 namespace detail
 {
 
-struct mpi_request
-{
-    mpi_request( MPI_Request request_ = MPI_REQUEST_NULL ) : request( request_ )
-    {
-    }
-
-    MPI_Request *native_ptr()
-    {
-        return &request;
-    }
-
-    const MPI_Request *native_ptr() const
-    {
-        return &request;
-    }
-
-    MPI_Request request;
-};
+using mpi_request = MPI_Request;
 
 struct mpi_status
 {
@@ -386,7 +369,7 @@ inline void isend(
     const void *buf, int count, const mpi_data_type<> &datatype, int dest, int tag, MPI_Comm comm, mpi_request *request
 )
 {
-    SCFD_MPI_SAFE_CALL( MPI_Isend( buf, count, datatype.native(), dest, tag, comm, request->native_ptr() ) );
+    SCFD_MPI_SAFE_CALL( MPI_Isend( buf, count, datatype.native(), dest, tag, comm, request ) );
 }
 
 template <class T>
@@ -399,7 +382,7 @@ inline void irecv(
     void *buf, int count, const mpi_data_type<> &datatype, int source, int tag, MPI_Comm comm, mpi_request *request
 )
 {
-    SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype.native(), source, tag, comm, request->native_ptr() ) );
+    SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype.native(), source, tag, comm, request ) );
 }
 
 template <class T>
@@ -556,6 +539,10 @@ class mpi_comm;
 struct mpi_comm_info
 {
     using mpi_comm_type = mpi_comm;
+    using request_type  = detail::mpi_request;
+    using status_type   = detail::mpi_status;
+    template <class T = void>
+    using data_type = detail::mpi_data_type<T>;
 
     MPI_Comm comm;
     int      num_procs;
