@@ -149,7 +149,7 @@ struct rect_distributor
     typedef static_vec::rect<Ord, Dim>         ord_rect_t;
     typedef static_vec::vec<BigOrd, Dim>       big_ord_vec_t;
     typedef static_vec::rect<BigOrd, Dim>      big_ord_rect_t;
-    typedef rect_partitioner<Dim, Ord, BigOrd> rect_partitioner_t;
+    typedef rect_partitioner<Dim, Ord, BigOrd, Comm> rect_partitioner_t;
     typedef Comm                               comm_type;
     typedef typename Comm::request_type        request_type;
     typedef typename Comm::status_type         status_type;

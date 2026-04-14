@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <scfd/static_vec/vec.h>
 #include <scfd/static_vec/rect.h>
-#include "mpi_comm_info.h"
+
 
 //TODO add Comm template parameter, rename _t to _type, rename ordinal,big_ordinal with _type
 
@@ -30,7 +30,7 @@ namespace scfd
 namespace communication
 {
 
-template <int Dim, class Ord, class BigOrd>
+template <int Dim, class Ord, class BigOrd, class Comm>
 struct rect_partitioner
 {
     using ordinal        = Ord;
@@ -39,7 +39,7 @@ struct rect_partitioner
     using ord_rect_t     = static_vec::rect<Ord, Dim>;
     using big_ord_vec_t  = static_vec::vec<BigOrd, Dim>;
     using big_ord_rect_t = static_vec::rect<BigOrd, Dim>;
-    using comm_info_type = mpi_comm_info;
+    using comm_info_type = Comm;
 
     comm_info_type comm_info;
     //proc_rects is of size comm_size
@@ -78,7 +78,7 @@ struct rect_partitioner
     }*/
 
     rect_partitioner() = default;
-    rect_partitioner( const mpi_comm_info &comm_info_p, const big_ord_vec_t &dom_size_p )
+    rect_partitioner( const comm_info_type &comm_info_p, const big_ord_vec_t &dom_size_p )
         : comm_info( comm_info_p ), dom_size( dom_size_p ), proc_rects( comm_info.num_procs )
     {
         std::vector<BigOrd> lin_sizes( comm_info.num_procs, dom_size[0] / comm_info.num_procs );
