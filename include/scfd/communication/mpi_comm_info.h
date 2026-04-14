@@ -102,7 +102,24 @@ protected:
 namespace detail
 {
 
-using mpi_request = MPI_Request;
+struct mpi_request //default zero initialization for simpler constructor operations in mgpu FFT
+{
+    mpi_request( MPI_Request request_ = MPI_REQUEST_NULL ) : request( request_ )
+    {
+    }
+
+    MPI_Request *native_ptr()
+    {
+        return &request;
+    }
+
+    const MPI_Request *native_ptr() const
+    {
+        return &request;
+    }
+
+    MPI_Request request;
+};
 
 struct mpi_status
 {
@@ -369,7 +386,7 @@ inline void isend(
     const void *buf, int count, const mpi_data_type<> &datatype, int dest, int tag, MPI_Comm comm, mpi_request *request
 )
 {
-    SCFD_MPI_SAFE_CALL( MPI_Isend( buf, count, datatype.native(), dest, tag, comm, request ) );
+    SCFD_MPI_SAFE_CALL( MPI_Isend( buf, count, datatype.native(), dest, tag, comm, raw_requests( request ) ) );
 }
 
 template <class T>
@@ -382,7 +399,7 @@ inline void irecv(
     void *buf, int count, const mpi_data_type<> &datatype, int source, int tag, MPI_Comm comm, mpi_request *request
 )
 {
-    SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype.native(), source, tag, comm, request ) );
+    SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype.native(), source, tag, comm, raw_requests( request ) ) );
 }
 
 template <class T>
