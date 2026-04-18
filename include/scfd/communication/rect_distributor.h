@@ -153,8 +153,6 @@ struct rect_distributor
     typedef Comm                               comm_type;
     typedef typename Comm::request_type        request_type;
     typedef typename Comm::status_type         status_type;
-    template <class U>
-    using data_type = typename Comm::template data_type<U>;
 
     rect_distributor() = default;
     void init_for_tensors(
