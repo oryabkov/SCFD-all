@@ -264,8 +264,8 @@ struct rect_distributor
             {
                 auto &bucket = pkg.buckets[bucket_i];
                 bucket.sync_from_array( for_each, array );
-                comm_info_.isend(
-                    bucket.buf(), bucket.buf_size(), data_type<char>::mpi_type(), pkg.proc_id, bucket_i,
+                comm_info_.template isend<char>(
+                    bucket.buf(), bucket.buf_size(), pkg.proc_id, bucket_i,
                     isend_requests_[isend_requests_count]
                 );
                 isend_requests_count++;
@@ -280,8 +280,8 @@ struct rect_distributor
             {
                 auto &bucket = pkg.buckets[bucket_i];
                 //TODO check if bucket_i is actually message tag
-                comm_info_.irecv(
-                    bucket.buf(), bucket.buf_size(), data_type<char>::mpi_type(), pkg.proc_id, bucket_i,
+                comm_info_.template irecv<char>(
+                    bucket.buf(), bucket.buf_size(), pkg.proc_id, bucket_i,
                     irecv_requests_[irecv_requests_count]
                 );
                 irecv_requests_count++;
