@@ -437,6 +437,13 @@ inline mpi_data_type<> type_vector( int count, int blocklength, int stride, cons
     return newtype;
 }
 
+inline mpi_data_type<> type_contiguous( int count, const mpi_data_type<> &oldtype )
+{
+    mpi_data_type<> newtype;
+    SCFD_MPI_SAFE_CALL( MPI_Type_contiguous( count, oldtype.native(), newtype.native_ptr() ) );
+    return newtype;
+}
+
 inline void type_commit( mpi_data_type<> *datatype )
 {
     SCFD_MPI_SAFE_CALL( MPI_Type_commit( datatype->native_ptr() ) );
