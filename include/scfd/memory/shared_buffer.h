@@ -1,3 +1,6 @@
+#ifndef __SCFD_MEMORY_SHARED_BUFFER_H__
+#define __SCFD_MEMORY_SHARED_BUFFER_H__
+
 #include <stdexcept>
 
 namespace scfd
@@ -91,3 +94,5 @@ private:
 
 }
 }
+
+#endif
