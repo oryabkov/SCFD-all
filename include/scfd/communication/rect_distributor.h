@@ -425,7 +425,7 @@ private:
             {
                 stencil_order += std::abs( dir[j] );
             }
-            if ( stencil_order > stencil_max_order )
+            if ( ( stencil_order == 0 ) || ( stencil_order > stencil_max_order ) )
                 continue;
 
             big_ord_vec_t padding_size;
@@ -444,7 +444,7 @@ private:
             /// Exclude non-periodic directions from tests
             for ( int j = 0; j < Dim; ++j )
             {
-                if ( !periodic_flags[j] )
+                if ( ( !periodic_flags[j] ) || ( dir[j] == 0 ) )
                     periodic_flags_rect.i2[j] = 1;
             }
             for ( auto periodic_flags_test : periodic_flags_rect )
