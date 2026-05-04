@@ -49,10 +49,10 @@ namespace detail
 namespace kernel
 {
 
-template <int Dim, class Ord, class InputArray, class OutputArray>
+template <int Dim, class Ord, class Array>
 struct copy_array_nd_func
 {
-    SCFD_FOR_EACH_FUNC_PARAMS( copy_array_nd_func, InputArray, input, OutputArray, output )
+    SCFD_FOR_EACH_FUNC_PARAMS( copy_array_nd_func, Array, input, Array, output )
     __DEVICE_TAG__ void operator()( const static_vec::vec<Ord, Dim> &idx )
     {
         output( idx ) = input( idx );
@@ -61,22 +61,21 @@ struct copy_array_nd_func
 
 } // namespace kernel
 
-template <class ForEach, int Dim, class Ord, class InputArray, class OutputArray>
+template <class ForEach, int Dim, class Ord, class Array>
 void copy_array_nd_rect(
-    const ForEach &for_each, const InputArray &input, const static_vec::rect<Ord, Dim> &rect,
-    const OutputArray &output
+    const ForEach &for_each, const Array &input, const static_vec::rect<Ord, Dim> &rect, const Array &output
 )
 {
-    for_each( kernel::copy_array_nd_func<Dim, Ord, InputArray, OutputArray>( input, output ), rect );
+    for_each( kernel::copy_array_nd_func<Dim, Ord, Array>( input, output ), rect );
 }
 
 namespace kernel
 {
 
-template <int Dim, class Ord, class InputArray, class OutputArray>
+template <int Dim, class Ord, class Array>
 struct copy_array1_nd_func
 {
-    SCFD_FOR_EACH_FUNC_PARAMS( copy_array1_nd_func, Ord, tensor_dim, InputArray, input, OutputArray, output )
+    SCFD_FOR_EACH_FUNC_PARAMS( copy_array1_nd_func, Ord, tensor_dim, Array, input, Array, output )
     __DEVICE_TAG__ void operator()( const static_vec::vec<Ord, Dim> &idx )
     {
         for ( Ord j = 0; j < tensor_dim; ++j )
@@ -86,13 +85,13 @@ struct copy_array1_nd_func
 
 } // namespace kernel
 
-template <class ForEach, int Dim, class Ord, class InputArray, class OutputArray>
+template <class ForEach, int Dim, class Ord, class Array>
 void copy_array1_nd_rect(
-    const ForEach &for_each, Ord tensor_dim, const InputArray &input, const static_vec::rect<Ord, Dim> &rect,
-    const OutputArray &output
+    const ForEach &for_each, Ord tensor_dim, const Array &input, const static_vec::rect<Ord, Dim> &rect,
+    const Array &output
 )
 {
-    for_each( kernel::copy_array1_nd_func<Dim, Ord, InputArray, OutputArray>( tensor_dim, input, output ), rect );
+    for_each( kernel::copy_array1_nd_func<Dim, Ord, Array>( tensor_dim, input, output ), rect );
 }
 
 template <class T, arrays::ordinal_type Dim, class Memory, template <arrays::ordinal_type...> class Arranger>
@@ -140,7 +139,6 @@ struct rect_distributor
 {
     /// NOTE these types for internal usage only
     typedef arrays::tensor1_array_nd<T, Dim, Memory, arrays::dyn_dim> array_type;
-    typedef arrays::array_nd<T, Dim, Memory>                         scalar_array_type;
 #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
     typedef arrays::tensor1_array_nd_visible<T, Dim, Memory, arrays::dyn_dim> vis_array_type;
 #endif
@@ -320,12 +318,11 @@ private:
         using buf_array_type = array_type;
 #endif
         ord_rect_t loc_rect;
-        Ord        tensor_max_dim_;
         /// TODO Would be nice to have unique_array's
         std::unique_ptr<buf_array_type> data_buf;
 
         packet_bucket( const ord_rect_t &loc_rect_p, Ord tensor_max_dim )
-            : loc_rect( loc_rect_p ), tensor_max_dim_( tensor_max_dim ), data_buf( std::make_unique<buf_array_type>() )
+            : loc_rect( loc_rect_p ), data_buf( std::make_unique<buf_array_type>() )
         {
             data_buf->init( loc_rect.i2 - loc_rect.i1, loc_rect.i1, tensor_max_dim );
         }
@@ -341,17 +338,6 @@ private:
             return *data_buf;
         }
 #endif
-        scalar_array_type scalar_buf_array_device() const
-        {
-            scalar_array_type res;
-#ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
-            auto             tensor_buf = data_buf->array();
-            res.init_by_raw_data( tensor_buf.raw_ptr(), loc_rect );
-#else
-            res.init_by_raw_data( data_buf->raw_ptr(), loc_rect );
-#endif
-            return res;
-        }
         char *buf() const
         {
             return (char *)data_buf->raw_ptr();
@@ -359,27 +345,6 @@ private:
         std::size_t buf_size() const
         {
             return data_buf->total_size() * sizeof( T );
-        }
-        template <template <arrays::ordinal_type...> class Arranger>
-        void sync_from_array(
-            const ForEach &for_each, const arrays::array_nd<T, Dim, Memory, Arranger> &array
-        ) const
-        {
-            if ( tensor_max_dim_ != 1 )
-            {
-                detail::copy_array1_nd_rect(
-                    for_each, detail::get_array_tensor_dim( array ), detail::array_as_tensor1_array( array ), loc_rect,
-                    buf_array_device()
-                );
-#ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
-                data_buf->sync_from_array();
-#endif
-                return;
-            }
-            detail::copy_array_nd_rect( for_each, array, loc_rect, scalar_buf_array_device() );
-#ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
-            data_buf->sync_from_array();
-#endif
         }
         template <class Array>
         void sync_from_array( const ForEach &for_each, const Array &array ) const
@@ -418,22 +383,6 @@ private:
                 for_each, detail::get_array_tensor_dim( array ), buf_array_device(), loc_rect,
                 detail::array_as_tensor1_array( array )
             );
-        }
-        template <template <arrays::ordinal_type...> class Arranger>
-        void sync_to_array( const ForEach &for_each, const arrays::array_nd<T, Dim, Memory, Arranger> &array ) const
-        {
-#ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
-            data_buf->sync_to_array();
-#endif
-            if ( tensor_max_dim_ != 1 )
-            {
-                detail::copy_array1_nd_rect(
-                    for_each, detail::get_array_tensor_dim( array ), buf_array_device(), loc_rect,
-                    detail::array_as_tensor1_array( array )
-                );
-                return;
-            }
-            detail::copy_array_nd_rect( for_each, scalar_buf_array_device(), loc_rect, array );
         }
     };
     struct packet
