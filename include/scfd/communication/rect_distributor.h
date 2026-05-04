@@ -480,15 +480,26 @@ private:
                 continue;
 
             big_ord_vec_t padding_size;
+            bool empty_padding = false;
             for ( int j = 0; j < Dim; ++j )
             {
                 if ( dir[j] < 0 )
+                {
+                    empty_padding = empty_padding || ( stencil_sizes_lower[j] == 0 );
                     padding_size[j] = -stencil_sizes_lower[j];
+                }
                 else if ( dir[j] == 0 )
+                {
                     padding_size[j] = 0;
+                }
                 else
+                {
+                    empty_padding = empty_padding || ( stencil_sizes_upper[j] == 0 );
                     padding_size[j] = stencil_sizes_upper[j];
+                }
             }
+            if ( empty_padding )
+                continue;
             big_ord_rect_t stencil_rect_base = recv_rect.padding_rect( padding_size );
 
             auto periodic_flags_rect = big_ord_rect_t::make_square_range();
