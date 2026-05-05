@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 #include <mpi.h>
 
 #define __STR_HELPER( x ) #x
@@ -589,6 +590,19 @@ struct mpi_comm_info
     void all_gatherv( const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs ) const
     {
         detail::all_gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, comm );
+    }
+
+    template <class T, class SendCount, class Count, typename std::enable_if<!std::is_same<SendCount, int>::value || !std::is_same<Count, int>::value, int>::type = 0>
+    void all_gatherv( const T *sendbuf, SendCount sendcount, T *recvbuf, const Count *recvcounts, const Count *displs ) const
+    {
+        std::vector<int> recvcounts_i( num_procs );
+        std::vector<int> displs_i( num_procs );
+        for ( int i = 0; i < num_procs; ++i )
+        {
+            recvcounts_i[i] = static_cast<int>( recvcounts[i] );
+            displs_i[i] = static_cast<int>( displs[i] );
+        }
+        detail::all_gatherv( sendbuf, static_cast<int>( sendcount ), recvbuf, recvcounts_i.data(), displs_i.data(), comm );
     }
     template <class T>
     void gatherv(

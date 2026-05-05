@@ -349,12 +349,12 @@ private:
         template <class Array>
         void sync_from_array( const ForEach &for_each, const Array &array ) const
         {
-            if ( detail::get_array_tensor_dim( array ) > detail::get_array_tensor_dim( buf_array_device() ) )
+            if ( static_cast<Ord>(detail::get_array_tensor_dim( array )) > detail::get_array_tensor_dim( buf_array_device() ) )
                 throw std::logic_error( "rect_distributor::packet_bucket::sync_from_array: array tensor dir "
                                         "exceeds buffer tensor dim - incorrect distributor initialization" );
 
             detail::copy_array1_nd_rect(
-                for_each, detail::get_array_tensor_dim( array ), detail::array_as_tensor1_array( array ), loc_rect,
+                for_each, static_cast<Ord>(detail::get_array_tensor_dim( array )), detail::array_as_tensor1_array( array ), loc_rect,
                 buf_array_device()
             );
 #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
@@ -364,7 +364,7 @@ private:
         template <class Array>
         void sync_to_array( const ForEach &for_each, const Array &array ) const
         {
-            if ( detail::get_array_tensor_dim( array ) > detail::get_array_tensor_dim( buf_array_device() ) )
+            if ( static_cast<Ord>(detail::get_array_tensor_dim( array )) > detail::get_array_tensor_dim( buf_array_device() ) )
                 throw std::logic_error( "rect_distributor::packet_bucket::sync_to_array: array tensor dir exceeds "
                                         "buffer tensor dim - incorrect distributor initialization" );
 
@@ -380,7 +380,7 @@ private:
             //std::cout << "loc_rect: i1 = " << i1[0] << "," << i1[1] << "," << i1[2] << std::endl;
             //std::cout << "loc_rect: i2 = " << i2[0] << "," << i2[1] << "," << i2[2] << std::endl;
             detail::copy_array1_nd_rect(
-                for_each, detail::get_array_tensor_dim( array ), buf_array_device(), loc_rect,
+                for_each, static_cast<Ord>(detail::get_array_tensor_dim( array )), buf_array_device(), loc_rect,
                 detail::array_as_tensor1_array( array )
             );
         }
