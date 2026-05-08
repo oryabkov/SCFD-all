@@ -82,7 +82,10 @@ template <class Ordinal = int>
 using for_each = current::for_each_type<Ordinal>;
 template <int Dim, class Ordinal = int>
 using for_each_nd = current::for_each_nd_type<Dim, Ordinal>;
-using reduce      = current::reduce_type;
+using reduce           = current::reduce_type;
+using sort             = current::sort_type;
+using unique           = current::unique_type;
+using exclusive_scan   = current::exclusive_scan_type;
 }
 }
 

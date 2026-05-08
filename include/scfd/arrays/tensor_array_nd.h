@@ -17,6 +17,7 @@
 #ifndef __SCFD_ARRAYS_TENSOR_ARRAY_ND_H__
 #define __SCFD_ARRAYS_TENSOR_ARRAY_ND_H__
 
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <scfd/utils/device_tag.h>

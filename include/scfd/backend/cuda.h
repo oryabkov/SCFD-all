@@ -23,6 +23,9 @@
 #include <scfd/for_each/cuda_impl.cuh>
 #include <scfd/for_each/cuda_nd_impl.cuh>
 #include <scfd/reduce/thrust.h>
+#include <scfd/sort/thrust.h>
+#include <scfd/unique/thrust.h>
+#include <scfd/exclusive_scan/thrust.h>
 
 namespace scfd
 {
@@ -36,7 +39,10 @@ struct cuda
     using for_each_type = scfd::for_each::cuda<Ordinal>;
     template <int Dim, class Ordinal = int>
     using for_each_nd_type = scfd::for_each::cuda_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::thrust_reduce<>;
+    using reduce_type       = scfd::thrust_reduce<>;
+    using sort_type         = scfd::thrust_sort<>;
+    using unique_type        = scfd::thrust_unique<>;
+    using exclusive_scan_type = scfd::thrust_exclusive_scan<>;
 };
 
 }

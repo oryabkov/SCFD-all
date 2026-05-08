@@ -23,6 +23,9 @@
 #include <scfd/for_each/hip_impl.h>
 #include <scfd/for_each/hip_nd_impl.h>
 #include <scfd/reduce/thrust.h>
+#include <scfd/sort/thrust.h>
+#include <scfd/unique/thrust.h>
+#include <scfd/exclusive_scan/thrust.h>
 
 namespace scfd
 {
@@ -35,7 +38,10 @@ struct hip
     using for_each_type = scfd::for_each::hip<Ordinal>;
     template <int Dim, class Ordinal = int>
     using for_each_nd_type = scfd::for_each::hip_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::thrust_reduce<>;
+    using reduce_type       = scfd::thrust_reduce<>;
+    using sort_type         = scfd::thrust_sort<>;
+    using unique_type        = scfd::thrust_unique<>;
+    using exclusive_scan_type = scfd::thrust_exclusive_scan<>;
 };
 }
 }

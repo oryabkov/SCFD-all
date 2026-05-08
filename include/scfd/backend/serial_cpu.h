@@ -22,6 +22,9 @@
 #include <scfd/for_each/serial_cpu.h>
 #include <scfd/for_each/serial_cpu_nd.h>
 #include <scfd/reduce/serial_cpu.h>
+#include <scfd/sort/serial_cpu.h>
+#include <scfd/unique/serial_cpu.h>
+#include <scfd/exclusive_scan/serial_cpu.h>
 namespace scfd
 {
 namespace backend
@@ -34,7 +37,10 @@ struct serial_cpu
     using for_each_type = scfd::for_each::serial_cpu<Ordinal>;
     template <int Dim, class Ordinal = int>
     using for_each_nd_type = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::serial_cpu_reduce<>;
+    using reduce_type       = scfd::serial_cpu_reduce<>;
+    using sort_type         = scfd::serial_cpu_sort<>;
+    using unique_type        = scfd::serial_cpu_unique<>;
+    using exclusive_scan_type = scfd::serial_cpu_exclusive_scan<>;
 };
 
 

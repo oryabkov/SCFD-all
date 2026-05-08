@@ -22,6 +22,9 @@
 #include <scfd/for_each/openmp_impl.h>
 #include <scfd/for_each/openmp_nd_impl.h>
 #include <scfd/reduce/omp_reduce_impl.h>
+#include <scfd/sort/omp_sort_impl.h>
+#include <scfd/unique/omp_unique_impl.h>
+#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
 
 
 namespace scfd
@@ -36,7 +39,10 @@ struct omp
     using for_each_type = scfd::for_each::openmp<Ordinal>;
     template <int Dim, class Ordinal = int>
     using for_each_nd_type = scfd::for_each::openmp_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::omp_reduce<>;
+    using reduce_type       = scfd::omp_reduce<>;
+    using sort_type         = scfd::omp_sort<>;
+    using unique_type        = scfd::omp_unique<>;
+    using exclusive_scan_type = scfd::omp_exclusive_scan<>;
 };
 
 }
