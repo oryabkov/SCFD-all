@@ -19,6 +19,8 @@
 
 #include "_hypre_utilities.h"
 #include <mpi_communicator_info.h>
+#include <limits>
+#include <stdexcept>
 
 namespace scfd
 {
@@ -40,8 +42,17 @@ struct hypre_mpi_communicator
             std::cout << "WARNING: hypre_mpi_communicator: provided != MPI_THREAD_FUNNELED" << std::endl;
         }*/
         data.comm = hypre_MPI_COMM_WORLD;
-        hypre_MPI_Comm_size( hypre_MPI_COMM_WORLD, &data.num_procs );
-        hypre_MPI_Comm_rank( hypre_MPI_COMM_WORLD, &data.myid );
+        HYPRE_Int num_procs = 0;
+        HYPRE_Int myid      = 0;
+        hypre_MPI_Comm_size( hypre_MPI_COMM_WORLD, &num_procs );
+        hypre_MPI_Comm_rank( hypre_MPI_COMM_WORLD, &myid );
+        if ( ( num_procs > static_cast<HYPRE_Int>( std::numeric_limits<Ord>::max() ) ) ||
+             ( myid > static_cast<HYPRE_Int>( std::numeric_limits<Ord>::max() ) ) )
+        {
+            throw std::overflow_error( "hypre_mpi_communicator: rank/count does not fit into Ord" );
+        }
+        data.num_procs = static_cast<Ord>( num_procs );
+        data.myid      = static_cast<Ord>( myid );
     }
     ~hypre_mpi_communicator()
     {

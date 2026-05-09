@@ -72,6 +72,7 @@ public:
         }
         else
             throw std::logic_error( "log_mpi_basic::log: wrong t_msg_type argument" );
+        fflush( stdout );
     }
     void set_verbosity( int _log_lev = 1 )
     {
