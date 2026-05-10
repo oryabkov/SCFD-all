@@ -23,6 +23,7 @@
 #include <scfd/for_each/hip_impl.h>
 #include <scfd/for_each/hip_nd_impl.h>
 #include <scfd/reduce/thrust.h>
+#include <scfd/external_libraries/hipsolver_wrap.h>
 
 namespace scfd
 {
@@ -36,6 +37,8 @@ struct hip
     template <int Dim, class Ordinal = int>
     using for_each_nd_type = scfd::for_each::hip_nd<Dim, Ordinal>;
     using reduce_type      = scfd::thrust_reduce<>;
+    using blas_wrap_type   = scfd::hipblas_wrap;
+    using solver_wrap_type = scfd::hipsolver_wrap;
 };
 }
 }

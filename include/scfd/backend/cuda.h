@@ -23,6 +23,7 @@
 #include <scfd/for_each/cuda_impl.cuh>
 #include <scfd/for_each/cuda_nd_impl.cuh>
 #include <scfd/reduce/thrust.h>
+#include <scfd/external_libraries/cusolver_wrap.h>
 
 namespace scfd
 {
@@ -37,6 +38,8 @@ struct cuda
     template <int Dim, class Ordinal = int>
     using for_each_nd_type = scfd::for_each::cuda_nd<Dim, Ordinal>;
     using reduce_type      = scfd::thrust_reduce<>;
+    using blas_wrap_type   = scfd::cublas_wrap;
+    using solver_wrap_type = scfd::cusolver_wrap;
 };
 
 }
