@@ -38,13 +38,13 @@ struct template_indexer_<Ord, Ind, true, Dim1, Dims...>
 template <class Ord, Ord Ind, Ord Dim1, Ord... Dims>
 struct template_indexer_<Ord, Ind, false, Dim1, Dims...>
 {
-    static const Ord value = template_indexer_<Ord, Ind - 1, Ind == 1, Dims...>::value;
+    static const Ord value = template_indexer_ < Ord, Ind - 1, Ind == 1, Dims... > ::value;
 };
 
 template <class Ord, Ord Ind, Ord... Dims>
 struct template_indexer
 {
-    static const Ord value = template_indexer_<Ord, Ind, Ind == 0, Dims...>::value;
+    static const Ord value = template_indexer_ < Ord, Ind, Ind == 0, Dims... > ::value;
 };
 
 }

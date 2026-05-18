@@ -48,8 +48,8 @@ value_t alltoallw_value( int source_rank, int row, int column )
 
 int main( int argc, char *argv[] )
 {
-    using mpi_wrap_t = scfd::communication::mpi_wrap;
-    using log_t      = scfd::utils::log_mpi;
+    using mpi_wrap_t  = scfd::communication::mpi_wrap;
+    using log_t       = scfd::utils::log_mpi;
     using mpi_dtype_t = scfd::communication::detail::mpi_data_type<>;
 
     mpi_wrap_t mpi( argc, argv );
@@ -61,8 +61,7 @@ int main( int argc, char *argv[] )
 
     bool is_failed = false;
 
-    auto fail = [&]( const char *fmt, auto... args )
-    {
+    auto fail = [&]( const char *fmt, auto... args ) {
         log.error_f( fmt, args... );
         is_failed = true;
     };
@@ -93,8 +92,8 @@ int main( int argc, char *argv[] )
 
     std::vector<value_t> gathered( gathered_total_size, -1 );
     comm_info.gatherv(
-        gather_local.raw_ptr(), gather_rows * gather_cols, gathered.data(), gatherv_counts.data(), gatherv_displs.data(),
-        0
+        gather_local.raw_ptr(), gather_rows * gather_cols, gathered.data(), gatherv_counts.data(),
+        gatherv_displs.data(), 0
     );
 
     if ( myid == 0 )
@@ -183,12 +182,12 @@ int main( int argc, char *argv[] )
     );
     scfd::communication::detail::type_commit( column_type );
 
-    std::vector<int>          alltoallw_sendcounts( num_procs, 1 );
-    std::vector<int>          alltoallw_sdispls( num_procs );
-    std::vector<mpi_dtype_t>  alltoallw_sendtypes( num_procs, column_type );
-    std::vector<int>          alltoallw_recvcounts( num_procs, num_procs );
-    std::vector<int>          alltoallw_rdispls( num_procs );
-    std::vector<mpi_dtype_t>  alltoallw_recvtypes(
+    std::vector<int>         alltoallw_sendcounts( num_procs, 1 );
+    std::vector<int>         alltoallw_sdispls( num_procs );
+    std::vector<mpi_dtype_t> alltoallw_sendtypes( num_procs, column_type );
+    std::vector<int>         alltoallw_recvcounts( num_procs, num_procs );
+    std::vector<int>         alltoallw_rdispls( num_procs );
+    std::vector<mpi_dtype_t> alltoallw_recvtypes(
         num_procs, scfd::communication::detail::mpi_data_type<value_t>::mpi_type()
     );
 

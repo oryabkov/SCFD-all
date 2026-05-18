@@ -20,7 +20,7 @@
 #include "omp_exclusive_scan.h"
 #include <vector>
 #ifdef _OPENMP
-#include <omp.h>
+#    include <omp.h>
 #endif
 
 namespace scfd
@@ -30,56 +30,56 @@ template <class Ord>
 template <class T>
 void omp_exclusive_scan<Ord>::operator()( Ord size, const T *input, T *output, T init_val ) const
 {
-    if (size <= 0)
+    if ( size <= 0 )
     {
         return;
     }
 
 #ifndef _OPENMP
     T sum = init_val;
-    for (Ord i = 0; i < size; ++i)
+    for ( Ord i = 0; i < size; ++i )
     {
         const T value = input[i];
-        output[i] = sum;
+        output[i]     = sum;
         sum += value;
     }
 #else
     std::vector<T> partial_sums;
 
-#pragma omp parallel
+#    pragma omp parallel
     {
-        const int thread_id = omp_get_thread_num();
+        const int thread_id     = omp_get_thread_num();
         const int threads_count = omp_get_num_threads();
 
-#pragma omp single
+#    pragma omp single
         {
-            partial_sums.assign(threads_count + 1, T(0));
+            partial_sums.assign( threads_count + 1, T( 0 ) );
         }
 
-        T local_sum = T(0);
-#pragma omp for schedule(static)
-        for (Ord i = 0; i < size; ++i)
+        T local_sum = T( 0 );
+#    pragma omp for schedule( static )
+        for ( Ord i = 0; i < size; ++i )
         {
             const T value = input[i];
-            output[i] = local_sum;
+            output[i]     = local_sum;
             local_sum += value;
         }
 
         partial_sums[thread_id + 1] = local_sum;
 
-#pragma omp barrier
-#pragma omp single
+#    pragma omp barrier
+#    pragma omp single
         {
             partial_sums[0] = init_val;
-            for (int i = 1; i <= threads_count; ++i)
+            for ( int i = 1; i <= threads_count; ++i )
             {
                 partial_sums[i] += partial_sums[i - 1];
             }
         }
 
         const T offset = partial_sums[thread_id];
-#pragma omp for schedule(static)
-        for (Ord i = 0; i < size; ++i)
+#    pragma omp for schedule( static )
+        for ( Ord i = 0; i < size; ++i )
         {
             output[i] += offset;
         }

@@ -38,10 +38,10 @@ struct omp
     template <class Ordinal = int>
     using for_each_type = scfd::for_each::openmp<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type = scfd::for_each::openmp_nd<Dim, Ordinal>;
-    using reduce_type       = scfd::omp_reduce<>;
-    using sort_type         = scfd::omp_sort<>;
-    using unique_type        = scfd::omp_unique<>;
+    using for_each_nd_type    = scfd::for_each::openmp_nd<Dim, Ordinal>;
+    using reduce_type         = scfd::omp_reduce<>;
+    using sort_type           = scfd::omp_sort<>;
+    using unique_type         = scfd::omp_unique<>;
     using exclusive_scan_type = scfd::omp_exclusive_scan<>;
 };
 

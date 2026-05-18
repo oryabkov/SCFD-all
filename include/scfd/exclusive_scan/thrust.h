@@ -32,8 +32,8 @@ struct thrust_exclusive_scan
     {
         ::thrust::device_ptr<const T> input_begin = ::thrust::device_pointer_cast( input ),
                                       input_end   = input_begin + size;
-        ::thrust::device_ptr<T> output_begin = ::thrust::device_pointer_cast( output ),
-                                 output_end   = output_begin + size;
+        ::thrust::device_ptr<T> output_begin      = ::thrust::device_pointer_cast( output ),
+                                output_end        = output_begin + size;
         ::thrust::exclusive_scan( input_begin, input_end, output_begin, init_val );
     }
     void wait() const

@@ -40,7 +40,7 @@ struct hypre_mpi_wrap
         {
             std::cout << "WARNING: hypre_mpi_wrap: provided != MPI_THREAD_FUNNELED" << std::endl;
         }*/
-        data.comm = hypre_MPI_COMM_WORLD;
+        data.comm           = hypre_MPI_COMM_WORLD;
         HYPRE_Int num_procs = 0;
         HYPRE_Int myid      = 0;
         hypre_MPI_Comm_size( hypre_MPI_COMM_WORLD, &num_procs );

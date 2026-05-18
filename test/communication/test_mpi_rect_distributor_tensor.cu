@@ -36,7 +36,7 @@ using value_t               = unsigned int;
 static const int dim        = 3;
 static const int tensor_dim = 4;
 using comm_t                = communication::mpi_wrap;
-using part_t                = communication::rect_partitioner<dim, ordinal, big_ordinal, decltype(comm_t::data)>;
+using part_t                = communication::rect_partitioner<dim, ordinal, big_ordinal, decltype( comm_t::data )>;
 using idx_t                 = static_vec::vec<ordinal, dim>;
 using periodic_flags_t      = static_vec::vec<bool, dim>;
 using rect_t                = static_vec::rect<ordinal, dim>;
@@ -112,7 +112,8 @@ int main( int argc, char *args[] )
     big_idx_t dom_sz( 100, 100, 100 );
     part_t    part( comm.data, dom_sz );
     part.proc_rects = {
-        { { 0, 0, 0 }, { 100, 50, 100 } }, { { 0, 50, 0 }, { 100, 100, 50 } }, { { 0, 50, 50 }, { 100, 100, 100 } } };
+        { { 0, 0, 0 }, { 100, 50, 100 } }, { { 0, 50, 0 }, { 100, 100, 50 } }, { { 0, 50, 50 }, { 100, 100, 100 } }
+    };
     periodic_flags_t periodic_flags( periodic_flag_x, periodic_flag_y, periodic_flag_z );
     dist_t           dist;
     log.info_all( "init distributor" );

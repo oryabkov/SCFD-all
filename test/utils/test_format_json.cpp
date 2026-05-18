@@ -12,7 +12,8 @@ int main( int argc, char **args )
           { { "sub_one", "one_str" },
             { "sub_two", 2.2 },
             { "sub_three", { { "subsub_one", true } } },
-            { "sub_four", { 1, 2, 3 } } } } };
+            { "sub_four", { 1, 2, 3 } } } }
+    };
     scfd::utils::format_json( j, std::cout, 0 );
 
     return 0;

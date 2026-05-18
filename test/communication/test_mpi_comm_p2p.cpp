@@ -38,8 +38,8 @@ value_t ring_value( int rank, int message_id, int j )
 
 int main( int argc, char *argv[] )
 {
-    using mpi_wrap_t = scfd::communication::mpi_wrap;
-    using log_t      = scfd::utils::log_mpi;
+    using mpi_wrap_t    = scfd::communication::mpi_wrap;
+    using log_t         = scfd::utils::log_mpi;
     using mpi_request_t = scfd::communication::detail::mpi_request;
     using mpi_status_t  = scfd::communication::detail::mpi_status;
 
@@ -54,8 +54,7 @@ int main( int argc, char *argv[] )
 
     bool is_failed = false;
 
-    auto fail = [&]( const char *fmt, auto... args )
-    {
+    auto fail = [&]( const char *fmt, auto... args ) {
         log.error_f( fmt, args... );
         is_failed = true;
     };
@@ -111,13 +110,14 @@ int main( int argc, char *argv[] )
         if ( status.source() != left )
         {
             fail(
-                "MPI_Waitany returned unexpected source on rank %d: got %d, expected %d", myid, status.source(),
-                left
+                "MPI_Waitany returned unexpected source on rank %d: got %d, expected %d", myid, status.source(), left
             );
         }
         if ( status.tag() != 100 + idx )
         {
-            fail( "MPI_Waitany returned unexpected tag on rank %d: got %d, expected %d", myid, status.tag(), 100 + idx );
+            fail(
+                "MPI_Waitany returned unexpected tag on rank %d: got %d, expected %d", myid, status.tag(), 100 + idx
+            );
         }
     }
 

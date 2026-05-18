@@ -40,13 +40,13 @@ struct dyn_dim_counter_<Ord, Ind, true, Dims...>
 template <class Ord, Ord Ind, Ord Dim1, Ord... Dims>
 struct dyn_dim_counter_<Ord, Ind, false, Dim1, Dims...>
 {
-    static const Ord value = dyn_dim_counter_<Ord, Ind - 1, Ind == 1, Dims...>::value + ( Dim1 == dyn_dim );
+    static const Ord value = dyn_dim_counter_ < Ord, Ind - 1, Ind == 1, Dims... > ::value + ( Dim1 == dyn_dim );
 };
 
 template <class Ord, Ord Ind, Ord... Dims>
 struct dyn_dim_counter
 {
-    static const Ord value = dyn_dim_counter_<Ord, Ind, Ind == 0, Dims...>::value;
+    static const Ord value = dyn_dim_counter_ < Ord, Ind, Ind == 0, Dims... > ::value;
 };
 
 }

@@ -30,7 +30,7 @@ template <class T>
 Ord sycl_unique<Ord>::operator()( Ord size, T *data ) const
 {
     auto policy = dpl::execution::make_device_policy( sycl_device_queue );
-    auto end = dpl::unique( policy, data, data + size );
+    auto end    = dpl::unique( policy, data, data + size );
     return static_cast<Ord>( end - data );
 }
 

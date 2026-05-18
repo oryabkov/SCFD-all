@@ -280,7 +280,9 @@ static_assert( alignof( mpi_request ) == alignof( MPI_Request ), "mpi_request mu
 static_assert( sizeof( mpi_status ) == sizeof( MPI_Status ), "mpi_status must match MPI_Status size" );
 static_assert( alignof( mpi_status ) == alignof( MPI_Status ), "mpi_status must match MPI_Status alignment" );
 static_assert( sizeof( mpi_data_type<> ) == sizeof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype size" );
-static_assert( alignof( mpi_data_type<> ) == alignof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype alignment" );
+static_assert(
+    alignof( mpi_data_type<> ) == alignof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype alignment"
+);
 
 inline MPI_Request *raw_requests( mpi_request *requests )
 {
@@ -364,8 +366,8 @@ inline void alltoallv(
 
 template <class T>
 void alltoallv(
-    const T *sendbuf, const int *sendcounts, const int *sdispls, T *recvbuf, const int *recvcounts,
-    const int *rdispls, MPI_Comm comm
+    const T *sendbuf, const int *sendcounts, const int *sdispls, T *recvbuf, const int *recvcounts, const int *rdispls,
+    MPI_Comm comm
 )
 {
     alltoallv(
@@ -398,9 +400,8 @@ void isend( const T *buf, int count, int dest, int tag, MPI_Comm comm, mpi_reque
     isend( static_cast<const void *>( buf ), count, mpi_data_type<T>::mpi_type(), dest, tag, comm, request );
 }
 
-inline void irecv(
-    void *buf, int count, const mpi_data_type<> &datatype, int source, int tag, MPI_Comm comm, mpi_request *request
-)
+inline void
+irecv( void *buf, int count, const mpi_data_type<> &datatype, int source, int tag, MPI_Comm comm, mpi_request *request )
 {
     SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype.native(), source, tag, comm, raw_requests( request ) ) );
 }
@@ -592,22 +593,27 @@ struct mpi_comm_info
         detail::all_gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, comm );
     }
 
-    template <class T, class SendCount, class Count, typename std::enable_if<!std::is_same<SendCount, int>::value || !std::is_same<Count, int>::value, int>::type = 0>
-    void all_gatherv( const T *sendbuf, SendCount sendcount, T *recvbuf, const Count *recvcounts, const Count *displs ) const
+    template <
+        class T, class SendCount, class Count,
+        typename std::enable_if<!std::is_same<SendCount, int>::value || !std::is_same<Count, int>::value, int>::type =
+            0>
+    void
+    all_gatherv( const T *sendbuf, SendCount sendcount, T *recvbuf, const Count *recvcounts, const Count *displs ) const
     {
         std::vector<int> recvcounts_i( num_procs );
         std::vector<int> displs_i( num_procs );
         for ( int i = 0; i < num_procs; ++i )
         {
             recvcounts_i[i] = static_cast<int>( recvcounts[i] );
-            displs_i[i] = static_cast<int>( displs[i] );
+            displs_i[i]     = static_cast<int>( displs[i] );
         }
-        detail::all_gatherv( sendbuf, static_cast<int>( sendcount ), recvbuf, recvcounts_i.data(), displs_i.data(), comm );
+        detail::all_gatherv(
+            sendbuf, static_cast<int>( sendcount ), recvbuf, recvcounts_i.data(), displs_i.data(), comm
+        );
     }
     template <class T>
-    void gatherv(
-        const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs, int root
-    ) const
+    void
+    gatherv( const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs, int root ) const
     {
         detail::gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, root, comm );
     }
@@ -662,15 +668,13 @@ struct mpi_comm_info
     }
 
     void irecv(
-        void *buf, int count, const detail::mpi_data_type<> &datatype, int source, int tag,
-        detail::mpi_request *request
+        void *buf, int count, const detail::mpi_data_type<> &datatype, int source, int tag, detail::mpi_request *request
     ) const
     {
         detail::irecv( buf, count, datatype, source, tag, comm, request );
     }
     void irecv(
-        void *buf, int count, const detail::mpi_data_type<> &datatype, int source, int tag,
-        detail::mpi_request &request
+        void *buf, int count, const detail::mpi_data_type<> &datatype, int source, int tag, detail::mpi_request &request
     ) const
     {
         irecv( buf, count, datatype, source, tag, &request );

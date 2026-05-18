@@ -144,15 +144,15 @@ struct rect_distributor
 #endif
 
     ///TODO rename with _type suffix
-    typedef static_vec::vec<bool, Dim>         bool_vec_t;
-    typedef static_vec::vec<Ord, Dim>          ord_vec_t;
-    typedef static_vec::rect<Ord, Dim>         ord_rect_t;
-    typedef static_vec::vec<BigOrd, Dim>       big_ord_vec_t;
-    typedef static_vec::rect<BigOrd, Dim>      big_ord_rect_t;
+    typedef static_vec::vec<bool, Dim>               bool_vec_t;
+    typedef static_vec::vec<Ord, Dim>                ord_vec_t;
+    typedef static_vec::rect<Ord, Dim>               ord_rect_t;
+    typedef static_vec::vec<BigOrd, Dim>             big_ord_vec_t;
+    typedef static_vec::rect<BigOrd, Dim>            big_ord_rect_t;
     typedef rect_partitioner<Dim, Ord, BigOrd, Comm> rect_partitioner_t;
-    typedef Comm                               comm_type;
-    typedef typename Comm::request_type        request_type;
-    typedef typename Comm::status_type         status_type;
+    typedef Comm                                     comm_type;
+    typedef typename Comm::request_type              request_type;
+    typedef typename Comm::status_type               status_type;
 
     rect_distributor() = default;
     void init_for_tensors(
@@ -263,8 +263,7 @@ struct rect_distributor
                 auto &bucket = pkg.buckets[bucket_i];
                 bucket.sync_from_array( for_each, array );
                 comm_info_.template isend<char>(
-                    bucket.buf(), bucket.buf_size(), pkg.proc_id, bucket_i,
-                    isend_requests_[isend_requests_count]
+                    bucket.buf(), bucket.buf_size(), pkg.proc_id, bucket_i, isend_requests_[isend_requests_count]
                 );
                 isend_requests_count++;
             }
@@ -279,8 +278,7 @@ struct rect_distributor
                 auto &bucket = pkg.buckets[bucket_i];
                 //TODO check if bucket_i is actually message tag
                 comm_info_.template irecv<char>(
-                    bucket.buf(), bucket.buf_size(), pkg.proc_id, bucket_i,
-                    irecv_requests_[irecv_requests_count]
+                    bucket.buf(), bucket.buf_size(), pkg.proc_id, bucket_i, irecv_requests_[irecv_requests_count]
                 );
                 irecv_requests_count++;
             }
@@ -349,13 +347,14 @@ private:
         template <class Array>
         void sync_from_array( const ForEach &for_each, const Array &array ) const
         {
-            if ( static_cast<Ord>(detail::get_array_tensor_dim( array )) > detail::get_array_tensor_dim( buf_array_device() ) )
+            if ( static_cast<Ord>( detail::get_array_tensor_dim( array ) ) >
+                 detail::get_array_tensor_dim( buf_array_device() ) )
                 throw std::logic_error( "rect_distributor::packet_bucket::sync_from_array: array tensor dir "
                                         "exceeds buffer tensor dim - incorrect distributor initialization" );
 
             detail::copy_array1_nd_rect(
-                for_each, static_cast<Ord>(detail::get_array_tensor_dim( array )), detail::array_as_tensor1_array( array ), loc_rect,
-                buf_array_device()
+                for_each, static_cast<Ord>( detail::get_array_tensor_dim( array ) ),
+                detail::array_as_tensor1_array( array ), loc_rect, buf_array_device()
             );
 #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
             data_buf->sync_from_array();
@@ -364,7 +363,8 @@ private:
         template <class Array>
         void sync_to_array( const ForEach &for_each, const Array &array ) const
         {
-            if ( static_cast<Ord>(detail::get_array_tensor_dim( array )) > detail::get_array_tensor_dim( buf_array_device() ) )
+            if ( static_cast<Ord>( detail::get_array_tensor_dim( array ) ) >
+                 detail::get_array_tensor_dim( buf_array_device() ) )
                 throw std::logic_error( "rect_distributor::packet_bucket::sync_to_array: array tensor dir exceeds "
                                         "buffer tensor dim - incorrect distributor initialization" );
 
@@ -380,7 +380,7 @@ private:
             //std::cout << "loc_rect: i1 = " << i1[0] << "," << i1[1] << "," << i1[2] << std::endl;
             //std::cout << "loc_rect: i2 = " << i2[0] << "," << i2[1] << "," << i2[2] << std::endl;
             detail::copy_array1_nd_rect(
-                for_each, static_cast<Ord>(detail::get_array_tensor_dim( array )), buf_array_device(), loc_rect,
+                for_each, static_cast<Ord>( detail::get_array_tensor_dim( array ) ), buf_array_device(), loc_rect,
                 detail::array_as_tensor1_array( array )
             );
         }
@@ -394,7 +394,7 @@ private:
     Comm                comm_info_;
     std::vector<packet> packets_in_, packets_out_;
     //TODO use indexes here instead of pointers
-    std::vector<packet *>            packets_in_by_rank_;
+    std::vector<packet *>             packets_in_by_rank_;
     mutable std::vector<request_type> isend_requests_, irecv_requests_;
 
     void init_packet(
@@ -429,12 +429,12 @@ private:
                 continue;
 
             big_ord_vec_t padding_size;
-            bool empty_padding = false;
+            bool          empty_padding = false;
             for ( int j = 0; j < Dim; ++j )
             {
                 if ( dir[j] < 0 )
                 {
-                    empty_padding = empty_padding || ( stencil_sizes_lower[j] == 0 );
+                    empty_padding   = empty_padding || ( stencil_sizes_lower[j] == 0 );
                     padding_size[j] = -stencil_sizes_lower[j];
                 }
                 else if ( dir[j] == 0 )
@@ -443,7 +443,7 @@ private:
                 }
                 else
                 {
-                    empty_padding = empty_padding || ( stencil_sizes_upper[j] == 0 );
+                    empty_padding   = empty_padding || ( stencil_sizes_upper[j] == 0 );
                     padding_size[j] = stencil_sizes_upper[j];
                 }
             }
@@ -495,8 +495,7 @@ private:
                 }
                 /// TODO how to check or proove that only one of these cases is met at once
                 if ( common_rect_from_recv.is_empty() != common_rect_from_send.is_empty() )
-                    throw std::logic_error( "rect_distributor::init_packet: common_rect send recv is_empty differs"
-                    );
+                    throw std::logic_error( "rect_distributor::init_packet: common_rect send recv is_empty differs" );
                 if ( common_rect_from_recv.is_empty() )
                     continue;
                 big_ord_rect_t common_rect_loc = ( is_in_pkg ? common_rect_from_recv : common_rect_from_send );

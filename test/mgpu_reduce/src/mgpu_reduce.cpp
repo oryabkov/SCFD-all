@@ -107,7 +107,7 @@ int main( int argc, char *argv[] )
 #if defined( CUDA )
     auto device_id = scfd::utils::init_cuda_mpi( mpi.comm_world() );
 #elif defined( HIP )
-    auto device_id   = scfd::utils::init_hip_mpi( mpi.comm_world() );
+    auto device_id = scfd::utils::init_hip_mpi( mpi.comm_world() );
 #endif
 
     vec_ops_t  vec_ops( &mpi.data );

@@ -67,7 +67,8 @@ struct shift //indexing temporal structure that returs indexes or seek position 
     {
         return {
             ( i( 0 ) + my_own_glob_rect_.i1( 0 ) ), ( i( 1 ) + my_own_glob_rect_.i1( 1 ) ),
-            ( i( 2 ) + my_own_glob_rect_.i1( 2 ) ) };
+            ( i( 2 ) + my_own_glob_rect_.i1( 2 ) )
+        };
     }
 
     big_ordinal shft( const idx_t &i ) const

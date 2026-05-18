@@ -30,9 +30,8 @@ struct thrust_unique
     template <class T>
     Ord operator()( Ord size, T *data ) const
     {
-        ::thrust::device_ptr<T> data_begin = ::thrust::device_pointer_cast( data ),
-                                data_end   = data_begin + size;
-        auto end = ::thrust::unique( data_begin, data_end );
+        ::thrust::device_ptr<T> data_begin = ::thrust::device_pointer_cast( data ), data_end = data_begin + size;
+        auto                    end = ::thrust::unique( data_begin, data_end );
         return static_cast<Ord>( end - data_begin );
     }
     void wait() const

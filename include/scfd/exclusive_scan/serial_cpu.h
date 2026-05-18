@@ -32,7 +32,7 @@ struct serial_cpu_exclusive_scan
         for ( Ord i = 0; i < size; ++i )
         {
             const T value = input[i];
-            output[i] = sum;
+            output[i]     = sum;
             sum += value;
         }
     }

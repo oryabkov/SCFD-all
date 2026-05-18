@@ -25,8 +25,7 @@ namespace scfd
 namespace communication
 {
 
-template <
-    class T, int Dim, class Memory, class ForEach, class Ord, class BigOrd, class Comm = mpi_comm_info>
+template <class T, int Dim, class Memory, class ForEach, class Ord, class BigOrd, class Comm = mpi_comm_info>
 struct mpi_rect_distributor : rect_distributor<T, Dim, Memory, ForEach, Ord, BigOrd, Comm>
 {
     using base_t = rect_distributor<T, Dim, Memory, ForEach, Ord, BigOrd, Comm>;

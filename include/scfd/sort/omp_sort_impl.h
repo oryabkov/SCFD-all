@@ -28,9 +28,9 @@ template <class Ord>
 template <class T>
 void omp_sort<Ord>::operator()( Ord size, T *data ) const
 {
-    #pragma omp parallel
+#pragma omp parallel
     {
-        #pragma omp single
+#pragma omp single
         {
             std::sort( data, data + size );
         }

@@ -30,8 +30,7 @@ struct thrust_sort
     template <class T>
     void operator()( Ord size, T *data ) const
     {
-        ::thrust::device_ptr<T> data_begin = ::thrust::device_pointer_cast( data ),
-                                data_end   = data_begin + size;
+        ::thrust::device_ptr<T> data_begin = ::thrust::device_pointer_cast( data ), data_end = data_begin + size;
         ::thrust::sort( data_begin, data_end );
     }
     void wait() const

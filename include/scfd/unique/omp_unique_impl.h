@@ -28,12 +28,12 @@ template <class T>
 Ord omp_unique<Ord>::operator()( Ord size, T *data ) const
 {
     Ord result = size;
-    #pragma omp parallel
+#pragma omp parallel
     {
-        #pragma omp single
+#pragma omp single
         {
             auto end = std::unique( data, data + size );
-            result = static_cast<Ord>( end - data );
+            result   = static_cast<Ord>( end - data );
         }
     }
     return result;

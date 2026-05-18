@@ -61,9 +61,8 @@ struct index0_getter
     template <Ord sz>
     static __DEVICE_TAG__ Ord get( const vec<Ord, sz> &dyn_indexes0 )
     {
-        return index0_getter_<Ord, Ind, template_indexer<Ord, Ind, Dims...>::value != dyn_dim, Dims...>::get(
-            dyn_indexes0
-        );
+        return index0_getter_ < Ord, Ind, template_indexer<Ord, Ind, Dims...>::value != dyn_dim,
+               Dims... > ::get( dyn_indexes0 );
     }
 };
 

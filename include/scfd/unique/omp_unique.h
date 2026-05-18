@@ -26,7 +26,7 @@ template <class Ord = int>
 struct omp_unique
 {
     template <class T>
-    Ord operator()( Ord size, T *data ) const;
+    Ord  operator()( Ord size, T *data ) const;
     void wait() const
     {
     }
