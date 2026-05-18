@@ -20,8 +20,8 @@ PERF_REPEATS ?= 3
 PERF_MIN_SPEEDUP ?= 1.05
 CPU_BINS = test_backend_serial_cpu.bin test_backend_omp_cpu.bin test_backend_algorithms_serial_cpu.bin test_backend_algorithms_omp_cpu.bin test_backend_performance_serial_cpu.bin test_backend_performance_omp_cpu.bin
 CUDA_BINS = test_backend_types_cuda.bin test_backend_algorithms_cuda.bin test_backend_performance_cuda.bin
-HIP_BINS = test_backend_algorithms_hip.bin test_backend_performance_hip.bin
-SYCL_BINS = test_backend_algorithms_sycl.bin test_backend_performance_sycl.bin
+HIP_BINS = test_backend_types_hip.bin test_backend_algorithms_hip.bin test_backend_performance_hip.bin
+SYCL_BINS = test_backend_types_sycl.bin test_backend_algorithms_sycl.bin test_backend_performance_sycl.bin
 
 .PHONY: all cpu cuda hip sycl perf_cpu perf_cuda perf_hip perf_sycl run_cpu run_cuda run_hip run_sycl run_perf_cpu run_perf_cuda run_perf_hip run_perf_sycl clean
 
@@ -60,11 +60,17 @@ test_backend_algorithms_omp_cpu.bin: test_backend_algorithms_omp_cpu.cpp test_ba
 test_backend_algorithms_cuda.bin: test_backend_algorithms_cuda.cu test_backend_algorithms_common.h
 	$(NVCC) $(CUDAFLAGS) test_backend_algorithms_cuda.cu -I$(SCFD_INCLUDE) -o test_backend_algorithms_cuda.bin
 
+test_backend_types_hip.bin: test_backend_types_hip.cpp
+	$(HIPCC) $(CXXFLAGS) test_backend_types_hip.cpp -I$(SCFD_INCLUDE) -o test_backend_types_hip.bin
+
 test_backend_algorithms_hip.bin: test_backend_algorithms_hip.cpp test_backend_algorithms_common.h
 	$(HIPCC) $(CXXFLAGS) test_backend_algorithms_hip.cpp -I$(SCFD_INCLUDE) -o test_backend_algorithms_hip.bin
 
 test_backend_algorithms_sycl.bin: test_backend_algorithms_sycl.cpp test_backend_algorithms_common.h
 	$(SYCL_CXX) $(CXXFLAGS) -fsycl test_backend_algorithms_sycl.cpp -I$(SCFD_INCLUDE) -o test_backend_algorithms_sycl.bin
+
+test_backend_types_sycl.bin: test_backend_types_sycl.cpp
+	$(SYCL_CXX) $(CXXFLAGS) -fsycl test_backend_types_sycl.cpp -I$(SCFD_INCLUDE) -o test_backend_types_sycl.bin
 
 test_backend_performance_serial_cpu.bin: test_backend_performance_serial_cpu.cpp test_backend_performance_common.h
 	$(CC) $(PERF_CXXFLAGS) test_backend_performance_serial_cpu.cpp -I$(SCFD_INCLUDE) -o test_backend_performance_serial_cpu.bin
@@ -92,9 +98,11 @@ run_cuda: cuda
 	./test_backend_algorithms_cuda.bin
 
 run_hip: hip
+	./test_backend_types_hip.bin
 	./test_backend_algorithms_hip.bin
 
 run_sycl: sycl
+	./test_backend_types_sycl.bin
 	./test_backend_algorithms_sycl.bin
 
 run_perf_cpu: perf_cpu

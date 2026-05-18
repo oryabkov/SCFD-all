@@ -40,12 +40,12 @@ struct sycl
 {
     using memory_type = scfd::memory::sycl_device;
     template <class Ordinal = int>
-    using for_each_type = scfd::for_each::sycl<Ordinal>;
+    using for_each_type = scfd::for_each::sycl_<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type = scfd::for_each::sycl_nd<Dim, Ordinal>;
-    using reduce_type       = scfd::sycl_reduce<>;
-    using sort_type         = scfd::sycl_sort<>;
-    using unique_type        = scfd::sycl_unique<>;
+    using for_each_nd_type    = scfd::for_each::sycl_nd<Dim, Ordinal>;
+    using reduce_type         = scfd::sycl_reduce<>;
+    using sort_type           = scfd::sycl_sort<>;
+    using unique_type         = scfd::sycl_unique<>;
     using exclusive_scan_type = scfd::sycl_exclusive_scan<>;
 };
 }
