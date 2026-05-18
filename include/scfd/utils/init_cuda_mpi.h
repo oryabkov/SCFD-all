@@ -30,7 +30,7 @@ namespace scfd
 namespace utils
 {
 
-template <class Log>
+template <class Log, bool WrapProcsGPUs = false>
 inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
 {
     int node_size                 = 0;
@@ -51,7 +51,13 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
     my_id           = comm_split.myid();
     comm_split.free();
     CUDA_SAFE_CALL( cudaGetDeviceCount( &number_of_devices_on_node ) );
-    if ( number_of_devices_on_node < node_size )
+    if ( number_of_devices_on_node <= 0 )
+    {
+        throw std::runtime_error(
+            "init_cuda_mpi: node name " + std::string( node_name ) + "\n no visible CUDA devices"
+        );
+    }
+    if ( number_of_devices_on_node < node_size && !WrapProcsGPUs )
     {
         throw std::runtime_error(
             "init_cuda_mpi: node name " + std::string( node_name ) + "\n number of nproc = " +
@@ -60,6 +66,14 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
         );
     }
     device_id = ( my_id + shift_index ) % number_of_devices_on_node;
+    if ( number_of_devices_on_node < node_size && WrapProcsGPUs && my_id == 0 )
+    {
+        log.info_f(
+            "WARNING: init_cuda_mpi is wrapping %i MPI processes over %i visible GPU(s) on node %s. "
+            "Several MPI processes will share one GPU.",
+            node_size, number_of_devices_on_node, node_name
+        );
+    }
     log.info_f(
         "init_cuda_mpi split_color: node_name = %s, node_color = %i, global_size = %i, global_id = %i, node_size = %i, "
         "devices_on_node = %i, node_device_id = %i, node_my_id = %i",
@@ -69,10 +83,11 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
 }
 
 
+template <bool WrapProcsGPUs = false>
 inline int init_cuda_mpi( const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
 {
     log_std log;
-    return init_cuda_mpi( log, comm, shift_index );
+    return init_cuda_mpi<log_std, WrapProcsGPUs>( log, comm, shift_index );
 }
 
 
