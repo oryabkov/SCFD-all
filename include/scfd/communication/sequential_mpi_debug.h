@@ -54,7 +54,7 @@ public:
             int                 source = mpi_comm_.myid - 1; //cascading recieve from
 
             SCFD_MPI_SAFE_CALL( MPI_Irecv(
-                &proc_running, 1, detail::mpi_data_type<int>::mpi_type().native(), source, tag, mpi_comm_.comm,
+                &proc_running, 1, mpi_comm_.template get_data_type<int>().native(), source, tag, mpi_comm_.comm,
                 request.native_ptr()
             ) );
             detail::waitall( 1, &request, &status );
@@ -68,7 +68,7 @@ public:
         if ( mpi_comm_.myid < mpi_comm_.num_procs - 1 )
         {
             SCFD_MPI_SAFE_CALL( MPI_Send(
-                &proc_running, 1, detail::mpi_data_type<int>::mpi_type().native(), destination, tag, mpi_comm_.comm
+                &proc_running, 1, mpi_comm_.template get_data_type<int>().native(), destination, tag, mpi_comm_.comm
             ) );
         }
         mpi_comm_.barrier();

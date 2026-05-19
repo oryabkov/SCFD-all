@@ -33,7 +33,7 @@ using comm_info_type = scfd::communication::mpi_comm_info;
 using ordinal     = std::int32_t;
 using big_ordinal = std::ptrdiff_t;
 
-using part_t    = scfd::communication::rect_partitioner<Dim, ordinal, big_ordinal>;
+using part_t    = scfd::communication::rect_partitioner<Dim, ordinal, big_ordinal, comm_info_type>;
 using idx_t     = scfd::static_vec::vec<ordinal, Dim>;
 using big_idx_t = scfd::static_vec::vec<big_ordinal, Dim>;
 

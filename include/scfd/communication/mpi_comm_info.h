@@ -17,6 +17,7 @@
 #ifndef __SCFD_MPI_COMM_INFO_H__
 #define __SCFD_MPI_COMM_INFO_H__
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -41,15 +42,6 @@
             );                                                                                                         \
         }                                                                                                              \
     } while ( 0 )
-
-/*#define SCFD_MPI_SAFE_CALL(X,MSG_PREFIX) \
-    do {                                                                                                                                                                                        \
-        auto mpi_res = (X);                                                                                                                                                       \
-        if (mpi_res != MPI_SUCCESS) throw scfd::communication::mpi_error(mpi_res, std::string(MSG_PREFIX "MPI_SAFE_CALL " __FILE__ " " __STR(__LINE__) " : " #X " failed: "));    \
-    } while (0)
-
-#define SCFD_MPI_SAFE_CALL(X) SCFD_MPI_SAFE_CALL(X,"")*/
-
 
 namespace scfd
 {
@@ -158,7 +150,6 @@ struct mpi_status
     MPI_Status status;
 };
 
-template <class T = void>
 struct mpi_data_type
 {
     mpi_data_type( MPI_Datatype datatype_ = MPI_DATATYPE_NULL ) : datatype( datatype_ )
@@ -185,104 +176,125 @@ struct mpi_data_type
         return datatype == MPI_DATATYPE_NULL;
     }
 
-    static mpi_data_type<> mpi_type()
-    {
-        static_assert( !std::is_same<T, T>::value, "mpi_data_type:type not implemented" );
-        return mpi_data_type<>();
-    }
-
     MPI_Datatype datatype;
 };
 
-template <>
-struct mpi_data_type<char> : mpi_data_type<>
+template <class T, class Enable = void>
+struct mpi_data_type_trait
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_BYTE );
+        static_assert( !std::is_same<T, T>::value, "get_mpi_data_type:type not implemented" );
+        return mpi_data_type();
+    }
+};
+
+template <class T>
+struct mpi_data_type_trait<
+    T, typename std::enable_if<std::is_same<T, unsigned char>::value || std::is_same<T, std::uint8_t>::value>::type>
+{
+    static mpi_data_type get()
+    {
+        return mpi_data_type( MPI_BYTE );
     }
 };
 
 template <>
-struct mpi_data_type<int> : mpi_data_type<>
+struct mpi_data_type_trait<char>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_INT );
+        return mpi_data_type( MPI_BYTE );
     }
 };
 
 template <>
-struct mpi_data_type<unsigned int> : mpi_data_type<>
+struct mpi_data_type_trait<int>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_UNSIGNED );
+        return mpi_data_type( MPI_INT );
     }
 };
 
 template <>
-struct mpi_data_type<long> : mpi_data_type<>
+struct mpi_data_type_trait<unsigned int>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_LONG );
+        return mpi_data_type( MPI_UNSIGNED );
     }
 };
 
 template <>
-struct mpi_data_type<unsigned long> : mpi_data_type<>
+struct mpi_data_type_trait<long>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_UNSIGNED_LONG );
+        return mpi_data_type( MPI_LONG );
     }
 };
 
 template <>
-struct mpi_data_type<long long> : mpi_data_type<>
+struct mpi_data_type_trait<unsigned long>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_LONG_LONG );
+        return mpi_data_type( MPI_UNSIGNED_LONG );
     }
 };
 
 template <>
-struct mpi_data_type<unsigned long long> : mpi_data_type<>
+struct mpi_data_type_trait<long long>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_UNSIGNED_LONG_LONG );
+        return mpi_data_type( MPI_LONG_LONG );
     }
 };
 
 template <>
-struct mpi_data_type<float> : mpi_data_type<>
+struct mpi_data_type_trait<unsigned long long>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_FLOAT );
+        return mpi_data_type( MPI_UNSIGNED_LONG_LONG );
     }
 };
 
 template <>
-struct mpi_data_type<double> : mpi_data_type<>
+struct mpi_data_type_trait<float>
 {
-    static mpi_data_type<> mpi_type()
+    static mpi_data_type get()
     {
-        return mpi_data_type<>( MPI_DOUBLE );
+        return mpi_data_type( MPI_FLOAT );
     }
 };
+
+template <>
+struct mpi_data_type_trait<double>
+{
+    static mpi_data_type get()
+    {
+        return mpi_data_type( MPI_DOUBLE );
+    }
+};
+
+template <class T>
+mpi_data_type get_mpi_data_type()
+{
+    return mpi_data_type_trait<T>::get();
+}
 
 static_assert( sizeof( mpi_request ) == sizeof( MPI_Request ), "mpi_request must match MPI_Request size" );
 static_assert( alignof( mpi_request ) == alignof( MPI_Request ), "mpi_request must match MPI_Request alignment" );
 static_assert( sizeof( mpi_status ) == sizeof( MPI_Status ), "mpi_status must match MPI_Status size" );
 static_assert( alignof( mpi_status ) == alignof( MPI_Status ), "mpi_status must match MPI_Status alignment" );
-static_assert( sizeof( mpi_data_type<> ) == sizeof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype size" );
-static_assert(
-    alignof( mpi_data_type<> ) == alignof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype alignment"
-);
+static_assert( sizeof( mpi_data_type ) == sizeof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype size" );
+static_assert( alignof( mpi_data_type ) == alignof( MPI_Datatype ), "mpi_data_type must match MPI_Datatype alignment" );
+static_assert( std::is_standard_layout<mpi_request>::value, "mpi_request must be standard layout" );
+static_assert( std::is_standard_layout<mpi_status>::value, "mpi_status must be standard layout" );
+static_assert( std::is_standard_layout<mpi_data_type>::value, "mpi_data_type must be standard layout" );
 
 inline MPI_Request *raw_requests( mpi_request *requests )
 {
@@ -314,12 +326,12 @@ inline const MPI_Status *raw_status( const mpi_status *status )
     return status == nullptr ? MPI_STATUS_IGNORE : reinterpret_cast<const MPI_Status *>( status );
 }
 
-inline MPI_Datatype *raw_datatypes( mpi_data_type<> *datatypes )
+inline MPI_Datatype *raw_datatypes( mpi_data_type *datatypes )
 {
     return reinterpret_cast<MPI_Datatype *>( datatypes );
 }
 
-inline const MPI_Datatype *raw_datatypes( const mpi_data_type<> *datatypes )
+inline const MPI_Datatype *raw_datatypes( const mpi_data_type *datatypes )
 {
     return reinterpret_cast<const MPI_Datatype *>( datatypes );
 }
@@ -328,19 +340,35 @@ template <class T>
 void all_gather( const T *sendbuf, int sendcount, T *recvbuf, int recvcount, MPI_Comm comm )
 {
     SCFD_MPI_SAFE_CALL( MPI_Allgather(
-        static_cast<const void *>( sendbuf ), sendcount * sizeof( T ), mpi_data_type<char>::mpi_type().native(),
-        static_cast<void *>( recvbuf ), recvcount * sizeof( T ), mpi_data_type<char>::mpi_type().native(), comm
+        static_cast<const void *>( sendbuf ), sendcount * sizeof( T ), MPI_BYTE, static_cast<void *>( recvbuf ),
+        recvcount * sizeof( T ), MPI_BYTE, comm
     ) );
 }
 
 
 template <class T>
+void iall_gather( const T *sendbuf, int sendcount, T *recvbuf, int recvcount, MPI_Comm comm, mpi_request *request )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Iallgather(
+        static_cast<const void *>( sendbuf ), sendcount * sizeof( T ), MPI_BYTE, static_cast<void *>( recvbuf ),
+        recvcount * sizeof( T ), MPI_BYTE, comm, raw_requests( request )
+    ) );
+}
+
+template <class T>
 void all_gatherv( const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs, MPI_Comm comm )
 {
     SCFD_MPI_SAFE_CALL( MPI_Allgatherv(
-        static_cast<const void *>( sendbuf ), sendcount, mpi_data_type<T>::mpi_type().native(),
-        static_cast<void *>( recvbuf ), recvcounts, displs, mpi_data_type<T>::mpi_type().native(), comm
+        static_cast<const void *>( sendbuf ), sendcount, get_mpi_data_type<T>().native(),
+        static_cast<void *>( recvbuf ), recvcounts, displs, get_mpi_data_type<T>().native(), comm
     ) );
+}
+
+inline void all_gatherv_bytes(
+    const void *sendbuf, int sendcount, void *recvbuf, const int *recvcounts, const int *displs, MPI_Comm comm
+)
+{
+    SCFD_MPI_SAFE_CALL( MPI_Allgatherv( sendbuf, sendcount, MPI_BYTE, recvbuf, recvcounts, displs, MPI_BYTE, comm ) );
 }
 
 template <class T>
@@ -349,14 +377,30 @@ void gatherv(
 )
 {
     SCFD_MPI_SAFE_CALL( MPI_Gatherv(
-        static_cast<const void *>( sendbuf ), sendcount, mpi_data_type<T>::mpi_type().native(),
-        static_cast<void *>( recvbuf ), recvcounts, displs, mpi_data_type<T>::mpi_type().native(), root, comm
+        static_cast<const void *>( sendbuf ), sendcount, get_mpi_data_type<T>().native(),
+        static_cast<void *>( recvbuf ), recvcounts, displs, get_mpi_data_type<T>().native(), root, comm
     ) );
 }
 
+inline void bcast( void *buf, int count, const mpi_data_type &datatype, int root, MPI_Comm comm )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Bcast( buf, count, datatype.native(), root, comm ) );
+}
+
+template <class T>
+void bcast( T *buf, int count, int root, MPI_Comm comm )
+{
+    bcast( static_cast<void *>( buf ), count, get_mpi_data_type<T>(), root, comm );
+}
+
+inline void bcast_bytes( void *buf, int count, int root, MPI_Comm comm )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Bcast( buf, count, MPI_BYTE, root, comm ) );
+}
+
 inline void alltoallv(
-    const void *sendbuf, const int *sendcounts, const int *sdispls, const mpi_data_type<> &sendtype, void *recvbuf,
-    const int *recvcounts, const int *rdispls, const mpi_data_type<> &recvtype, MPI_Comm comm
+    const void *sendbuf, const int *sendcounts, const int *sdispls, const mpi_data_type &sendtype, void *recvbuf,
+    const int *recvcounts, const int *rdispls, const mpi_data_type &recvtype, MPI_Comm comm
 )
 {
     SCFD_MPI_SAFE_CALL( MPI_Alltoallv(
@@ -371,14 +415,14 @@ void alltoallv(
 )
 {
     alltoallv(
-        static_cast<const void *>( sendbuf ), sendcounts, sdispls, mpi_data_type<T>::mpi_type(),
-        static_cast<void *>( recvbuf ), recvcounts, rdispls, mpi_data_type<T>::mpi_type(), comm
+        static_cast<const void *>( sendbuf ), sendcounts, sdispls, get_mpi_data_type<T>(),
+        static_cast<void *>( recvbuf ), recvcounts, rdispls, get_mpi_data_type<T>(), comm
     );
 }
 
 inline void alltoallw(
-    const void *sendbuf, const int *sendcounts, const int *sdispls, const mpi_data_type<> *sendtypes, void *recvbuf,
-    const int *recvcounts, const int *rdispls, const mpi_data_type<> *recvtypes, MPI_Comm comm
+    const void *sendbuf, const int *sendcounts, const int *sdispls, const mpi_data_type *sendtypes, void *recvbuf,
+    const int *recvcounts, const int *rdispls, const mpi_data_type *recvtypes, MPI_Comm comm
 )
 {
     SCFD_MPI_SAFE_CALL( MPI_Alltoallw(
@@ -388,7 +432,7 @@ inline void alltoallw(
 }
 
 inline void isend(
-    const void *buf, int count, const mpi_data_type<> &datatype, int dest, int tag, MPI_Comm comm, mpi_request *request
+    const void *buf, int count, const mpi_data_type &datatype, int dest, int tag, MPI_Comm comm, mpi_request *request
 )
 {
     SCFD_MPI_SAFE_CALL( MPI_Isend( buf, count, datatype.native(), dest, tag, comm, raw_requests( request ) ) );
@@ -397,11 +441,11 @@ inline void isend(
 template <class T>
 void isend( const T *buf, int count, int dest, int tag, MPI_Comm comm, mpi_request *request )
 {
-    isend( static_cast<const void *>( buf ), count, mpi_data_type<T>::mpi_type(), dest, tag, comm, request );
+    isend( static_cast<const void *>( buf ), count, get_mpi_data_type<T>(), dest, tag, comm, request );
 }
 
 inline void
-irecv( void *buf, int count, const mpi_data_type<> &datatype, int source, int tag, MPI_Comm comm, mpi_request *request )
+irecv( void *buf, int count, const mpi_data_type &datatype, int source, int tag, MPI_Comm comm, mpi_request *request )
 {
     SCFD_MPI_SAFE_CALL( MPI_Irecv( buf, count, datatype.native(), source, tag, comm, raw_requests( request ) ) );
 }
@@ -409,7 +453,17 @@ irecv( void *buf, int count, const mpi_data_type<> &datatype, int source, int ta
 template <class T>
 void irecv( T *buf, int count, int source, int tag, MPI_Comm comm, mpi_request *request )
 {
-    irecv( static_cast<void *>( buf ), count, mpi_data_type<T>::mpi_type(), source, tag, comm, request );
+    irecv( static_cast<void *>( buf ), count, get_mpi_data_type<T>(), source, tag, comm, request );
+}
+
+inline void wait( mpi_request *request, mpi_status *status )
+{
+    SCFD_MPI_SAFE_CALL( MPI_Wait( raw_requests( request ), raw_status( status ) ) );
+}
+
+inline void wait( mpi_request *request )
+{
+    wait( request, static_cast<mpi_status *>( nullptr ) );
 }
 
 inline void waitall( int count, mpi_request *requests, mpi_status *statuses )
@@ -434,38 +488,38 @@ inline int waitany( int count, mpi_request *requests )
     return waitany( count, requests, static_cast<mpi_status *>( nullptr ) );
 }
 
-inline mpi_data_type<> type_vector( int count, int blocklength, int stride, const mpi_data_type<> &oldtype )
+inline mpi_data_type type_vector( int count, int blocklength, int stride, const mpi_data_type &oldtype )
 {
-    mpi_data_type<> newtype;
+    mpi_data_type newtype;
     SCFD_MPI_SAFE_CALL( MPI_Type_vector( count, blocklength, stride, oldtype.native(), newtype.native_ptr() ) );
     return newtype;
 }
 
-inline mpi_data_type<> type_contiguous( int count, const mpi_data_type<> &oldtype )
+inline mpi_data_type type_contiguous( int count, const mpi_data_type &oldtype )
 {
-    mpi_data_type<> newtype;
+    mpi_data_type newtype;
     SCFD_MPI_SAFE_CALL( MPI_Type_contiguous( count, oldtype.native(), newtype.native_ptr() ) );
     return newtype;
 }
 
-inline void type_commit( mpi_data_type<> *datatype )
+inline void type_commit( mpi_data_type *datatype )
 {
     SCFD_MPI_SAFE_CALL( MPI_Type_commit( datatype->native_ptr() ) );
 }
 
-inline void type_commit( mpi_data_type<> &datatype )
+inline void type_commit( mpi_data_type &datatype )
 {
     type_commit( &datatype );
 }
 
-inline void type_free( mpi_data_type<> *datatype )
+inline void type_free( mpi_data_type *datatype )
 {
     if ( datatype->is_null() )
         return;
     SCFD_MPI_SAFE_CALL( MPI_Type_free( datatype->native_ptr() ) );
 }
 
-inline void type_free( mpi_data_type<> &datatype )
+inline void type_free( mpi_data_type &datatype )
 {
     type_free( &datatype );
 }
@@ -477,86 +531,11 @@ inline double wtime()
 
 
 template <class T>
-void all_reduce( T *loc_data, T *res_data, int count, MPI_Op op, MPI_Comm communicator )
-{
-    throw std::logic_error( "all_reduce:type not implemented" );
-}
-
-template <>
-void all_reduce<float>( float *loc_data, float *res_data, int count, MPI_Op op, MPI_Comm communicator )
+void all_reduce( const T *loc_data, T *res_data, int count, MPI_Op op, MPI_Comm communicator )
 {
     SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<float>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<double>( double *loc_data, double *res_data, int count, MPI_Op op, MPI_Comm communicator )
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<double>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<int>( int *loc_data, int *res_data, int count, MPI_Op op, MPI_Comm communicator )
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<int>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<unsigned int>(
-    unsigned int *loc_data, unsigned int *res_data, int count, MPI_Op op, MPI_Comm communicator
-)
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<unsigned int>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<long>( long *loc_data, long *res_data, int count, MPI_Op op, MPI_Comm communicator )
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<long>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<unsigned long>(
-    unsigned long *loc_data, unsigned long *res_data, int count, MPI_Op op, MPI_Comm communicator
-)
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<unsigned long>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<long long>( long long *loc_data, long long *res_data, int count, MPI_Op op, MPI_Comm communicator )
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<long long>::mpi_type().native(), op, communicator
-    ) );
-}
-
-template <>
-void all_reduce<unsigned long long>(
-    unsigned long long *loc_data, unsigned long long *res_data, int count, MPI_Op op, MPI_Comm communicator
-)
-{
-    SCFD_MPI_SAFE_CALL( MPI_Allreduce(
-        static_cast<void *>( loc_data ), static_cast<void *>( res_data ), count,
-        mpi_data_type<unsigned long long>::mpi_type().native(), op, communicator
+        static_cast<const void *>( loc_data ), static_cast<void *>( res_data ), count, get_mpi_data_type<T>().native(),
+        op, communicator
     ) );
 }
 
@@ -569,8 +548,7 @@ struct mpi_comm_info
     using mpi_comm_type = mpi_comm;
     using request_type  = detail::mpi_request;
     using status_type   = detail::mpi_status;
-    template <class T = void>
-    using data_type = detail::mpi_data_type<T>;
+    using data_type     = detail::mpi_data_type;
 
     MPI_Comm comm;
     int      num_procs;
@@ -583,14 +561,37 @@ struct mpi_comm_info
     }
 
     template <class T>
+    data_type get_data_type() const
+    {
+        return detail::get_mpi_data_type<T>();
+    }
+
+    template <class T>
     void all_gather( const T *sendbuf, int sendcount, T *recvbuf, int recvcount ) const
     {
         detail::all_gather( sendbuf, sendcount, recvbuf, recvcount, comm );
     }
     template <class T>
+    void iall_gather( const T *sendbuf, int sendcount, T *recvbuf, int recvcount, detail::mpi_request *request ) const
+    {
+        detail::iall_gather( sendbuf, sendcount, recvbuf, recvcount, comm, request );
+    }
+    template <class T>
+    void iall_gather( const T *sendbuf, int sendcount, T *recvbuf, int recvcount, detail::mpi_request &request ) const
+    {
+        iall_gather( sendbuf, sendcount, recvbuf, recvcount, &request );
+    }
+    template <class T>
     void all_gatherv( const T *sendbuf, int sendcount, T *recvbuf, const int *recvcounts, const int *displs ) const
     {
         detail::all_gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, comm );
+    }
+
+    void all_gatherv_bytes(
+        const void *sendbuf, int sendcount, void *recvbuf, const int *recvcounts, const int *displs
+    ) const
+    {
+        detail::all_gatherv_bytes( sendbuf, sendcount, recvbuf, recvcounts, displs, comm );
     }
 
     template <
@@ -618,9 +619,48 @@ struct mpi_comm_info
         detail::gatherv( sendbuf, sendcount, recvbuf, recvcounts, displs, root, comm );
     }
 
+    void bcast( void *buf, int count, const data_type &datatype, int root ) const
+    {
+        detail::bcast( buf, count, datatype, root, comm );
+    }
+    template <class T>
+    void bcast( T *buf, int count, int root ) const
+    {
+        detail::bcast( buf, count, root, comm );
+    }
+    void bcast_bytes( void *buf, int count, int root ) const
+    {
+        detail::bcast_bytes( buf, count, root, comm );
+    }
+
+    data_type type_vector( int count, int blocklength, int stride, const data_type &oldtype ) const
+    {
+        return detail::type_vector( count, blocklength, stride, oldtype );
+    }
+    data_type type_contiguous( int count, const data_type &oldtype ) const
+    {
+        return detail::type_contiguous( count, oldtype );
+    }
+    void type_commit( data_type *datatype ) const
+    {
+        detail::type_commit( datatype );
+    }
+    void type_commit( data_type &datatype ) const
+    {
+        detail::type_commit( datatype );
+    }
+    void type_free( data_type *datatype ) const
+    {
+        detail::type_free( datatype );
+    }
+    void type_free( data_type &datatype ) const
+    {
+        detail::type_free( datatype );
+    }
+
     void alltoallv(
-        const void *sendbuf, const int *sendcounts, const int *sdispls, const detail::mpi_data_type<> &sendtype,
-        void *recvbuf, const int *recvcounts, const int *rdispls, const detail::mpi_data_type<> &recvtype
+        const void *sendbuf, const int *sendcounts, const int *sdispls, const data_type &sendtype, void *recvbuf,
+        const int *recvcounts, const int *rdispls, const data_type &recvtype
     ) const
     {
         detail::alltoallv( sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm );
@@ -635,24 +675,20 @@ struct mpi_comm_info
     }
 
     void alltoallw(
-        const void *sendbuf, const int *sendcounts, const int *sdispls, const detail::mpi_data_type<> *sendtypes,
-        void *recvbuf, const int *recvcounts, const int *rdispls, const detail::mpi_data_type<> *recvtypes
+        const void *sendbuf, const int *sendcounts, const int *sdispls, const data_type *sendtypes, void *recvbuf,
+        const int *recvcounts, const int *rdispls, const data_type *recvtypes
     ) const
     {
         detail::alltoallw( sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm );
     }
 
-    void isend(
-        const void *buf, int count, const detail::mpi_data_type<> &datatype, int dest, int tag,
-        detail::mpi_request *request
-    ) const
+    void isend( const void *buf, int count, const data_type &datatype, int dest, int tag, detail::mpi_request *request )
+        const
     {
         detail::isend( buf, count, datatype, dest, tag, comm, request );
     }
-    void isend(
-        const void *buf, int count, const detail::mpi_data_type<> &datatype, int dest, int tag,
-        detail::mpi_request &request
-    ) const
+    void isend( const void *buf, int count, const data_type &datatype, int dest, int tag, detail::mpi_request &request )
+        const
     {
         isend( buf, count, datatype, dest, tag, &request );
     }
@@ -667,15 +703,13 @@ struct mpi_comm_info
         isend( buf, count, dest, tag, &request );
     }
 
-    void irecv(
-        void *buf, int count, const detail::mpi_data_type<> &datatype, int source, int tag, detail::mpi_request *request
-    ) const
+    void
+    irecv( void *buf, int count, const data_type &datatype, int source, int tag, detail::mpi_request *request ) const
     {
         detail::irecv( buf, count, datatype, source, tag, comm, request );
     }
-    void irecv(
-        void *buf, int count, const detail::mpi_data_type<> &datatype, int source, int tag, detail::mpi_request &request
-    ) const
+    void
+    irecv( void *buf, int count, const data_type &datatype, int source, int tag, detail::mpi_request &request ) const
     {
         irecv( buf, count, datatype, source, tag, &request );
     }
@@ -699,6 +733,23 @@ struct mpi_comm_info
         detail::waitall( count, requests );
     }
 
+    void wait( detail::mpi_request *request, detail::mpi_status *status ) const
+    {
+        detail::wait( request, status );
+    }
+    void wait( detail::mpi_request *request ) const
+    {
+        detail::wait( request );
+    }
+    void wait( detail::mpi_request &request, detail::mpi_status *status ) const
+    {
+        wait( &request, status );
+    }
+    void wait( detail::mpi_request &request ) const
+    {
+        wait( &request );
+    }
+
     int waitany( int count, detail::mpi_request *requests, detail::mpi_status *status ) const
     {
         return detail::waitany( count, requests, status );
@@ -708,23 +759,28 @@ struct mpi_comm_info
         return detail::waitany( count, requests );
     }
 
+    double wtime() const
+    {
+        return detail::wtime();
+    }
+
     template <class T>
-    void all_reduce( T *loc_data, T *res_data, int count, MPI_Op op ) const
+    void all_reduce( const T *loc_data, T *res_data, int count, MPI_Op op ) const
     {
         detail::all_reduce( loc_data, res_data, count, op, comm );
     }
     template <class T>
-    void all_reduce_sum( T *loc_data, T *res_data, int count ) const
+    void all_reduce_sum( const T *loc_data, T *res_data, int count ) const
     {
         all_reduce( loc_data, res_data, count, MPI_SUM );
     }
     template <class T>
-    void all_reduce_max( T *loc_data, T *res_data, int count ) const
+    void all_reduce_max( const T *loc_data, T *res_data, int count ) const
     {
         all_reduce( loc_data, res_data, count, MPI_MAX );
     }
     template <class T>
-    void all_reduce_min( T *loc_data, T *res_data, int count ) const
+    void all_reduce_min( const T *loc_data, T *res_data, int count ) const
     {
         all_reduce( loc_data, res_data, count, MPI_MIN );
     }

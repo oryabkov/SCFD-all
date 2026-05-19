@@ -40,8 +40,8 @@ int main( int argc, char *argv[] )
 {
     using mpi_wrap_t    = scfd::communication::mpi_wrap;
     using log_t         = scfd::utils::log_mpi;
-    using mpi_request_t = scfd::communication::detail::mpi_request;
-    using mpi_status_t  = scfd::communication::detail::mpi_status;
+    using mpi_request_t = scfd::communication::mpi_comm_info::request_type;
+    using mpi_status_t  = scfd::communication::mpi_comm_info::status_type;
 
     mpi_wrap_t mpi( argc, argv );
     auto       comm_info = mpi.comm_world();
@@ -81,15 +81,15 @@ int main( int argc, char *argv[] )
     comm_info.irecv( recv_tensor.raw_ptr(), payload_size, left, 100, recv_requests[0] );
     comm_info.irecv(
         static_cast<void *>( recv_tensor.raw_ptr() + payload_size ),
-        payload_size * static_cast<int>( sizeof( value_t ) ),
-        scfd::communication::detail::mpi_data_type<char>::mpi_type(), left, 101, recv_requests[1]
+        payload_size * static_cast<int>( sizeof( value_t ) ), comm_info.get_data_type<unsigned char>(), left, 101,
+        recv_requests[1]
     );
 
     comm_info.isend( send_tensor.raw_ptr(), payload_size, right, 100, send_requests[0] );
     comm_info.isend(
         static_cast<const void *>( send_tensor.raw_ptr() + payload_size ),
-        payload_size * static_cast<int>( sizeof( value_t ) ),
-        scfd::communication::detail::mpi_data_type<char>::mpi_type(), right, 101, send_requests[1]
+        payload_size * static_cast<int>( sizeof( value_t ) ), comm_info.get_data_type<unsigned char>(), right, 101,
+        send_requests[1]
     );
 
     std::array<int, 2> recv_seen{ 0, 0 };
@@ -140,9 +140,9 @@ int main( int argc, char *argv[] )
     }
 
     comm_info.barrier();
-    const double t0 = scfd::communication::detail::wtime();
+    const double t0 = comm_info.wtime();
     comm_info.barrier();
-    const double t1 = scfd::communication::detail::wtime();
+    const double t1 = comm_info.wtime();
     if ( t1 < t0 )
     {
         fail( "MPI_Wtime is not monotone on rank %d: t0=%lf, t1=%lf", myid, t0, t1 );

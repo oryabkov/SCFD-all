@@ -17,6 +17,14 @@ MPICOMPILER_OPENMP = -fopenmp -lpthread
 MPI_CXXFLAGS = -std=c++14
 MPI_TEST_HOST = localhost:4
 MPI_TEST_PROCS = 4
+MPI_TEST_RUN_FLAGS = --bind-to none
+CUDA_TEST_TARGETS = test_mpi_rect_distributor.bin test_mpi_rect_distributor_tensor.bin
+MPI_TEST_TARGETS = test_sequential_mpi.bin test_mpi_binary_file.bin test_mpi_thread_multiple.bin test_mpi_comm_split.bin test_mpi_comm_collectives.bin test_mpi_comm_p2p.bin test_mpi_comm_calls.bin
+TEST_TARGETS = $(CUDA_TEST_TARGETS) $(MPI_TEST_TARGETS)
+
+.PHONY: all clean
+
+all: $(TEST_TARGETS)
 
 test_mpi_rect_distributor.bin: test_mpi_rect_distributor.cu
 	$(NVCC) -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 test_mpi_rect_distributor.cu -c -o test_mpi_rect_distributor.o
@@ -27,36 +35,43 @@ test_mpi_rect_distributor_tensor.bin: test_mpi_rect_distributor_tensor.cu
 
 test_sequential_mpi.bin: test_sequential_mpi.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_sequential_mpi.cpp -o test_sequential_mpi.bin
-	mpiexec --host localhost:77 -n 77 ./test_sequential_mpi.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:77 -n 77 ./test_sequential_mpi.bin
 
 test_mpi_binary_file.bin: test_mpi_binary_file.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_mpi_binary_file.cpp -o test_mpi_binary_file.bin
-	mpiexec --host localhost:77 -n 77 ./test_mpi_binary_file.bin		
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:77 -n 77 ./test_mpi_binary_file.bin
 
 
 test_mpi_thread_multiple.bin: test_mpi_thread_multiple.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_mpi_thread_multiple.cpp -o test_mpi_thread_multiple.bin
-	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin	
-	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 0	
-	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 1	
-	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 2	
-	mpiexec --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 3	
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 0
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 1
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 2
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 3
 
 	
 test_mpi_comm_split.bin: test_mpi_comm_split.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_mpi_comm_split.cpp -o test_mpi_comm_split.bin
-	mpiexec --host localhost:8 -n 2 test_mpi_comm_split.bin
-	mpiexec --host localhost:8 -n 3 test_mpi_comm_split.bin
-	mpiexec --host localhost:8 -n 4 test_mpi_comm_split.bin
-	mpiexec --host localhost:8 -n 5 test_mpi_comm_split.bin
-	mpiexec --host localhost:8 -n 6 test_mpi_comm_split.bin		
-	mpiexec --host localhost:8 -n 7 test_mpi_comm_split.bin		
-	mpiexec --host localhost:8 -n 8 test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 2 ./test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 3 ./test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 4 ./test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 5 ./test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 6 ./test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 7 ./test_mpi_comm_split.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_comm_split.bin
 
 test_mpi_comm_collectives.bin: test_mpi_comm_collectives.cpp
 	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_collectives.cpp -o test_mpi_comm_collectives.bin
-	$(MPIRUN) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_collectives.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_collectives.bin
 
 test_mpi_comm_p2p.bin: test_mpi_comm_p2p.cpp
 	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_p2p.cpp -o test_mpi_comm_p2p.bin
-	$(MPIRUN) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_p2p.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_p2p.bin
+
+test_mpi_comm_calls.bin: test_mpi_comm_calls.cpp
+	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_calls.cpp -o test_mpi_comm_calls.bin
+	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_calls.bin
+
+clean:
+	rm -f *.bin *.o test_file_write.txt

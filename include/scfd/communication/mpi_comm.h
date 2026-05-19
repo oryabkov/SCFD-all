@@ -90,7 +90,7 @@ struct mpi_comm
     mpi_comm_info info() const
     {
         ///ISSUE leave info as plain struct or make it to be class??
-        return mpi_comm_info{ comm_, num_procs_, myid_ };
+        return mpi_comm_info{ comm_, num_procs_, myid_, -1 };
     }
 
 private:
