@@ -1,4 +1,4 @@
-// Copyright © 2016-2025 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch, Sorokin Ivan Antonovich
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
 // This file is part of SCFD.
 
@@ -14,21 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SYCL_REDUCE_IMPL_H__
-#define __SCFD_SYCL_REDUCE_IMPL_H__
+#ifndef __SCFD_SYCL_SEQUENCE_IMPL_H__
+#define __SCFD_SYCL_SEQUENCE_IMPL_H__
 
-#include "sycl_reduce.h"
-#include "scfd/utils/init_sycl.h"
+#include "sycl_sequence.h"
+#include <scfd/utils/init_sycl.h>
 
 namespace scfd
 {
 
 template <class Ord>
 template <class T>
-T sycl_reduce<Ord>::operator()( Ord size, const T *input, T init_val ) const
+void sycl_sequence<Ord>::operator()( Ord size, T *output, T init_val, T step ) const
 {
-    auto policy = dpl::execution::make_device_policy( sycl_device_queue );
-    return dpl::reduce( policy, input, input + size, init_val, std::plus<T>{} );
+    if ( size <= 0 )
+        return;
+    sycl_device_queue
+        .parallel_for(
+            sycl::range<1>( static_cast<size_t>( size ) ),
+            [=]( sycl::id<1> item ) {
+                const Ord i = static_cast<Ord>( item[0] );
+                output[i]   = init_val + static_cast<T>( i ) * step;
+            }
+        )
+        .wait();
 }
 
 }

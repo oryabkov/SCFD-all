@@ -22,10 +22,16 @@
 #include <scfd/memory/hip.h>
 #include <scfd/for_each/hip_impl.h>
 #include <scfd/for_each/hip_nd_impl.h>
-#include <scfd/reduce/thrust.h>
-#include <scfd/sort/thrust.h>
-#include <scfd/unique/thrust.h>
-#include <scfd/exclusive_scan/thrust.h>
+#include <scfd/backend/reduce/thrust.h>
+#include <scfd/backend/sort/thrust.h>
+#include <scfd/backend/unique/thrust.h>
+#include <scfd/backend/exclusive_scan/thrust.h>
+#include <scfd/backend/copy/hip.h>
+#include <scfd/backend/inclusive_scan/thrust.h>
+#include <scfd/backend/sort_by_key/thrust.h>
+#include <scfd/backend/reduce_by_key/thrust.h>
+#include <scfd/backend/set_intersection/thrust.h>
+#include <scfd/backend/sequence/thrust.h>
 
 namespace scfd
 {
@@ -42,6 +48,12 @@ struct hip
     using sort_type           = scfd::thrust_sort<>;
     using unique_type         = scfd::thrust_unique<>;
     using exclusive_scan_type = scfd::thrust_exclusive_scan<>;
+    using copy_type           = scfd::hip_copy<>;
+    using inclusive_scan_type = scfd::thrust_inclusive_scan<>;
+    using sort_by_key_type    = scfd::thrust_sort_by_key<>;
+    using reduce_by_key_type  = scfd::thrust_reduce_by_key<>;
+    using set_intersection_type = scfd::thrust_set_intersection<>;
+    using sequence_type       = scfd::thrust_sequence<>;
 };
 }
 }

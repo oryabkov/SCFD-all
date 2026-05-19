@@ -8,7 +8,7 @@
 
 #    include <scfd/memory/host.h>
 #    include <scfd/for_each/serial_cpu_nd.h>
-#    include <scfd/reduce/serial_cpu.h>
+#    include <scfd/backend/reduce/serial_cpu.h>
 ///NOTE for serial implementation no separate intantiation is needed
 #    ifdef POISSON_SOLVER_USE_LAMBDA
 #        include "poisson_solver_lambda_impl.h"
@@ -24,7 +24,7 @@ using reduce_t   = scfd::serial_cpu_reduce<>;
 
 #    include <scfd/memory/host.h>
 #    include <scfd/for_each/openmp_nd.h>
-#    include <scfd/reduce/omp_reduce.h>
+#    include <scfd/backend/reduce/omp_reduce.h>
 
 using memory_t   = scfd::memory::host;
 using for_each_t = scfd::for_each::openmp_nd<current_dim>;
@@ -34,7 +34,7 @@ using reduce_t   = scfd::omp_reduce<>;
 
 #    include <scfd/memory/cuda.h>
 #    include <scfd/for_each/cuda_nd.h>
-#    include <scfd/reduce/thrust.h>
+#    include <scfd/backend/reduce/thrust.h>
 
 using memory_t   = scfd::memory::cuda_device;
 using for_each_t = scfd::for_each::cuda_nd<current_dim>;
@@ -44,8 +44,8 @@ using reduce_t   = scfd::thrust_reduce<>;
 
 #    include <scfd/memory/sycl.h>
 #    include <scfd/for_each/sycl_nd.h>
-#    include <scfd/reduce/sycl_reduce.h>
-#    include <scfd/reduce/sycl_reduce_impl.h>
+#    include <scfd/backend/reduce/sycl_reduce.h>
+#    include <scfd/backend/reduce/sycl_reduce_impl.h>
 
 using memory_t   = scfd::memory::sycl_device;
 using for_each_t = scfd::for_each::sycl_nd<current_dim>;
@@ -55,7 +55,7 @@ using reduce_t   = scfd::sycl_reduce<>;
 
 #    include <scfd/memory/hip.h>
 #    include <scfd/for_each/hip_nd.h>
-#    include <scfd/reduce/thrust.h>
+#    include <scfd/backend/reduce/thrust.h>
 
 using memory_t   = scfd::memory::hip_device;
 using for_each_t = scfd::for_each::hip_nd<current_dim>;

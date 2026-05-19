@@ -1,5 +1,5 @@
 #include <scfd/for_each/sycl_nd_impl.h>
-#include <scfd/reduce/sycl_reduce_impl.h>
+#include <scfd/backend/reduce/sycl_reduce_impl.h>
 #ifdef POISSON_SOLVER_USE_LAMBDA
 #    include "poisson_solver_lambda_impl.h"
 #else

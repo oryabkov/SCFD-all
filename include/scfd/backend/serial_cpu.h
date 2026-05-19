@@ -21,10 +21,16 @@
 #include <scfd/memory/host.h>
 #include <scfd/for_each/serial_cpu.h>
 #include <scfd/for_each/serial_cpu_nd.h>
-#include <scfd/reduce/serial_cpu.h>
-#include <scfd/sort/serial_cpu.h>
-#include <scfd/unique/serial_cpu.h>
-#include <scfd/exclusive_scan/serial_cpu.h>
+#include <scfd/backend/reduce/serial_cpu.h>
+#include <scfd/backend/sort/serial_cpu.h>
+#include <scfd/backend/unique/serial_cpu.h>
+#include <scfd/backend/exclusive_scan/serial_cpu.h>
+#include <scfd/backend/copy/serial_cpu.h>
+#include <scfd/backend/inclusive_scan/serial_cpu.h>
+#include <scfd/backend/sort_by_key/serial_cpu.h>
+#include <scfd/backend/reduce_by_key/serial_cpu.h>
+#include <scfd/backend/set_intersection/serial_cpu.h>
+#include <scfd/backend/sequence/serial_cpu.h>
 namespace scfd
 {
 namespace backend
@@ -41,6 +47,12 @@ struct serial_cpu
     using sort_type           = scfd::serial_cpu_sort<>;
     using unique_type         = scfd::serial_cpu_unique<>;
     using exclusive_scan_type = scfd::serial_cpu_exclusive_scan<>;
+    using copy_type           = scfd::serial_cpu_copy<>;
+    using inclusive_scan_type = scfd::serial_cpu_inclusive_scan<>;
+    using sort_by_key_type    = scfd::serial_cpu_sort_by_key<>;
+    using reduce_by_key_type  = scfd::serial_cpu_reduce_by_key<>;
+    using set_intersection_type = scfd::serial_cpu_set_intersection<>;
+    using sequence_type       = scfd::serial_cpu_sequence<>;
 };
 
 

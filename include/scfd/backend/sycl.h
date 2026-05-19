@@ -21,10 +21,16 @@
 #include <scfd/memory/sycl.h>
 #include <scfd/for_each/sycl_impl.h>
 #include <scfd/for_each/sycl_nd_impl.h>
-#include <scfd/reduce/sycl_reduce_impl.h>
-#include <scfd/sort/sycl_sort_impl.h>
-#include <scfd/unique/sycl_unique_impl.h>
-#include <scfd/exclusive_scan/sycl_exclusive_scan_impl.h>
+#include <scfd/backend/reduce/sycl_reduce_impl.h>
+#include <scfd/backend/sort/sycl_sort_impl.h>
+#include <scfd/backend/unique/sycl_unique_impl.h>
+#include <scfd/backend/exclusive_scan/sycl_exclusive_scan_impl.h>
+#include <scfd/backend/copy/sycl_copy_impl.h>
+#include <scfd/backend/inclusive_scan/sycl_inclusive_scan_impl.h>
+#include <scfd/backend/sort_by_key/sycl_sort_by_key_impl.h>
+#include <scfd/backend/reduce_by_key/sycl_reduce_by_key_impl.h>
+#include <scfd/backend/set_intersection/sycl_set_intersection_impl.h>
+#include <scfd/backend/sequence/sycl_sequence_impl.h>
 
 #define MAKE_SYCL_DEVICE_COPYABLE( kernel )                                                                            \
     template <>                                                                                                        \
@@ -47,6 +53,12 @@ struct sycl
     using sort_type           = scfd::sycl_sort<>;
     using unique_type         = scfd::sycl_unique<>;
     using exclusive_scan_type = scfd::sycl_exclusive_scan<>;
+    using copy_type           = scfd::sycl_copy<>;
+    using inclusive_scan_type = scfd::sycl_inclusive_scan<>;
+    using sort_by_key_type    = scfd::sycl_sort_by_key<>;
+    using reduce_by_key_type  = scfd::sycl_reduce_by_key<>;
+    using set_intersection_type = scfd::sycl_set_intersection<>;
+    using sequence_type       = scfd::sycl_sequence<>;
 };
 }
 }

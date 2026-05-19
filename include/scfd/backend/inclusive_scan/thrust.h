@@ -1,4 +1,4 @@
-// Copyright © 2016-2021 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
 // This file is part of SCFD.
 
@@ -14,30 +14,27 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_REDUCE_THRUST_H__
-#define __SCFD_REDUCE_THRUST_H__
+#ifndef __SCFD_INCLUSIVE_SCAN_THRUST_H__
+#define __SCFD_INCLUSIVE_SCAN_THRUST_H__
 
-#include "reduce_config.h"
 #include <thrust/device_ptr.h>
-#include <thrust/reduce.h>
-
-/// TODO how to specify memory type in thrust?
-
-///TODO this is PLUS only operation reduce
-///TODO now it's in cpp code also because for simple types we can call thrust from cpp, later - move to _impl
+#include <thrust/scan.h>
 
 namespace scfd
 {
 
 template <class Ord = int>
-struct thrust_reduce
+struct thrust_inclusive_scan
 {
     template <class T>
-    T operator()( Ord size, const T *input, T init_val ) const
+    void operator()( Ord size, const T *input, T *output ) const
     {
+        if ( size <= 0 )
+            return;
         ::thrust::device_ptr<const T> input_begin = ::thrust::device_pointer_cast( input ),
                                       input_end   = input_begin + size;
-        return ::thrust::reduce( input_begin, input_end, init_val );
+        ::thrust::device_ptr<T> output_begin      = ::thrust::device_pointer_cast( output );
+        ::thrust::inclusive_scan( input_begin, input_end, output_begin );
     }
     void wait() const
     {

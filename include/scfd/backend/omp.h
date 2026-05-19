@@ -21,10 +21,16 @@
 #include <scfd/memory/host.h>
 #include <scfd/for_each/openmp_impl.h>
 #include <scfd/for_each/openmp_nd_impl.h>
-#include <scfd/reduce/omp_reduce_impl.h>
-#include <scfd/sort/omp_sort_impl.h>
-#include <scfd/unique/omp_unique_impl.h>
-#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
+#include <scfd/backend/reduce/omp_reduce_impl.h>
+#include <scfd/backend/sort/omp_sort_impl.h>
+#include <scfd/backend/unique/omp_unique_impl.h>
+#include <scfd/backend/exclusive_scan/omp_exclusive_scan_impl.h>
+#include <scfd/backend/copy/omp_copy_impl.h>
+#include <scfd/backend/inclusive_scan/omp_inclusive_scan_impl.h>
+#include <scfd/backend/sort_by_key/omp_sort_by_key_impl.h>
+#include <scfd/backend/reduce_by_key/omp_reduce_by_key_impl.h>
+#include <scfd/backend/set_intersection/omp_set_intersection_impl.h>
+#include <scfd/backend/sequence/omp_sequence_impl.h>
 
 
 namespace scfd
@@ -43,6 +49,12 @@ struct omp
     using sort_type           = scfd::omp_sort<>;
     using unique_type         = scfd::omp_unique<>;
     using exclusive_scan_type = scfd::omp_exclusive_scan<>;
+    using copy_type           = scfd::omp_copy<>;
+    using inclusive_scan_type = scfd::omp_inclusive_scan<>;
+    using sort_by_key_type    = scfd::omp_sort_by_key<>;
+    using reduce_by_key_type  = scfd::omp_reduce_by_key<>;
+    using set_intersection_type = scfd::omp_set_intersection<>;
+    using sequence_type       = scfd::omp_sequence<>;
 };
 
 }

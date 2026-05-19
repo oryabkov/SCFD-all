@@ -1,4 +1,4 @@
-// Copyright © 2016-2021 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
 // This file is part of SCFD.
 
@@ -14,39 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SERIAL_CPU_REDUCE_H__
-#define __SCFD_SERIAL_CPU_REDUCE_H__
+#ifndef __SCFD_HIP_COPY_H__
+#define __SCFD_HIP_COPY_H__
 
-///TODO this is PLUS only operation reduce
-
-#include "reduce_config.h"
+#include <hip/hip_runtime.h>
+#include <scfd/utils/hip_safe_call.h>
 
 namespace scfd
 {
 
 template <class Ord = int>
-struct serial_cpu_reduce
+struct hip_copy
 {
-    /*void set_max_size(Ord max_size)
-    {
-        max_size_ = max_size;
-    }*/
-
     template <class T>
-    T operator()( Ord size, const T *input, T init_val ) const
+    void operator()( Ord size, const T *input, T *output ) const
     {
-        T res( init_val );
-        for ( Ord i = 0; i < size; ++i )
-        {
-            res += input[i];
-        }
-        return res;
+        if ( size <= 0 )
+            return;
+        HIP_SAFE_CALL( hipMemcpy( output, input, sizeof( T ) * static_cast<size_t>( size ), hipMemcpyDefault ) );
     }
     void wait() const
     {
     }
-
-    Ord max_size_;
 };
 
 }

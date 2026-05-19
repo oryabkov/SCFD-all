@@ -1,4 +1,4 @@
-// Copyright © 2016-2025 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch, Sorokin Ivan Antonovich
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
 // This file is part of SCFD.
 
@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SYCL_REDUCE_H__
-#define __SCFD_SYCL_REDUCE_H__
-
-#include "reduce_config.h"
-
-///TODO this is PLUS only operation reduce
+#ifndef __SCFD_SYCL_SEQUENCE_H__
+#define __SCFD_SYCL_SEQUENCE_H__
 
 namespace scfd
 {
 
 template <class Ord = int>
-struct sycl_reduce
+struct sycl_sequence
 {
     template <class T>
-    T    operator()( Ord size, const T *input, T init_val ) const;
+    void operator()( Ord size, T *output, T init_val = T( 0 ), T step = T( 1 ) ) const;
     void wait() const
     {
     }

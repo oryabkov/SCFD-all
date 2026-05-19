@@ -1,6 +1,6 @@
 
 #include <scfd/for_each/openmp_nd_impl.h>
-#include <scfd/reduce/omp_reduce_impl.h>
+#include <scfd/backend/reduce/omp_reduce_impl.h>
 #ifdef POISSON_SOLVER_USE_LAMBDA
 #    include "poisson_solver_lambda_impl.h"
 #else
