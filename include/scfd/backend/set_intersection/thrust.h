@@ -31,10 +31,11 @@ struct thrust_set_intersection
     {
         if ( size1 <= 0 || size2 <= 0 )
             return 0;
-        ::thrust::device_ptr<const T> set1_begin = ::thrust::device_pointer_cast( set1 );
-        ::thrust::device_ptr<const T> set2_begin = ::thrust::device_pointer_cast( set2 );
+        ::thrust::device_ptr<const T> set1_begin   = ::thrust::device_pointer_cast( set1 );
+        ::thrust::device_ptr<const T> set2_begin   = ::thrust::device_pointer_cast( set2 );
         ::thrust::device_ptr<T>       result_begin = ::thrust::device_pointer_cast( result );
-        auto end = ::thrust::set_intersection( set1_begin, set1_begin + size1, set2_begin, set2_begin + size2, result_begin );
+        auto                          end =
+            ::thrust::set_intersection( set1_begin, set1_begin + size1, set2_begin, set2_begin + size2, result_begin );
         return static_cast<Ord>( end - result_begin );
     }
     void wait() const

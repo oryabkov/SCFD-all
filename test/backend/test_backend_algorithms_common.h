@@ -1,6 +1,7 @@
 #ifndef __SCFD_TEST_BACKEND_ALGORITHMS_COMMON_H__
 #define __SCFD_TEST_BACKEND_ALGORITHMS_COMMON_H__
 
+#include <algorithm>
 #include <exception>
 #include <iostream>
 #include <type_traits>
@@ -69,19 +70,19 @@ bool array_prefix_equal_to_expected( const Array &array, const int ( &expected )
 template <class Backend>
 int run_backend_algorithm_tests( const char *backend_name )
 {
-    using memory_t         = typename Backend::memory_type;
-    using array_t          = scfd::arrays::tensor0_array_nd<int, 1, memory_t>;
-    using for_each_t       = typename Backend::template for_each_type<int>;
-    using reduce_t         = typename Backend::reduce_type;
-    using sort_t           = typename Backend::sort_type;
-    using unique_t         = typename Backend::unique_type;
-    using exclusive_scan_t = typename Backend::exclusive_scan_type;
-    using copy_t           = typename Backend::copy_type;
-    using inclusive_scan_t = typename Backend::inclusive_scan_type;
-    using sort_by_key_t    = typename Backend::sort_by_key_type;
-    using reduce_by_key_t  = typename Backend::reduce_by_key_type;
+    using memory_t           = typename Backend::memory_type;
+    using array_t            = scfd::arrays::tensor0_array_nd<int, 1, memory_t>;
+    using for_each_t         = typename Backend::template for_each_type<int>;
+    using reduce_t           = typename Backend::reduce_type;
+    using sort_t             = typename Backend::sort_type;
+    using unique_t           = typename Backend::unique_type;
+    using exclusive_scan_t   = typename Backend::exclusive_scan_type;
+    using copy_t             = typename Backend::copy_type;
+    using inclusive_scan_t   = typename Backend::inclusive_scan_type;
+    using sort_by_key_t      = typename Backend::sort_by_key_type;
+    using reduce_by_key_t    = typename Backend::reduce_by_key_type;
     using set_intersection_t = typename Backend::set_intersection_type;
-    using sequence_t       = typename Backend::sequence_type;
+    using sequence_t         = typename Backend::sequence_type;
 
     try
     {
@@ -146,17 +147,17 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 26;
         }
 
-        for_each_t       for_each;
-        reduce_t         reduce;
-        sort_t           sort;
-        unique_t         unique;
-        exclusive_scan_t exclusive_scan;
-        copy_t           backend_copy;
-        inclusive_scan_t inclusive_scan;
-        sort_by_key_t    sort_by_key;
-        reduce_by_key_t  reduce_by_key;
+        for_each_t         for_each;
+        reduce_t           reduce;
+        sort_t             sort;
+        unique_t           unique;
+        exclusive_scan_t   exclusive_scan;
+        copy_t             backend_copy;
+        inclusive_scan_t   inclusive_scan;
+        sort_by_key_t      sort_by_key;
+        reduce_by_key_t    reduce_by_key;
         set_intersection_t set_intersection;
-        sequence_t       sequence;
+        sequence_t         sequence;
 
         array_t for_each_values;
         for_each_values.init( 5 );
@@ -234,8 +235,7 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 27;
         }
 
-        const int reduce_max =
-            reduce( 8, scan_input.raw_ptr(), -1, scfd::functional::maximum<int>() );
+        const int reduce_max = reduce( 8, scan_input.raw_ptr(), -1, scfd::functional::maximum<int>() );
         if ( reduce_max != 8 )
         {
             std::cout << backend_name << ": FAILED reduce max" << std::endl;
@@ -329,6 +329,56 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 34;
         }
 
+        const int rbk_stress_size   = 257;
+        const int rbk_stress_group  = 37;
+        const int rbk_stress_groups = ( rbk_stress_size + rbk_stress_group - 1 ) / rbk_stress_group;
+        array_t   rbk_stress_keys;
+        array_t   rbk_stress_vals;
+        array_t   rbk_stress_keys_out;
+        array_t   rbk_stress_vals_out;
+        rbk_stress_keys.init( rbk_stress_size );
+        rbk_stress_vals.init( rbk_stress_size );
+        rbk_stress_keys_out.init( rbk_stress_groups );
+        rbk_stress_vals_out.init( rbk_stress_groups );
+        {
+            typename array_t::view_type keys_view( rbk_stress_keys, false );
+            typename array_t::view_type vals_view( rbk_stress_vals, false );
+            for ( int i = 0; i < rbk_stress_size; ++i )
+            {
+                keys_view( i ) = i / rbk_stress_group;
+                vals_view( i ) = 1;
+            }
+            keys_view.release( true );
+            vals_view.release( true );
+        }
+        const int rbk_stress_out_size = reduce_by_key(
+            rbk_stress_size, rbk_stress_keys.raw_ptr(), rbk_stress_vals.raw_ptr(), rbk_stress_keys_out.raw_ptr(),
+            rbk_stress_vals_out.raw_ptr()
+        );
+        reduce_by_key.wait();
+        bool rbk_stress_ok = rbk_stress_out_size == rbk_stress_groups;
+        {
+            typename array_t::view_type keys_view( rbk_stress_keys_out, true );
+            typename array_t::view_type vals_view( rbk_stress_vals_out, true );
+            for ( int i = 0; i < rbk_stress_groups; ++i )
+            {
+                const int first_index    = i * rbk_stress_group;
+                const int expected_count = std::min( rbk_stress_group, rbk_stress_size - first_index );
+                if ( keys_view( i ) != i || vals_view( i ) != expected_count )
+                {
+                    rbk_stress_ok = false;
+                    break;
+                }
+            }
+            keys_view.release( false );
+            vals_view.release( false );
+        }
+        if ( !rbk_stress_ok )
+        {
+            std::cout << backend_name << ": FAILED reduce_by_key chunk stress" << std::endl;
+            return 36;
+        }
+
         const int set1_values[] = { 1, 2, 3, 5, 7 };
         const int set2_values[] = { 0, 2, 3, 4, 7 };
         array_t   set1;
@@ -346,6 +396,50 @@ int run_backend_algorithm_tests( const char *backend_name )
         {
             std::cout << backend_name << ": FAILED set_intersection" << std::endl;
             return 35;
+        }
+
+        const int set_stress_unique = 32;
+        const int set_stress_size1  = set_stress_unique * 3;
+        const int set_stress_size2  = set_stress_unique * 2;
+        const int set_stress_size   = set_stress_unique * 2;
+        array_t   set_stress1;
+        array_t   set_stress2;
+        array_t   set_stress_result;
+        set_stress1.init( set_stress_size1 );
+        set_stress2.init( set_stress_size2 );
+        set_stress_result.init( set_stress_size );
+        {
+            typename array_t::view_type set1_view( set_stress1, false );
+            typename array_t::view_type set2_view( set_stress2, false );
+            for ( int i = 0; i < set_stress_size1; ++i )
+                set1_view( i ) = i / 3;
+            for ( int i = 0; i < set_stress_size2; ++i )
+                set2_view( i ) = i / 2;
+            set1_view.release( true );
+            set2_view.release( true );
+        }
+        const int set_stress_out_size = set_intersection(
+            set_stress_size1, set_stress1.raw_ptr(), set_stress_size2, set_stress2.raw_ptr(),
+            set_stress_result.raw_ptr()
+        );
+        set_intersection.wait();
+        bool set_stress_ok = set_stress_out_size == set_stress_size;
+        {
+            typename array_t::view_type result_view( set_stress_result, true );
+            for ( int i = 0; i < set_stress_unique; ++i )
+            {
+                if ( result_view( 2 * i ) != i || result_view( 2 * i + 1 ) != i )
+                {
+                    set_stress_ok = false;
+                    break;
+                }
+            }
+            result_view.release( false );
+        }
+        if ( !set_stress_ok )
+        {
+            std::cout << backend_name << ": FAILED set_intersection duplicate stress" << std::endl;
+            return 37;
         }
     }
     catch ( const std::exception &err )

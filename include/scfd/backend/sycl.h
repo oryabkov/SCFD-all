@@ -48,17 +48,17 @@ struct sycl
     template <class Ordinal = int>
     using for_each_type = scfd::for_each::sycl_<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type    = scfd::for_each::sycl_nd<Dim, Ordinal>;
-    using reduce_type         = scfd::sycl_reduce<>;
-    using sort_type           = scfd::sycl_sort<>;
-    using unique_type         = scfd::sycl_unique<>;
-    using exclusive_scan_type = scfd::sycl_exclusive_scan<>;
-    using copy_type           = scfd::sycl_copy<>;
-    using inclusive_scan_type = scfd::sycl_inclusive_scan<>;
-    using sort_by_key_type    = scfd::sycl_sort_by_key<>;
-    using reduce_by_key_type  = scfd::sycl_reduce_by_key<>;
+    using for_each_nd_type      = scfd::for_each::sycl_nd<Dim, Ordinal>;
+    using reduce_type           = scfd::sycl_reduce<>;
+    using sort_type             = scfd::sycl_sort<>;
+    using unique_type           = scfd::sycl_unique<>;
+    using exclusive_scan_type   = scfd::sycl_exclusive_scan<>;
+    using copy_type             = scfd::sycl_copy<>;
+    using inclusive_scan_type   = scfd::sycl_inclusive_scan<>;
+    using sort_by_key_type      = scfd::sycl_sort_by_key<>;
+    using reduce_by_key_type    = scfd::sycl_reduce_by_key<>;
     using set_intersection_type = scfd::sycl_set_intersection<>;
-    using sequence_type       = scfd::sycl_sequence<>;
+    using sequence_type         = scfd::sycl_sequence<>;
 };
 }
 }

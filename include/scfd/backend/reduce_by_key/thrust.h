@@ -35,11 +35,11 @@ struct thrust_reduce_by_key
     {
         if ( size <= 0 )
             return 0;
-        ::thrust::device_ptr<const Key>   keys_begin   = ::thrust::device_pointer_cast( keys_in );
-        ::thrust::device_ptr<const Value> values_begin = ::thrust::device_pointer_cast( values_in );
-        ::thrust::device_ptr<Key>         keys_out_it  = ::thrust::device_pointer_cast( keys_out );
+        ::thrust::device_ptr<const Key>   keys_begin    = ::thrust::device_pointer_cast( keys_in );
+        ::thrust::device_ptr<const Value> values_begin  = ::thrust::device_pointer_cast( values_in );
+        ::thrust::device_ptr<Key>         keys_out_it   = ::thrust::device_pointer_cast( keys_out );
         ::thrust::device_ptr<Value>       values_out_it = ::thrust::device_pointer_cast( values_out );
-        auto new_end = ::thrust::reduce_by_key(
+        auto                              new_end       = ::thrust::reduce_by_key(
             keys_begin, keys_begin + size, values_begin, keys_out_it, values_out_it, key_equal, binary_op
         );
         return static_cast<Ord>( new_end.first - keys_out_it );

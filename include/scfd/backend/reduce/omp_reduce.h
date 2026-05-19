@@ -26,7 +26,7 @@ template <class Ord = int>
 struct omp_reduce
 {
     template <class T>
-    T    operator()( Ord size, const T *input, T init_val ) const;
+    T operator()( Ord size, const T *input, T init_val ) const;
     template <class T, class BinaryOp>
     T    operator()( Ord size, const T *input, T init_val, BinaryOp binary_op ) const;
     void wait() const

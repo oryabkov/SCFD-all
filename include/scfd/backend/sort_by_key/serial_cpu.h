@@ -33,8 +33,8 @@ void sort_by_key_host_impl( Ord size, Key *keys, Value *values, Compare compare 
     if ( size <= 0 )
         return;
 
-    typedef std::pair<Key, Value> pair_type;
-    std::vector<pair_type>        pairs;
+    using pair_type = std::pair<Key, Value>;
+    std::vector<pair_type> pairs;
     pairs.reserve( static_cast<size_t>( size ) );
     for ( Ord i = 0; i < size; ++i )
     {

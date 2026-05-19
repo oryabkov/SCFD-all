@@ -43,17 +43,17 @@ struct hip
     template <class Ordinal = int>
     using for_each_type = scfd::for_each::hip<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type    = scfd::for_each::hip_nd<Dim, Ordinal>;
-    using reduce_type         = scfd::thrust_reduce<>;
-    using sort_type           = scfd::thrust_sort<>;
-    using unique_type         = scfd::thrust_unique<>;
-    using exclusive_scan_type = scfd::thrust_exclusive_scan<>;
-    using copy_type           = scfd::hip_copy<>;
-    using inclusive_scan_type = scfd::thrust_inclusive_scan<>;
-    using sort_by_key_type    = scfd::thrust_sort_by_key<>;
-    using reduce_by_key_type  = scfd::thrust_reduce_by_key<>;
+    using for_each_nd_type      = scfd::for_each::hip_nd<Dim, Ordinal>;
+    using reduce_type           = scfd::thrust_reduce<>;
+    using sort_type             = scfd::thrust_sort<>;
+    using unique_type           = scfd::thrust_unique<>;
+    using exclusive_scan_type   = scfd::thrust_exclusive_scan<>;
+    using copy_type             = scfd::hip_copy<>;
+    using inclusive_scan_type   = scfd::thrust_inclusive_scan<>;
+    using sort_by_key_type      = scfd::thrust_sort_by_key<>;
+    using reduce_by_key_type    = scfd::thrust_reduce_by_key<>;
     using set_intersection_type = scfd::thrust_set_intersection<>;
-    using sequence_type       = scfd::thrust_sequence<>;
+    using sequence_type         = scfd::thrust_sequence<>;
 };
 }
 }

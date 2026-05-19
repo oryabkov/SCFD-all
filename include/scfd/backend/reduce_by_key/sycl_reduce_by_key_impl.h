@@ -49,8 +49,7 @@ Ord sycl_reduce_by_key<Ord>::operator()(
     );
 
     sycl_device_queue.memcpy( keys_out, keys_out_host.data(), sizeof( Key ) * static_cast<size_t>( out_size ) ).wait();
-    sycl_device_queue
-        .memcpy( values_out, values_out_host.data(), sizeof( Value ) * static_cast<size_t>( out_size ) )
+    sycl_device_queue.memcpy( values_out, values_out_host.data(), sizeof( Value ) * static_cast<size_t>( out_size ) )
         .wait();
 
     return out_size;

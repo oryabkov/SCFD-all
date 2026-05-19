@@ -62,22 +62,28 @@ void sycl_sort_by_key<Ord>::operator()( Ord size, Key *keys, Value *values, Comp
     pair_type *pairs = sycl::malloc_device<pair_type>( static_cast<size_t>( size ), sycl_device_queue );
 
     sycl_device_queue
-        .parallel_for( sycl::range<1>( static_cast<size_t>( size ) ), [=]( sycl::id<1> item ) {
-            const Ord i = static_cast<Ord>( item[0] );
-            pairs[i].key   = keys[i];
-            pairs[i].value = values[i];
-        } )
+        .parallel_for(
+            sycl::range<1>( static_cast<size_t>( size ) ),
+            [=]( sycl::id<1> item ) {
+                const Ord i    = static_cast<Ord>( item[0] );
+                pairs[i].key   = keys[i];
+                pairs[i].value = values[i];
+            }
+        )
         .wait();
 
     auto policy = dpl::execution::make_device_policy( sycl_device_queue );
     dpl::sort( policy, pairs, pairs + size, detail::sycl_key_value_pair_less<Key, Value, Compare>( compare ) );
 
     sycl_device_queue
-        .parallel_for( sycl::range<1>( static_cast<size_t>( size ) ), [=]( sycl::id<1> item ) {
-            const Ord i = static_cast<Ord>( item[0] );
-            keys[i]     = pairs[i].key;
-            values[i]   = pairs[i].value;
-        } )
+        .parallel_for(
+            sycl::range<1>( static_cast<size_t>( size ) ),
+            [=]( sycl::id<1> item ) {
+                const Ord i = static_cast<Ord>( item[0] );
+                keys[i]     = pairs[i].key;
+                values[i]   = pairs[i].value;
+            }
+        )
         .wait();
 
     sycl::free( pairs, sycl_device_queue );

@@ -24,7 +24,7 @@ template <class Ord = int>
 struct sycl_set_intersection
 {
     template <class T>
-    Ord operator()( Ord size1, const T *set1, Ord size2, const T *set2, T *result ) const;
+    Ord  operator()( Ord size1, const T *set1, Ord size2, const T *set2, T *result ) const;
     void wait() const
     {
     }

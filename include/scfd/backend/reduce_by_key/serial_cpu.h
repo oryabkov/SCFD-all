@@ -71,9 +71,7 @@ struct serial_cpu_reduce_by_key
         BinaryOp binary_op
     ) const
     {
-        return detail::reduce_by_key_host_impl(
-            size, keys_in, values_in, keys_out, values_out, key_equal, binary_op
-        );
+        return detail::reduce_by_key_host_impl( size, keys_in, values_in, keys_out, values_out, key_equal, binary_op );
     }
 
     template <class Key, class Value>

@@ -313,8 +313,7 @@ inline int checked_backend_size( std::size_t size, const char *operation_name )
 
 inline std::size_t bounded_algorithm_size( std::size_t size )
 {
-    const std::size_t default_size = std::min( size, std::size_t( 1024 ) * 1024 );
-    return std::min( size, env_size( "SCFD_BACKEND_PERF_ALGO_SIZE", default_size ) );
+    return std::min( size, env_size( "SCFD_BACKEND_PERF_ALGO_SIZE", size ) );
 }
 
 template <class Backend>
@@ -485,8 +484,7 @@ double benchmark_copy( const char *backend_name, std::size_t size, int repeats )
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
         const double elapsed = measure_ms<Backend>(
-            [&]() { backend_copy( op_size, input.raw_ptr(), output.raw_ptr() ); },
-            [&]() { backend_copy.wait(); }
+            [&]() { backend_copy( op_size, input.raw_ptr(), output.raw_ptr() ); }, [&]() { backend_copy.wait(); }
         );
         best_ms = std::min( best_ms, elapsed );
     }
@@ -538,8 +536,7 @@ double benchmark_inclusive_scan( const char *backend_name, std::size_t size, int
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
         const double elapsed = measure_ms<Backend>(
-            [&]() { inclusive_scan( op_size, input.raw_ptr(), output.raw_ptr() ); },
-            [&]() { inclusive_scan.wait(); }
+            [&]() { inclusive_scan( op_size, input.raw_ptr(), output.raw_ptr() ); }, [&]() { inclusive_scan.wait(); }
         );
         best_ms = std::min( best_ms, elapsed );
     }

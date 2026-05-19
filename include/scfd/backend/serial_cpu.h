@@ -42,17 +42,17 @@ struct serial_cpu
     template <class Ordinal = int>
     using for_each_type = scfd::for_each::serial_cpu<Ordinal>;
     template <int Dim, class Ordinal = int>
-    using for_each_nd_type    = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
-    using reduce_type         = scfd::serial_cpu_reduce<>;
-    using sort_type           = scfd::serial_cpu_sort<>;
-    using unique_type         = scfd::serial_cpu_unique<>;
-    using exclusive_scan_type = scfd::serial_cpu_exclusive_scan<>;
-    using copy_type           = scfd::serial_cpu_copy<>;
-    using inclusive_scan_type = scfd::serial_cpu_inclusive_scan<>;
-    using sort_by_key_type    = scfd::serial_cpu_sort_by_key<>;
-    using reduce_by_key_type  = scfd::serial_cpu_reduce_by_key<>;
+    using for_each_nd_type      = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
+    using reduce_type           = scfd::serial_cpu_reduce<>;
+    using sort_type             = scfd::serial_cpu_sort<>;
+    using unique_type           = scfd::serial_cpu_unique<>;
+    using exclusive_scan_type   = scfd::serial_cpu_exclusive_scan<>;
+    using copy_type             = scfd::serial_cpu_copy<>;
+    using inclusive_scan_type   = scfd::serial_cpu_inclusive_scan<>;
+    using sort_by_key_type      = scfd::serial_cpu_sort_by_key<>;
+    using reduce_by_key_type    = scfd::serial_cpu_reduce_by_key<>;
     using set_intersection_type = scfd::serial_cpu_set_intersection<>;
-    using sequence_type       = scfd::serial_cpu_sequence<>;
+    using sequence_type         = scfd::serial_cpu_sequence<>;
 };
 
 
