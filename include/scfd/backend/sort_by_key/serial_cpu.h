@@ -18,9 +18,9 @@
 #define __SCFD_SERIAL_CPU_SORT_BY_KEY_H__
 
 #include <algorithm>
-#include <utility>
 #include <vector>
 #include <scfd/backend/functional/basic_ops.h>
+#include <scfd/backend/value_pair.h>
 
 namespace scfd
 {
@@ -33,7 +33,7 @@ void sort_by_key_host_impl( Ord size, Key *keys, Value *values, Compare compare 
     if ( size <= 0 )
         return;
 
-    using pair_type = std::pair<Key, Value>;
+    using pair_type = scfd::backend::value_pair<Key, Value>;
     std::vector<pair_type> pairs;
     pairs.reserve( static_cast<size_t>( size ) );
     for ( Ord i = 0; i < size; ++i )

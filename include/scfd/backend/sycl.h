@@ -31,6 +31,7 @@
 #include <scfd/backend/reduce_by_key/sycl_reduce_by_key_impl.h>
 #include <scfd/backend/set_intersection/sycl_set_intersection_impl.h>
 #include <scfd/backend/sequence/sycl_sequence_impl.h>
+#include <scfd/backend/runtime/sycl.h>
 
 #define MAKE_SYCL_DEVICE_COPYABLE( kernel )                                                                            \
     template <>                                                                                                        \
@@ -59,6 +60,7 @@ struct sycl
     using reduce_by_key_type    = scfd::sycl_reduce_by_key<>;
     using set_intersection_type = scfd::sycl_set_intersection<>;
     using sequence_type         = scfd::sycl_sequence<>;
+    using runtime_type          = scfd::backend::detail::sycl_runtime;
 };
 }
 }

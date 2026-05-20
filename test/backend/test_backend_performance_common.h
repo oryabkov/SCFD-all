@@ -15,13 +15,6 @@
 #include <scfd/backend/omp.h>
 #include <scfd/backend/serial_cpu.h>
 #include <scfd/utils/device_tag.h>
-#include <scfd/utils/system_timer_event.h>
-#ifdef PLATFORM_CUDA
-#    include <scfd/utils/cuda_timer_event.h>
-#endif
-#ifdef PLATFORM_HIP
-#    include <scfd/utils/hip_timer_event.h>
-#endif
 
 namespace scfd_backend_tests
 {
@@ -240,36 +233,13 @@ inline double env_double( const char *name, double default_value )
 template <class Backend>
 struct performance_timer_event_type
 {
-    using type = scfd::utils::system_timer_event;
+    using runtime_type = typename Backend::runtime_type;
+    using type         = typename runtime_type::timer_event_type;
     static bool uses_device_events()
     {
-        return false;
+        return runtime_type::uses_device_timer();
     }
 };
-
-#ifdef PLATFORM_CUDA
-template <>
-struct performance_timer_event_type<scfd::backend::cuda>
-{
-    using type = scfd::utils::cuda_timer_event;
-    static bool uses_device_events()
-    {
-        return true;
-    }
-};
-#endif
-
-#ifdef PLATFORM_HIP
-template <>
-struct performance_timer_event_type<scfd::backend::hip>
-{
-    using type = scfd::utils::hip_timer_event;
-    static bool uses_device_events()
-    {
-        return true;
-    }
-};
-#endif
 
 template <class Backend, class Operation, class Sync>
 double measure_ms( Operation operation, Sync sync )

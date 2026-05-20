@@ -31,6 +31,7 @@
 #include <scfd/backend/reduce_by_key/serial_cpu.h>
 #include <scfd/backend/set_intersection/serial_cpu.h>
 #include <scfd/backend/sequence/serial_cpu.h>
+#include <scfd/backend/runtime/serial_cpu.h>
 namespace scfd
 {
 namespace backend
@@ -53,6 +54,7 @@ struct serial_cpu
     using reduce_by_key_type    = scfd::serial_cpu_reduce_by_key<>;
     using set_intersection_type = scfd::serial_cpu_set_intersection<>;
     using sequence_type         = scfd::serial_cpu_sequence<>;
+    using runtime_type          = scfd::backend::detail::serial_cpu_runtime;
 };
 
 

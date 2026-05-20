@@ -18,6 +18,7 @@
 #define __SCFD_SYCL_SORT_BY_KEY_IMPL_H__
 
 #include "sycl_sort_by_key.h"
+#include <scfd/backend/value_pair.h>
 #include <scfd/utils/init_sycl.h>
 #include <oneapi/dpl/algorithm>
 #include <oneapi/dpl/execution>
@@ -27,23 +28,16 @@ namespace scfd
 namespace detail
 {
 
-template <class Key, class Value>
-struct sycl_key_value_pair
+template <class Pair, class Compare>
+struct sycl_value_pair_less
 {
-    Key   key;
-    Value value;
-};
-
-template <class Key, class Value, class Compare>
-struct sycl_key_value_pair_less
-{
-    sycl_key_value_pair_less( Compare compare_ ) : compare( compare_ )
+    sycl_value_pair_less( Compare compare_ ) : compare( compare_ )
     {
     }
 
-    bool operator()( const sycl_key_value_pair<Key, Value> &a, const sycl_key_value_pair<Key, Value> &b ) const
+    bool operator()( const Pair &a, const Pair &b ) const
     {
-        return compare( a.key, b.key );
+        return compare( a.first, b.first );
     }
 
     Compare compare;
@@ -58,30 +52,30 @@ void sycl_sort_by_key<Ord>::operator()( Ord size, Key *keys, Value *values, Comp
     if ( size <= 0 )
         return;
 
-    typedef detail::sycl_key_value_pair<Key, Value> pair_type;
+    typedef scfd::backend::value_pair<Key, Value> pair_type;
     pair_type *pairs = sycl::malloc_device<pair_type>( static_cast<size_t>( size ), sycl_device_queue );
 
     sycl_device_queue
         .parallel_for(
             sycl::range<1>( static_cast<size_t>( size ) ),
             [=]( sycl::id<1> item ) {
-                const Ord i    = static_cast<Ord>( item[0] );
-                pairs[i].key   = keys[i];
-                pairs[i].value = values[i];
+                const Ord i     = static_cast<Ord>( item[0] );
+                pairs[i].first  = keys[i];
+                pairs[i].second = values[i];
             }
         )
         .wait();
 
     auto policy = dpl::execution::make_device_policy( sycl_device_queue );
-    dpl::sort( policy, pairs, pairs + size, detail::sycl_key_value_pair_less<Key, Value, Compare>( compare ) );
+    dpl::sort( policy, pairs, pairs + size, detail::sycl_value_pair_less<pair_type, Compare>( compare ) );
 
     sycl_device_queue
         .parallel_for(
             sycl::range<1>( static_cast<size_t>( size ) ),
             [=]( sycl::id<1> item ) {
                 const Ord i = static_cast<Ord>( item[0] );
-                keys[i]     = pairs[i].key;
-                values[i]   = pairs[i].value;
+                keys[i]     = pairs[i].first;
+                values[i]   = pairs[i].second;
             }
         )
         .wait();
