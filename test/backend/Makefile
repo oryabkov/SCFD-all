@@ -29,7 +29,7 @@ PERF_ALGO_SIZE ?= $(PERF_SIZE)
 PERF_REPEATS ?= 3
 PERF_MIN_SPEEDUP ?= 1.05
 CPU_BINS = test_backend_serial_cpu.bin test_backend_omp_cpu.bin test_backend_algorithms_serial_cpu.bin test_backend_algorithms_omp_cpu.bin test_backend_runtime_serial_cpu.bin test_backend_runtime_omp_cpu.bin test_backend_performance_serial_cpu.bin test_backend_performance_omp_cpu.bin
-CUDA_BINS = test_backend_types_cuda.bin test_backend_algorithms_cuda.bin test_backend_runtime_cuda.bin test_backend_performance_cuda.bin
+CUDA_BINS = test_backend_types_cuda.bin test_backend_algorithms_cuda.bin test_backend_runtime_cuda.bin test_backend_performance_cuda.bin test_backend_exclusive_scan_omp_vs_cuda.bin
 HIP_BINS = test_backend_types_hip.bin test_backend_algorithms_hip.bin test_backend_runtime_hip.bin test_backend_performance_hip.bin
 SYCL_BINS = test_backend_types_sycl.bin test_backend_algorithms_sycl.bin test_backend_runtime_sycl.bin test_backend_performance_sycl.bin
 
@@ -69,6 +69,9 @@ test_backend_algorithms_omp_cpu.bin: test_backend_algorithms_omp_cpu.cpp test_ba
 
 test_backend_algorithms_cuda.bin: test_backend_algorithms_cuda.cu test_backend_algorithms_common.h
 	$(NVCC) $(CUDAFLAGS) test_backend_algorithms_cuda.cu -I$(SCFD_INCLUDE) -o test_backend_algorithms_cuda.bin
+
+test_backend_exclusive_scan_omp_vs_cuda.bin: test_backend_exclusive_scan_omp_vs_cuda.cu
+	$(NVCC) $(CUDAFLAGS) test_backend_exclusive_scan_omp_vs_cuda.cu -I$(SCFD_INCLUDE) $(PERF_CUDA_OPENMP) -o test_backend_exclusive_scan_omp_vs_cuda.bin
 
 test_backend_runtime_serial_cpu.bin: test_backend_runtime_serial_cpu.cpp test_backend_runtime_common.h
 	$(CC) $(CXXFLAGS) test_backend_runtime_serial_cpu.cpp -I$(SCFD_INCLUDE) -o test_backend_runtime_serial_cpu.bin
@@ -124,6 +127,7 @@ run_cuda: cuda
 	./test_backend_types_cuda.bin
 	./test_backend_algorithms_cuda.bin
 	./test_backend_runtime_cuda.bin
+	./test_backend_exclusive_scan_omp_vs_cuda.bin
 
 run_hip: hip
 	./test_backend_types_hip.bin
