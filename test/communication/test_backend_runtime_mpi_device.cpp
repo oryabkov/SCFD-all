@@ -7,11 +7,11 @@ static const char *backend_name = "hip";
 #elif defined( PLATFORM_SYCL )
 static const char *backend_name = "sycl";
 #else
-#error "Define PLATFORM_CUDA, PLATFORM_HIP, or PLATFORM_SYCL for this test"
+#    error "Define PLATFORM_CUDA, PLATFORM_HIP, or PLATFORM_SYCL for this test"
 #endif
 
 #ifndef SCFD_BACKEND_ENABLE_MPI
-#error "Define SCFD_BACKEND_ENABLE_MPI for this test"
+#    error "Define SCFD_BACKEND_ENABLE_MPI for this test"
 #endif
 
 #include <scfd/backend/backend.h>
