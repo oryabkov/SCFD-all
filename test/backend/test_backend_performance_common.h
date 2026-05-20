@@ -181,6 +181,7 @@ struct performance_result
     double unique_ms;
     double sort_by_key_ms;
     double reduce_by_key_ms;
+    double count_by_key_ms;
     double set_intersection_ms;
 };
 
@@ -901,6 +902,75 @@ double benchmark_reduce_by_key( const char *backend_name, std::size_t size, int 
 }
 
 template <class Backend>
+double benchmark_count_by_key( const char *backend_name, std::size_t size, int repeats )
+{
+    using memory_t       = typename Backend::memory_type;
+    using array_t        = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
+    using for_each_t     = typename Backend::template for_each_type<std::size_t>;
+    using count_by_key_t = typename Backend::count_by_key_type;
+
+    const std::size_t group_size = 8;
+    ensure_size_is_supported<array_t>( size );
+    const int op_size       = checked_backend_size( size, "count_by_key" );
+    const int expected_size = checked_backend_size( ( size + group_size - 1 ) / group_size, "count_by_key result" );
+
+    array_t keys_in;
+    array_t keys_out;
+    array_t counts_out;
+    keys_in.init( size );
+    keys_out.init( expected_size );
+    counts_out.init( expected_size );
+
+    for_each_t     for_each;
+    count_by_key_t count_by_key;
+    for_each( fill_grouped<array_t>( keys_in, group_size ), size );
+    for_each.wait();
+
+    int output_size = count_by_key( op_size, keys_in.raw_ptr(), keys_out.raw_ptr(), counts_out.raw_ptr() );
+    count_by_key.wait();
+
+    double best_ms = std::numeric_limits<double>::max();
+    for ( int repeat = 0; repeat < repeats; ++repeat )
+    {
+        const double elapsed = measure_ms<Backend>(
+            [&]() {
+                output_size = count_by_key( op_size, keys_in.raw_ptr(), keys_out.raw_ptr(), counts_out.raw_ptr() );
+            },
+            [&]() { count_by_key.wait(); }
+        );
+        best_ms = std::min( best_ms, elapsed );
+    }
+
+    if ( output_size != expected_size )
+    {
+        throw std::runtime_error( std::string( backend_name ) + " count_by_key size verification failed" );
+    }
+
+    typename array_t::view_type keys_view( keys_out, true );
+    typename array_t::view_type counts_view( counts_out, true );
+    const int                   probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
+    for ( int probe_i = 0; probe_i < 3; ++probe_i )
+    {
+        const int         i              = probe_indexes[probe_i];
+        const std::size_t expected_key   = static_cast<std::size_t>( i );
+        const std::size_t first_index    = expected_key * group_size;
+        const std::size_t expected_count = std::min( group_size, size - first_index );
+        if ( keys_view( i ) != expected_key || counts_view( i ) != expected_count )
+        {
+            keys_view.release( false );
+            counts_view.release( false );
+            throw std::runtime_error(
+                std::string( backend_name ) + " count_by_key verification failed at index " + std::to_string( i )
+            );
+        }
+    }
+    keys_view.release( false );
+    counts_view.release( false );
+
+    return best_ms;
+}
+
+template <class Backend>
 double benchmark_set_intersection( const char *backend_name, std::size_t size, int repeats )
 {
     using memory_t           = typename Backend::memory_type;
@@ -978,6 +1048,7 @@ benchmark_backend( const char *backend_name, std::size_t size, std::size_t algor
     result.unique_ms           = benchmark_unique<Backend>( backend_name, algorithm_size, repeats );
     result.sort_by_key_ms      = benchmark_sort_by_key<Backend>( backend_name, algorithm_size, repeats );
     result.reduce_by_key_ms    = benchmark_reduce_by_key<Backend>( backend_name, algorithm_size, repeats );
+    result.count_by_key_ms     = benchmark_count_by_key<Backend>( backend_name, algorithm_size, repeats );
     result.set_intersection_ms = benchmark_set_intersection<Backend>( backend_name, algorithm_size, repeats );
     return result;
 }
@@ -991,6 +1062,7 @@ inline void print_result( const char *backend_name, const performance_result &re
               << " ms, sequence = " << result.sequence_ms << " ms" << std::endl;
     std::cout << backend_name << ": sort = " << result.sort_ms << " ms, unique = " << result.unique_ms
               << " ms, sort_by_key = " << result.sort_by_key_ms << " ms, reduce_by_key = " << result.reduce_by_key_ms
+              << " ms, count_by_key = " << result.count_by_key_ms
               << " ms, set_intersection = " << result.set_intersection_ms << " ms" << std::endl;
 }
 
@@ -1003,7 +1075,7 @@ inline double total_ms( const performance_result &result )
 {
     return result.for_each_ms + result.copy_ms + result.exclusive_scan_ms + result.inclusive_scan_ms +
            result.reduce_ms + result.reduce_max_ms + result.sequence_ms + result.sort_ms + result.unique_ms +
-           result.sort_by_key_ms + result.reduce_by_key_ms + result.set_intersection_ms;
+           result.sort_by_key_ms + result.reduce_by_key_ms + result.count_by_key_ms + result.set_intersection_ms;
 }
 
 inline void print_openmp_comparison(
@@ -1026,6 +1098,7 @@ inline void print_openmp_comparison(
               << ", unique = " << speedup( openmp_result.unique_ms, backend_result.unique_ms )
               << ", sort_by_key = " << speedup( openmp_result.sort_by_key_ms, backend_result.sort_by_key_ms )
               << ", reduce_by_key = " << speedup( openmp_result.reduce_by_key_ms, backend_result.reduce_by_key_ms )
+              << ", count_by_key = " << speedup( openmp_result.count_by_key_ms, backend_result.count_by_key_ms )
               << ", set_intersection = "
               << speedup( openmp_result.set_intersection_ms, backend_result.set_intersection_ms ) << std::endl;
 }

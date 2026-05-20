@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <scfd/arrays/tensorN_array_nd.h>
 #include <scfd/backend/functional/basic_ops.h>
+#include <scfd/backend/value_pair.h>
 #include <scfd/utils/device_tag.h>
 
 namespace scfd_backend_tests
@@ -50,8 +51,36 @@ void fill_with_values( Array &array, const int ( &values )[N] )
     view.release( true );
 }
 
+template <class Array, class T, int N>
+void fill_with_typed_values( Array &array, const T ( &values )[N] )
+{
+    typename Array::view_type view( array, false );
+    for ( int i = 0; i < N; ++i )
+    {
+        view( i ) = values[i];
+    }
+    view.release( true );
+}
+
 template <class Array, int N>
 bool array_prefix_equal_to_expected( const Array &array, const int ( &expected )[N], int size = N )
+{
+    typename Array::view_type view( array, true );
+    bool                      result = true;
+    for ( int i = 0; i < size; ++i )
+    {
+        if ( view( i ) != expected[i] )
+        {
+            result = false;
+            break;
+        }
+    }
+    view.release( false );
+    return result;
+}
+
+template <class Array, class T, int N>
+bool array_prefix_equal_to_typed_expected( const Array &array, const T ( &expected )[N], int size = N )
 {
     typename Array::view_type view( array, true );
     bool                      result = true;
@@ -72,6 +101,8 @@ int run_backend_algorithm_tests( const char *backend_name )
 {
     using memory_t           = typename Backend::memory_type;
     using array_t            = scfd::arrays::tensor0_array_nd<int, 1, memory_t>;
+    using pair_t             = scfd::backend::value_pair<int, int>;
+    using pair_array_t       = scfd::arrays::tensor0_array_nd<pair_t, 1, memory_t>;
     using for_each_t         = typename Backend::template for_each_type<int>;
     using reduce_t           = typename Backend::reduce_type;
     using sort_t             = typename Backend::sort_type;
@@ -83,6 +114,7 @@ int run_backend_algorithm_tests( const char *backend_name )
     using reduce_by_key_t    = typename Backend::reduce_by_key_type;
     using set_intersection_t = typename Backend::set_intersection_type;
     using sequence_t         = typename Backend::sequence_type;
+    using count_by_key_t     = typename Backend::count_by_key_type;
 
     try
     {
@@ -146,6 +178,11 @@ int run_backend_algorithm_tests( const char *backend_name )
             std::cout << backend_name << ": FAILED sequence type check" << std::endl;
             return 26;
         }
+        if ( !std::is_same<count_by_key_t, scfd::backend::count_by_key>::value )
+        {
+            std::cout << backend_name << ": FAILED count_by_key type check" << std::endl;
+            return 38;
+        }
 
         for_each_t         for_each;
         reduce_t           reduce;
@@ -158,6 +195,7 @@ int run_backend_algorithm_tests( const char *backend_name )
         reduce_by_key_t    reduce_by_key;
         set_intersection_t set_intersection;
         sequence_t         sequence;
+        count_by_key_t     count_by_key;
 
         array_t for_each_values;
         for_each_values.init( 5 );
@@ -440,6 +478,51 @@ int run_backend_algorithm_tests( const char *backend_name )
         {
             std::cout << backend_name << ": FAILED set_intersection duplicate stress" << std::endl;
             return 37;
+        }
+
+        const int count_keys_values[] = { 1, 1, 1, 3, 4, 4, 8 };
+        array_t   count_keys;
+        array_t   count_keys_out;
+        array_t   count_values_out;
+        count_keys.init( 7 );
+        count_keys_out.init( 7 );
+        count_values_out.init( 7 );
+        fill_with_values( count_keys, count_keys_values );
+        const int count_by_key_size =
+            count_by_key( 7, count_keys.raw_ptr(), count_keys_out.raw_ptr(), count_values_out.raw_ptr() );
+        count_by_key.wait();
+        const int expected_count_keys[] = { 1, 3, 4, 8 };
+        const int expected_count_vals[] = { 3, 1, 2, 1 };
+        if ( count_by_key_size != 4 ||
+             !array_prefix_equal_to_expected( count_keys_out, expected_count_keys, count_by_key_size ) ||
+             !array_prefix_equal_to_expected( count_values_out, expected_count_vals, count_by_key_size ) )
+        {
+            std::cout << backend_name << ": FAILED count_by_key" << std::endl;
+            return 39;
+        }
+
+        const pair_t pair_values[] = { pair_t( 2, 3 ), pair_t( 1, 4 ), pair_t( 2, 1 ), pair_t( 1, 4 ), pair_t( 2, 1 ) };
+        pair_array_t pair_data;
+        pair_data.init( 5 );
+        fill_with_typed_values( pair_data, pair_values );
+        sort( 5, pair_data.raw_ptr() );
+        sort.wait();
+        const pair_t expected_pair_sorted[] = {
+            pair_t( 1, 4 ), pair_t( 1, 4 ), pair_t( 2, 1 ), pair_t( 2, 1 ), pair_t( 2, 3 )
+        };
+        if ( !array_prefix_equal_to_typed_expected( pair_data, expected_pair_sorted ) )
+        {
+            std::cout << backend_name << ": FAILED value_pair sort" << std::endl;
+            return 40;
+        }
+        const int pair_unique_size = unique( 5, pair_data.raw_ptr() );
+        unique.wait();
+        const pair_t expected_pair_unique[] = { pair_t( 1, 4 ), pair_t( 2, 1 ), pair_t( 2, 3 ) };
+        if ( pair_unique_size != 3 ||
+             !array_prefix_equal_to_typed_expected( pair_data, expected_pair_unique, pair_unique_size ) )
+        {
+            std::cout << backend_name << ": FAILED value_pair unique" << std::endl;
+            return 41;
         }
     }
     catch ( const std::exception &err )

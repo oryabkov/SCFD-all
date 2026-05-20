@@ -71,6 +71,25 @@ int run_backend_runtime_tests( const char *backend_name )
             std::cout << backend_name << ": FAILED value_pair host construction" << std::endl;
             return 13;
         }
+        if ( !( scfd::backend::make_value_pair( 1, 4 ) < scfd::backend::make_value_pair( 2, 1 ) ) ||
+             !( scfd::backend::make_value_pair( 2, 1 ) < scfd::backend::make_value_pair( 2, 3 ) ) ||
+             !( scfd::backend::make_value_pair( 2, 3 ) == scfd::backend::make_value_pair( 2, 3 ) ) )
+        {
+            std::cout << backend_name << ": FAILED value_pair host comparison" << std::endl;
+            return 21;
+        }
+
+        const int init_device_result = runtime_t::init_device( 0 );
+        if ( runtime_t::is_device_backend() && init_device_result < 0 )
+        {
+            std::cout << backend_name << ": FAILED init_device result" << std::endl;
+            return 22;
+        }
+        if ( !runtime_t::is_device_backend() && init_device_result != -1 )
+        {
+            std::cout << backend_name << ": FAILED host init_device result" << std::endl;
+            return 23;
+        }
 
         runtime_t::synchronize();
         runtime_t::device_synchronize();

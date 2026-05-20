@@ -32,6 +32,7 @@
 #include <scfd/backend/reduce_by_key/thrust.h>
 #include <scfd/backend/set_intersection/thrust.h>
 #include <scfd/backend/sequence/thrust.h>
+#include <scfd/backend/count_by_key/thrust.h>
 #include <scfd/backend/runtime/cuda.h>
 
 namespace scfd
@@ -56,6 +57,7 @@ struct cuda
     using reduce_by_key_type    = scfd::thrust_reduce_by_key<>;
     using set_intersection_type = scfd::thrust_set_intersection<>;
     using sequence_type         = scfd::thrust_sequence<>;
+    using count_by_key_type     = scfd::thrust_count_by_key<>;
     using runtime_type          = scfd::backend::detail::cuda_runtime;
 };
 

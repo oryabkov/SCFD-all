@@ -20,6 +20,7 @@
 #include <hip/hip_runtime.h>
 #include <scfd/backend/runtime/common.h>
 #include <scfd/utils/hip_safe_call.h>
+#include <scfd/utils/init_hip.h>
 #include <scfd/utils/hip_timer_event.h>
 
 namespace scfd
@@ -32,6 +33,23 @@ namespace detail
 struct hip_runtime
 {
     using timer_event_type = scfd::utils::hip_timer_event;
+
+    template <class Log>
+    static int init_device( Log &log, int device_id = 0 )
+    {
+        return scfd::utils::init_hip( log, -2, device_id );
+    }
+
+    static int init_device( int device_id = 0 )
+    {
+        return scfd::utils::init_hip( -2, device_id );
+    }
+
+    template <bool WrapProcsDevices = false, class Log, class Comm>
+    static int init_device_mpi( Log &log, const Comm &comm, int shift_index = 0 );
+
+    template <bool WrapProcsDevices = false, class Comm>
+    static int init_device_mpi( const Comm &comm, int shift_index = 0 );
 
     static void synchronize()
     {

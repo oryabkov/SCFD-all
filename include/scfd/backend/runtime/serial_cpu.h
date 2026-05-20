@@ -31,6 +31,29 @@ struct serial_cpu_runtime
 {
     using timer_event_type = scfd::utils::system_timer_event;
 
+    template <class Log>
+    static int init_device( Log &, int = -1 )
+    {
+        return -1;
+    }
+
+    static int init_device( int = -1 )
+    {
+        return -1;
+    }
+
+    template <bool WrapProcsDevices = false, class Log, class Comm>
+    static int init_device_mpi( Log &, const Comm &, int = 0 )
+    {
+        return -1;
+    }
+
+    template <bool WrapProcsDevices = false, class Comm>
+    static int init_device_mpi( const Comm &, int = 0 )
+    {
+        return -1;
+    }
+
     static void synchronize()
     {
     }

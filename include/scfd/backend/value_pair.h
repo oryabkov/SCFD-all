@@ -45,6 +45,24 @@ __DEVICE_TAG__ value_pair<First, Second> make_value_pair( First first, Second se
     return value_pair<First, Second>( first, second );
 }
 
+template <class First, class Second>
+__DEVICE_TAG__ bool operator==( const value_pair<First, Second> &a, const value_pair<First, Second> &b )
+{
+    return a.first == b.first && a.second == b.second;
+}
+
+template <class First, class Second>
+__DEVICE_TAG__ bool operator!=( const value_pair<First, Second> &a, const value_pair<First, Second> &b )
+{
+    return !( a == b );
+}
+
+template <class First, class Second>
+__DEVICE_TAG__ bool operator<( const value_pair<First, Second> &a, const value_pair<First, Second> &b )
+{
+    return ( a.first < b.first ) || ( !( b.first < a.first ) && a.second < b.second );
+}
+
 }
 }
 

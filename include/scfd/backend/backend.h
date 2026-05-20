@@ -93,9 +93,14 @@ using sort_by_key      = current::sort_by_key_type;
 using reduce_by_key    = current::reduce_by_key_type;
 using set_intersection = current::set_intersection_type;
 using sequence         = current::sequence_type;
+using count_by_key     = current::count_by_key_type;
 using runtime          = current::runtime_type;
 using timer_event      = runtime::timer_event_type;
 }
 }
+
+#ifdef SCFD_BACKEND_ENABLE_MPI
+#    include <scfd/backend/runtime/mpi.h>
+#endif
 
 #endif
