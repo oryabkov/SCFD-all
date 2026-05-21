@@ -123,9 +123,8 @@ struct rect
         bool is_empty = false;
         for ( int j = 0; j < Dim; ++j )
         {
-            //TODO correct min/max functions (need traits)
-            res.i1[j] = max( i1[j], r.i1[j] );
-            res.i2[j] = min( i2[j], r.i2[j] );
+            res.i1[j] = ( i1[j] < r.i1[j] ) ? r.i1[j] : i1[j];
+            res.i2[j] = ( i2[j] < r.i2[j] ) ? i2[j] : r.i2[j];
             if ( res.i1[j] >= res.i2[j] )
                 is_empty = true;
         }
