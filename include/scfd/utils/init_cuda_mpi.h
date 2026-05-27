@@ -17,6 +17,8 @@
 #ifndef __SCFD_UTILS_INITCUDAMPI_H__
 #define __SCFD_UTILS_INITCUDAMPI_H__
 
+#include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 #include <string>
 #include <scfd/communication/mpi_comm.h>
@@ -30,6 +32,18 @@ namespace scfd
 namespace utils
 {
 
+inline bool spsfd_device_bind_debug_enabled()
+{
+    const char *env = std::getenv( "SPSFD_DEVICE_BIND_DEBUG" );
+    return env && env[0] && env[0] != '0';
+}
+
+inline const char *spsfd_env_or_na( const char *name )
+{
+    const char *value = std::getenv( name );
+    return value && value[0] ? value : "n/a";
+}
+
 template <class Log, bool WrapProcsGPUs = false>
 inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
 {
@@ -41,12 +55,7 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
     char node_name[255];
     int  node_name_size = 0;
     SCFD_MPI_SAFE_CALL( MPI_Get_processor_name( node_name, &node_name_size ) );
-    int char_hash = 0;
-    for ( int j = 0; j < node_name_size; j++ )
-    {
-        char_hash = char_hash + static_cast<int>( node_name[j] );
-    }
-    auto comm_split = comm.split( char_hash );
+    auto comm_split = comm.split_type( MPI_COMM_TYPE_SHARED );
     node_size       = comm_split.num_procs();
     my_id           = comm_split.myid();
     comm_split.free();
@@ -75,11 +84,50 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
         );
     }
     log.info_f(
-        "init_cuda_mpi split_color: node_name = %s, node_color = %i, global_size = %i, global_id = %i, node_size = %i, "
+        "init_cuda_mpi split_type_shared: node_name = %s, global_size = %i, global_id = %i, node_size = %i, "
         "devices_on_node = %i, node_device_id = %i, node_my_id = %i",
-        node_name, char_hash, comm.num_procs, comm.myid, node_size, number_of_devices_on_node, device_id, my_id
+        node_name, comm.num_procs, comm.myid, node_size, number_of_devices_on_node, device_id, my_id
     );
-    return scfd::utils::init_cuda( -2, device_id );
+    const int initialized_device = scfd::utils::init_cuda( -2, device_id );
+
+    if ( spsfd_device_bind_debug_enabled() )
+    {
+        int         active_device = -1;
+        char        pci_bus_id[64] = "n/a";
+        const char *device_name = "n/a";
+        std::size_t free_mem = 0;
+        std::size_t total_mem = 0;
+
+        CUDA_SAFE_CALL( cudaGetDevice( &active_device ) );
+        if ( active_device >= 0 )
+        {
+            cudaDeviceProp prop;
+            CUDA_SAFE_CALL( cudaGetDeviceProperties( &prop, active_device ) );
+            device_name = prop.name;
+            CUDA_SAFE_CALL( cudaDeviceGetPCIBusId( pci_bus_id, sizeof( pci_bus_id ), active_device ) );
+            CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem, &total_mem ) );
+        }
+
+        std::fprintf(
+            stderr,
+            "[SPSFD_DEVICE_BIND_DEBUG SCFD_CUDA_BIND] rank=%i/%i local_rank=%i/%i "
+            "visible_devices=%i requested_device=%i active_device=%i initialized_device=%i "
+            "pci=%s name=\"%s\" free_MB=%.3f total_MB=%.3f host=%s "
+            "CUDA_VISIBLE_DEVICES=%s NVIDIA_VISIBLE_DEVICES=%s SLURM_PROCID=%s "
+            "SLURM_LOCALID=%s SLURM_NODEID=%s PMI_RANK=%s PMIX_RANK=%s\n",
+            comm.myid, comm.num_procs, my_id, node_size, number_of_devices_on_node, device_id,
+            active_device, initialized_device, pci_bus_id, device_name,
+            static_cast<double>( free_mem ) / ( 1024.0 * 1024.0 ),
+            static_cast<double>( total_mem ) / ( 1024.0 * 1024.0 ), node_name,
+            spsfd_env_or_na( "CUDA_VISIBLE_DEVICES" ), spsfd_env_or_na( "NVIDIA_VISIBLE_DEVICES" ),
+            spsfd_env_or_na( "SLURM_PROCID" ), spsfd_env_or_na( "SLURM_LOCALID" ),
+            spsfd_env_or_na( "SLURM_NODEID" ), spsfd_env_or_na( "PMI_RANK" ),
+            spsfd_env_or_na( "PMIX_RANK" )
+        );
+        std::fflush( stderr );
+    }
+
+    return initialized_device;
 }
 
 
