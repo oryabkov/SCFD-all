@@ -18,7 +18,7 @@
 #define __SCFD_OMP_REDUCE_IMPL_H__
 
 #include "omp_reduce.h"
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {

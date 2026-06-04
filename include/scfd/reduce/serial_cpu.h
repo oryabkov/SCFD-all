@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_REDUCE_THRUST_H__
-#define __SCFD_REDUCE_THRUST_H__
+#ifndef __SCFD_SERIAL_CPU_REDUCE_H__
+#define __SCFD_SERIAL_CPU_REDUCE_H__
 
 #include "reduce_config.h"
-#include <thrust/device_ptr.h>
-#include <thrust/reduce.h>
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
 
 template <class Ord = int>
-struct thrust_reduce
+struct serial_cpu_reduce
 {
+    /*void set_max_size(Ord max_size)
+    {
+        max_size_ = max_size;
+    }*/
+
     template <class T>
     T operator()( Ord size, const T *input, T init_val ) const
     {
@@ -37,13 +40,18 @@ struct thrust_reduce
     template <class T, class BinaryOp>
     T operator()( Ord size, const T *input, T init_val, BinaryOp binary_op ) const
     {
-        ::thrust::device_ptr<const T> input_begin = ::thrust::device_pointer_cast( input ),
-                                      input_end   = input_begin + size;
-        return ::thrust::reduce( input_begin, input_end, init_val, binary_op );
+        T res( init_val );
+        for ( Ord i = 0; i < size; ++i )
+        {
+            res = binary_op( res, input[i] );
+        }
+        return res;
     }
     void wait() const
     {
     }
+
+    Ord max_size_;
 };
 
 }

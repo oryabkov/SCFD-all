@@ -9,8 +9,8 @@
 #include <thrust/system_error.h>
 #include <vector>
 
-#include <scfd/backend/exclusive_scan/omp_exclusive_scan_impl.h>
-#include <scfd/backend/exclusive_scan/thrust.h>
+#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
+#include <scfd/exclusive_scan/thrust.h>
 
 #ifdef _OPENMP
 #    include <omp.h>

@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_BACKEND_RUNTIME_CUDA_H__
-#define __SCFD_BACKEND_RUNTIME_CUDA_H__
+#ifndef __SCFD_BACKEND_RUNTIME_HIP_H__
+#define __SCFD_BACKEND_RUNTIME_HIP_H__
 
-#include <cuda_runtime.h>
-#include <scfd/backend/runtime/common.h>
-#include <scfd/utils/cuda_safe_call.h>
-#include <scfd/utils/init_cuda.h>
-#include <scfd/utils/cuda_timer_event.h>
+#include <hip/hip_runtime.h>
+#include <scfd/runtime/common.h>
+#include <scfd/utils/hip_safe_call.h>
+#include <scfd/utils/init_hip.h>
+#include <scfd/utils/hip_timer_event.h>
 
 namespace scfd
 {
@@ -30,19 +30,19 @@ namespace backend
 namespace detail
 {
 
-struct cuda_runtime
+struct hip_runtime
 {
-    using timer_event_type = scfd::utils::cuda_timer_event;
+    using timer_event_type = scfd::utils::hip_timer_event;
 
     template <class Log>
     static int init_device( Log &log, int device_id = 0 )
     {
-        return scfd::utils::init_cuda( log, -2, device_id );
+        return scfd::utils::init_hip( log, -2, device_id );
     }
 
     static int init_device( int device_id = 0 )
     {
-        return scfd::utils::init_cuda( -2, device_id );
+        return scfd::utils::init_hip( -2, device_id );
     }
 
     template <bool WrapProcsDevices = false, class Log, class Comm>
@@ -53,7 +53,7 @@ struct cuda_runtime
 
     static void synchronize()
     {
-        CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+        HIP_SAFE_CALL( hipDeviceSynchronize() );
     }
 
     static void device_synchronize()
@@ -65,7 +65,7 @@ struct cuda_runtime
     {
         std::size_t free_bytes  = 0;
         std::size_t total_bytes = 0;
-        CUDA_SAFE_CALL( cudaMemGetInfo( &free_bytes, &total_bytes ) );
+        HIP_SAFE_CALL( hipMemGetInfo( &free_bytes, &total_bytes ) );
         return device_memory_info( free_bytes, total_bytes, true, true );
     }
 

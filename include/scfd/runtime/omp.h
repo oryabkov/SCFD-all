@@ -1,4 +1,4 @@
-// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch, Sorokin Ivan Antonovich
 
 // This file is part of SCFD.
 
@@ -14,31 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SYCL_SORT_BY_KEY_H__
-#define __SCFD_SYCL_SORT_BY_KEY_H__
+#ifndef __SCFD_BACKEND_RUNTIME_OMP_H__
+#define __SCFD_BACKEND_RUNTIME_OMP_H__
 
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/runtime/serial_cpu.h>
 
 namespace scfd
 {
-
-template <class Ord = int>
-struct sycl_sort_by_key
+namespace backend
 {
-    template <class Key, class Value, class Compare>
-    void operator()( Ord size, Key *keys, Value *values, Compare compare ) const;
+namespace detail
+{
 
-    template <class Key, class Value>
-    void operator()( Ord size, Key *keys, Value *values ) const
-    {
-        operator()( size, keys, values, functional::less<Key>() );
-    }
-
-    void wait() const
-    {
-    }
+struct omp_runtime : public serial_cpu_runtime
+{
 };
 
+}
+}
 }
 
 #endif

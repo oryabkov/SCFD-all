@@ -17,7 +17,7 @@
 #ifndef __SCFD_BACKEND_RUNTIME_SERIAL_CPU_H__
 #define __SCFD_BACKEND_RUNTIME_SERIAL_CPU_H__
 
-#include <scfd/backend/runtime/common.h>
+#include <scfd/runtime/common.h>
 #include <scfd/utils/system_timer_event.h>
 
 namespace scfd

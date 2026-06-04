@@ -14,29 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SYCL_REDUCE_BY_KEY_H__
-#define __SCFD_SYCL_REDUCE_BY_KEY_H__
+#ifndef __SCFD_SORT_BY_KEY_THRUST_H__
+#define __SCFD_SORT_BY_KEY_THRUST_H__
 
-#include <scfd/backend/functional/basic_ops.h>
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
 
 template <class Ord = int>
-struct sycl_reduce_by_key
+struct thrust_sort_by_key
 {
-    template <class Key, class Value, class KeyEqual, class BinaryOp>
-    Ord operator()(
-        Ord size, const Key *keys_in, const Value *values_in, Key *keys_out, Value *values_out, KeyEqual key_equal,
-        BinaryOp binary_op
-    ) const;
+    template <class Key, class Value, class Compare>
+    void operator()( Ord size, Key *keys, Value *values, Compare compare ) const
+    {
+        if ( size <= 0 )
+            return;
+        ::thrust::device_ptr<Key>   keys_begin   = ::thrust::device_pointer_cast( keys );
+        ::thrust::device_ptr<Value> values_begin = ::thrust::device_pointer_cast( values );
+        ::thrust::sort_by_key( keys_begin, keys_begin + size, values_begin, compare );
+    }
 
     template <class Key, class Value>
-    Ord operator()( Ord size, const Key *keys_in, const Value *values_in, Key *keys_out, Value *values_out ) const
+    void operator()( Ord size, Key *keys, Value *values ) const
     {
-        return operator()(
-            size, keys_in, values_in, keys_out, values_out, functional::equal_to<Key>(), functional::plus<Value>()
-        );
+        operator()( size, keys, values, functional::less<Key>() );
     }
 
     void wait() const

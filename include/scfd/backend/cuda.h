@@ -22,18 +22,18 @@
 #include <scfd/memory/cuda.h>
 #include <scfd/for_each/cuda_impl.cuh>
 #include <scfd/for_each/cuda_nd_impl.cuh>
-#include <scfd/backend/reduce/thrust.h>
-#include <scfd/backend/sort/thrust.h>
-#include <scfd/backend/unique/thrust.h>
-#include <scfd/backend/exclusive_scan/thrust.h>
-#include <scfd/backend/copy/cuda.h>
-#include <scfd/backend/inclusive_scan/thrust.h>
-#include <scfd/backend/sort_by_key/thrust.h>
-#include <scfd/backend/reduce_by_key/thrust.h>
-#include <scfd/backend/set_intersection/thrust.h>
-#include <scfd/backend/sequence/thrust.h>
-#include <scfd/backend/count_by_key/thrust.h>
-#include <scfd/backend/runtime/cuda.h>
+#include <scfd/reduce/thrust.h>
+#include <scfd/sort/thrust.h>
+#include <scfd/unique/thrust.h>
+#include <scfd/exclusive_scan/thrust.h>
+#include <scfd/copy/cuda.h>
+#include <scfd/inclusive_scan/thrust.h>
+#include <scfd/sort_by_key/thrust.h>
+#include <scfd/reduce_by_key/thrust.h>
+#include <scfd/set_intersection/thrust.h>
+#include <scfd/sequence/thrust.h>
+#include <scfd/count_by_key/thrust.h>
+#include <scfd/runtime/cuda.h>
 
 namespace scfd
 {

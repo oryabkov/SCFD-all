@@ -1,4 +1,4 @@
-// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch, Sorokin Ivan Antonovich
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch
 
 // This file is part of SCFD.
 
@@ -14,24 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_BACKEND_RUNTIME_OMP_H__
-#define __SCFD_BACKEND_RUNTIME_OMP_H__
+#ifndef __SCFD_OMP_SORT_BY_KEY_IMPL_H__
+#define __SCFD_OMP_SORT_BY_KEY_IMPL_H__
 
-#include <scfd/backend/runtime/serial_cpu.h>
+#include "omp_sort_by_key.h"
+#include <scfd/sort_by_key/serial_cpu.h>
 
 namespace scfd
 {
-namespace backend
-{
-namespace detail
-{
 
-struct omp_runtime : public serial_cpu_runtime
+template <class Ord>
+template <class Key, class Value, class Compare>
+void omp_sort_by_key<Ord>::operator()( Ord size, Key *keys, Value *values, Compare compare ) const
 {
-};
+#pragma omp parallel
+    {
+#pragma omp single
+        {
+            detail::sort_by_key_host_impl( size, keys, values, compare );
+        }
+    }
+}
 
-}
-}
 }
 
 #endif

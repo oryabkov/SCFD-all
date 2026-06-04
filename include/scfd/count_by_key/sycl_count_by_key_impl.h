@@ -18,7 +18,7 @@
 #define __SCFD_SYCL_COUNT_BY_KEY_IMPL_H__
 
 #include "sycl_count_by_key.h"
-#include <scfd/backend/count_by_key/serial_cpu.h>
+#include <scfd/count_by_key/serial_cpu.h>
 #include <scfd/utils/init_sycl.h>
 #include <vector>
 

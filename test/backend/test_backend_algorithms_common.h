@@ -6,7 +6,7 @@
 #include <iostream>
 #include <type_traits>
 #include <scfd/arrays/tensorN_array_nd.h>
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 #include <scfd/backend/value_pair.h>
 #include <scfd/utils/device_tag.h>
 

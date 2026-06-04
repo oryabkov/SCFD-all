@@ -21,18 +21,18 @@
 #include <scfd/memory/host.h>
 #include <scfd/for_each/openmp_impl.h>
 #include <scfd/for_each/openmp_nd_impl.h>
-#include <scfd/backend/reduce/omp_reduce_impl.h>
-#include <scfd/backend/sort/omp_sort_impl.h>
-#include <scfd/backend/unique/omp_unique_impl.h>
-#include <scfd/backend/exclusive_scan/omp_exclusive_scan_impl.h>
-#include <scfd/backend/copy/omp_copy_impl.h>
-#include <scfd/backend/inclusive_scan/omp_inclusive_scan_impl.h>
-#include <scfd/backend/sort_by_key/omp_sort_by_key_impl.h>
-#include <scfd/backend/reduce_by_key/omp_reduce_by_key_impl.h>
-#include <scfd/backend/set_intersection/omp_set_intersection_impl.h>
-#include <scfd/backend/sequence/omp_sequence_impl.h>
-#include <scfd/backend/count_by_key/omp_count_by_key_impl.h>
-#include <scfd/backend/runtime/omp.h>
+#include <scfd/reduce/omp_reduce_impl.h>
+#include <scfd/sort/omp_sort_impl.h>
+#include <scfd/unique/omp_unique_impl.h>
+#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
+#include <scfd/copy/omp_copy_impl.h>
+#include <scfd/inclusive_scan/omp_inclusive_scan_impl.h>
+#include <scfd/sort_by_key/omp_sort_by_key_impl.h>
+#include <scfd/reduce_by_key/omp_reduce_by_key_impl.h>
+#include <scfd/set_intersection/omp_set_intersection_impl.h>
+#include <scfd/sequence/omp_sequence_impl.h>
+#include <scfd/count_by_key/omp_count_by_key_impl.h>
+#include <scfd/runtime/omp.h>
 
 
 namespace scfd

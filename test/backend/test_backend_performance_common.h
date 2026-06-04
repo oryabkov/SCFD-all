@@ -11,7 +11,7 @@
 #include <string>
 #include <type_traits>
 #include <scfd/arrays/tensorN_array_nd.h>
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 #include <scfd/backend/omp.h>
 #include <scfd/backend/serial_cpu.h>
 #include <scfd/utils/device_tag.h>

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 #include <sycl/sycl.hpp>
-#include <scfd/backend/runtime/common.h>
+#include <scfd/runtime/common.h>
 #include <scfd/utils/init_sycl.h>
 #include <scfd/utils/system_timer_event.h>
 

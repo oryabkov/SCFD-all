@@ -22,18 +22,18 @@
 #include <scfd/memory/hip.h>
 #include <scfd/for_each/hip_impl.h>
 #include <scfd/for_each/hip_nd_impl.h>
-#include <scfd/backend/reduce/thrust.h>
-#include <scfd/backend/sort/thrust.h>
-#include <scfd/backend/unique/thrust.h>
-#include <scfd/backend/exclusive_scan/thrust.h>
-#include <scfd/backend/copy/hip.h>
-#include <scfd/backend/inclusive_scan/thrust.h>
-#include <scfd/backend/sort_by_key/thrust.h>
-#include <scfd/backend/reduce_by_key/thrust.h>
-#include <scfd/backend/set_intersection/thrust.h>
-#include <scfd/backend/sequence/thrust.h>
-#include <scfd/backend/count_by_key/thrust.h>
-#include <scfd/backend/runtime/hip.h>
+#include <scfd/reduce/thrust.h>
+#include <scfd/sort/thrust.h>
+#include <scfd/unique/thrust.h>
+#include <scfd/exclusive_scan/thrust.h>
+#include <scfd/copy/hip.h>
+#include <scfd/inclusive_scan/thrust.h>
+#include <scfd/sort_by_key/thrust.h>
+#include <scfd/reduce_by_key/thrust.h>
+#include <scfd/set_intersection/thrust.h>
+#include <scfd/sequence/thrust.h>
+#include <scfd/count_by_key/thrust.h>
+#include <scfd/runtime/hip.h>
 
 namespace scfd
 {

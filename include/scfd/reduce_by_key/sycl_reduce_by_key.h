@@ -14,24 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_OMP_SORT_BY_KEY_H__
-#define __SCFD_OMP_SORT_BY_KEY_H__
+#ifndef __SCFD_SYCL_REDUCE_BY_KEY_H__
+#define __SCFD_SYCL_REDUCE_BY_KEY_H__
 
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
 
 template <class Ord = int>
-struct omp_sort_by_key
+struct sycl_reduce_by_key
 {
-    template <class Key, class Value, class Compare>
-    void operator()( Ord size, Key *keys, Value *values, Compare compare ) const;
+    template <class Key, class Value, class KeyEqual, class BinaryOp>
+    Ord operator()(
+        Ord size, const Key *keys_in, const Value *values_in, Key *keys_out, Value *values_out, KeyEqual key_equal,
+        BinaryOp binary_op
+    ) const;
 
     template <class Key, class Value>
-    void operator()( Ord size, Key *keys, Value *values ) const
+    Ord operator()( Ord size, const Key *keys_in, const Value *values_in, Key *keys_out, Value *values_out ) const
     {
-        operator()( size, keys, values, functional::less<Key>() );
+        return operator()(
+            size, keys_in, values_in, keys_out, values_out, functional::equal_to<Key>(), functional::plus<Value>()
+        );
     }
 
     void wait() const

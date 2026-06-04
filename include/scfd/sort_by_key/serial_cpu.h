@@ -14,27 +14,53 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SORT_BY_KEY_THRUST_H__
-#define __SCFD_SORT_BY_KEY_THRUST_H__
+#ifndef __SCFD_SERIAL_CPU_SORT_BY_KEY_H__
+#define __SCFD_SERIAL_CPU_SORT_BY_KEY_H__
 
-#include <thrust/device_ptr.h>
-#include <thrust/sort.h>
-#include <scfd/backend/functional/basic_ops.h>
+#include <algorithm>
+#include <vector>
+#include <scfd/functional/basic_ops.h>
+#include <scfd/backend/value_pair.h>
 
 namespace scfd
 {
+namespace detail
+{
+
+template <class Ord, class Key, class Value, class Compare>
+void sort_by_key_host_impl( Ord size, Key *keys, Value *values, Compare compare )
+{
+    if ( size <= 0 )
+        return;
+
+    using pair_type = scfd::backend::value_pair<Key, Value>;
+    std::vector<pair_type> pairs;
+    pairs.reserve( static_cast<size_t>( size ) );
+    for ( Ord i = 0; i < size; ++i )
+    {
+        pairs.push_back( pair_type( keys[i], values[i] ) );
+    }
+    std::sort( pairs.begin(), pairs.end(), [compare]( const pair_type &a, const pair_type &b ) {
+        return compare( a.first, b.first );
+    } );
+    for ( Ord i = 0; i < size; ++i )
+    {
+        keys[i]   = pairs[static_cast<size_t>( i )].first;
+        values[i] = pairs[static_cast<size_t>( i )].second;
+    }
+}
+
+}
 
 template <class Ord = int>
-struct thrust_sort_by_key
+struct serial_cpu_sort_by_key
 {
     template <class Key, class Value, class Compare>
     void operator()( Ord size, Key *keys, Value *values, Compare compare ) const
     {
         if ( size <= 0 )
             return;
-        ::thrust::device_ptr<Key>   keys_begin   = ::thrust::device_pointer_cast( keys );
-        ::thrust::device_ptr<Value> values_begin = ::thrust::device_pointer_cast( values );
-        ::thrust::sort_by_key( keys_begin, keys_begin + size, values_begin, compare );
+        detail::sort_by_key_host_impl( size, keys, values, compare );
     }
 
     template <class Key, class Value>

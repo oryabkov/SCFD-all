@@ -17,7 +17,7 @@
 #ifndef __SCFD_SERIAL_CPU_REDUCE_BY_KEY_H__
 #define __SCFD_SERIAL_CPU_REDUCE_BY_KEY_H__
 
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {

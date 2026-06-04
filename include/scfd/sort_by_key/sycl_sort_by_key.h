@@ -14,27 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_OMP_SORT_BY_KEY_IMPL_H__
-#define __SCFD_OMP_SORT_BY_KEY_IMPL_H__
+#ifndef __SCFD_SYCL_SORT_BY_KEY_H__
+#define __SCFD_SYCL_SORT_BY_KEY_H__
 
-#include "omp_sort_by_key.h"
-#include <scfd/backend/sort_by_key/serial_cpu.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
 
-template <class Ord>
-template <class Key, class Value, class Compare>
-void omp_sort_by_key<Ord>::operator()( Ord size, Key *keys, Value *values, Compare compare ) const
+template <class Ord = int>
+struct sycl_sort_by_key
 {
-#pragma omp parallel
+    template <class Key, class Value, class Compare>
+    void operator()( Ord size, Key *keys, Value *values, Compare compare ) const;
+
+    template <class Key, class Value>
+    void operator()( Ord size, Key *keys, Value *values ) const
     {
-#pragma omp single
-        {
-            detail::sort_by_key_host_impl( size, keys, values, compare );
-        }
+        operator()( size, keys, values, functional::less<Key>() );
     }
-}
+
+    void wait() const
+    {
+    }
+};
 
 }
 

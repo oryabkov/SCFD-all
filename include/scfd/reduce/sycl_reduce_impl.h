@@ -21,7 +21,7 @@
 #include "scfd/utils/init_sycl.h"
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/numeric>
-#include <scfd/backend/functional/basic_ops.h>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {

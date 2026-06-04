@@ -100,7 +100,7 @@ using timer_event      = runtime::timer_event_type;
 }
 
 #ifdef SCFD_BACKEND_ENABLE_MPI
-#    include <scfd/backend/runtime/mpi.h>
+#    include <scfd/runtime/mpi.h>
 #endif
 
 #endif

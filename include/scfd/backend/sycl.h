@@ -21,18 +21,18 @@
 #include <scfd/memory/sycl.h>
 #include <scfd/for_each/sycl_impl.h>
 #include <scfd/for_each/sycl_nd_impl.h>
-#include <scfd/backend/reduce/sycl_reduce_impl.h>
-#include <scfd/backend/sort/sycl_sort_impl.h>
-#include <scfd/backend/unique/sycl_unique_impl.h>
-#include <scfd/backend/exclusive_scan/sycl_exclusive_scan_impl.h>
-#include <scfd/backend/copy/sycl_copy_impl.h>
-#include <scfd/backend/inclusive_scan/sycl_inclusive_scan_impl.h>
-#include <scfd/backend/sort_by_key/sycl_sort_by_key_impl.h>
-#include <scfd/backend/reduce_by_key/sycl_reduce_by_key_impl.h>
-#include <scfd/backend/set_intersection/sycl_set_intersection_impl.h>
-#include <scfd/backend/sequence/sycl_sequence_impl.h>
-#include <scfd/backend/count_by_key/sycl_count_by_key_impl.h>
-#include <scfd/backend/runtime/sycl.h>
+#include <scfd/reduce/sycl_reduce_impl.h>
+#include <scfd/sort/sycl_sort_impl.h>
+#include <scfd/unique/sycl_unique_impl.h>
+#include <scfd/exclusive_scan/sycl_exclusive_scan_impl.h>
+#include <scfd/copy/sycl_copy_impl.h>
+#include <scfd/inclusive_scan/sycl_inclusive_scan_impl.h>
+#include <scfd/sort_by_key/sycl_sort_by_key_impl.h>
+#include <scfd/reduce_by_key/sycl_reduce_by_key_impl.h>
+#include <scfd/set_intersection/sycl_set_intersection_impl.h>
+#include <scfd/sequence/sycl_sequence_impl.h>
+#include <scfd/count_by_key/sycl_count_by_key_impl.h>
+#include <scfd/runtime/sycl.h>
 
 #define MAKE_SYCL_DEVICE_COPYABLE( kernel )                                                                            \
     template <>                                                                                                        \
