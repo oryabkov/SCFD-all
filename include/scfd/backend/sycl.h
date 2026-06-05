@@ -18,51 +18,38 @@
 #ifndef __SCFD_BACKEND_SYCL_H__
 #define __SCFD_BACKEND_SYCL_H__
 
-#include <scfd/memory/sycl.h>
-#include <scfd/for_each/sycl_impl.h>
-#include <scfd/for_each/sycl_nd_impl.h>
-#include <scfd/reduce/sycl_reduce_impl.h>
-#include <scfd/sort/sycl_sort_impl.h>
-#include <scfd/unique/sycl_unique_impl.h>
-#include <scfd/exclusive_scan/sycl_exclusive_scan_impl.h>
-#include <scfd/copy/sycl_copy_impl.h>
-#include <scfd/inclusive_scan/sycl_inclusive_scan_impl.h>
-#include <scfd/sort_by_key/sycl_sort_by_key_impl.h>
-#include <scfd/reduce_by_key/sycl_reduce_by_key_impl.h>
-#include <scfd/set_intersection/sycl_set_intersection_impl.h>
-#include <scfd/sequence/sycl_sequence_impl.h>
-#include <scfd/count_by_key/sycl_count_by_key_impl.h>
-#include <scfd/runtime/sycl.h>
-
-#define MAKE_SYCL_DEVICE_COPYABLE( kernel )                                                                            \
-    template <>                                                                                                        \
-    struct sycl::is_device_copyable<typename kernel> : std::true_type                                                  \
-    {                                                                                                                  \
-    }
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <scfd/backend/sycl_common.h>
 
 namespace scfd
 {
 namespace backend
 {
-struct sycl
+struct sycl : public sycl_common
 {
-    using memory_type = scfd::memory::sycl_device;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::sycl_<Ordinal>;
-    template <int Dim, class Ordinal = int>
-    using for_each_nd_type      = scfd::for_each::sycl_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::sycl_reduce<>;
-    using sort_type             = scfd::sycl_sort<>;
-    using unique_type           = scfd::sycl_unique<>;
-    using exclusive_scan_type   = scfd::sycl_exclusive_scan<>;
-    using copy_type             = scfd::sycl_copy<>;
-    using inclusive_scan_type   = scfd::sycl_inclusive_scan<>;
-    using sort_by_key_type      = scfd::sycl_sort_by_key<>;
-    using reduce_by_key_type    = scfd::sycl_reduce_by_key<>;
-    using set_intersection_type = scfd::sycl_set_intersection<>;
-    using sequence_type         = scfd::sycl_sequence<>;
-    using count_by_key_type     = scfd::sycl_count_by_key<>;
-    using runtime_type          = scfd::backend::detail::sycl_runtime;
+    using runtime_type = sycl;
+
+    template <class Log>
+    static int init_device( Log &, int device_id = 0 )
+    {
+        return init_device( device_id );
+    }
+
+    static int init_device( int device_id = 0 )
+    {
+        std::vector<::sycl::device> devices = ::sycl::device::get_devices( ::sycl::info::device_type::gpu );
+        if ( devices.empty() )
+            throw std::runtime_error( "sycl::init_device: no visible SYCL GPU devices" );
+        if ( device_id < 0 || device_id >= static_cast<int>( devices.size() ) )
+            throw std::runtime_error(
+                "sycl::init_device: requested device " + std::to_string( device_id ) +
+                " is outside visible SYCL GPU device range"
+            );
+        sycl_device_queue = ::sycl::queue( devices[static_cast<std::size_t>( device_id )] );
+        return device_id;
+    }
 };
 }
 }

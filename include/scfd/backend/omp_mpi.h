@@ -14,37 +14,37 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_BACKEND_RUNTIME_COMMON_H__
-#define __SCFD_BACKEND_RUNTIME_COMMON_H__
+#ifndef __SCFD_BACKEND_OMP_MPI_H__
+#define __SCFD_BACKEND_OMP_MPI_H__
 
-#include <cstddef>
+#include <scfd/backend/omp.h>
+#include <scfd/communication/mpi_comm_info.h>
 
 namespace scfd
 {
 namespace backend
 {
-namespace detail
-{
 
-struct device_memory_info
+struct omp_mpi : public omp
 {
-    std::size_t free_bytes;
-    std::size_t total_bytes;
-    bool        free_bytes_known;
-    bool        total_bytes_known;
+    using omp::init_device;
+    using communicator_type = scfd::communication::mpi_comm_info;
+    using runtime_type      = omp_mpi;
 
-    device_memory_info() : free_bytes( 0 ), total_bytes( 0 ), free_bytes_known( false ), total_bytes_known( false )
+    template <class Log, class Comm>
+    static int init_device( Log &, const Comm &, int = 0, bool = false )
     {
+        return 0;
     }
 
-    device_memory_info( std::size_t free_bytes_, std::size_t total_bytes_, bool free_known_, bool total_known_ )
-        : free_bytes( free_bytes_ ), total_bytes( total_bytes_ ), free_bytes_known( free_known_ ),
-          total_bytes_known( total_known_ )
+    template <class Comm>
+    static int init_device( const Comm &, int = 0, bool = false )
     {
+        return 0;
     }
+
 };
 
-}
 }
 }
 

@@ -18,52 +18,92 @@
 #define __SCFD_BACKEND_H__
 
 #if defined( PLATFORM_SERIAL_CPU )
-#    include "serial_cpu.h"
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+#        include "serial_cpu_mpi.h"
+#    else
+#        include "serial_cpu.h"
+#    endif
 namespace scfd
 {
 namespace backend
 {
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+using current = serial_cpu_mpi;
+#    else
 using current = serial_cpu;
+#    endif
 }
 }
 
 #elif defined( PLATFORM_OMP )
-#    include "omp.h"
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+#        include "omp_mpi.h"
+#    else
+#        include "omp.h"
+#    endif
 namespace scfd
 {
 namespace backend
 {
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+using current = omp_mpi;
+#    else
 using current = omp;
+#    endif
 }
 }
 
 #elif defined( PLATFORM_CUDA )
-#    include "cuda.h"
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+#        include "cuda_mpi.h"
+#    else
+#        include "cuda.h"
+#    endif
 namespace scfd
 {
 namespace backend
 {
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+using current = cuda_mpi;
+#    else
 using current = cuda;
+#    endif
 }
 }
 
 #elif defined( PLATFORM_HIP )
-#    include "hip.h"
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+#        include "hip_mpi.h"
+#    else
+#        include "hip.h"
+#    endif
 namespace scfd
 {
 namespace backend
 {
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+using current = hip_mpi;
+#    else
 using current = hip;
+#    endif
 }
 }
 
 #elif defined( PLATFORM_SYCL )
-#    include "sycl.h"
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+#        include "sycl_mpi.h"
+#    else
+#        include "sycl.h"
+#    endif
 namespace scfd
 {
 namespace backend
 {
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+using current = sycl_mpi;
+#    else
 using current = sycl;
+#    endif
 }
 }
 
@@ -78,6 +118,7 @@ namespace backend
 {
 // usefull aliases
 using device_memory_info = detail::device_memory_info;
+using host_memory_info   = detail::host_memory_info;
 using memory             = current::memory_type;
 template <class Ordinal = int>
 using for_each = current::for_each_type<Ordinal>;
@@ -94,13 +135,9 @@ using reduce_by_key    = current::reduce_by_key_type;
 using set_intersection = current::set_intersection_type;
 using sequence         = current::sequence_type;
 using count_by_key     = current::count_by_key_type;
-using runtime          = current::runtime_type;
-using timer_event      = runtime::timer_event_type;
+using runtime          = current;
+using timer_event      = current::timer_event_type;
 }
 }
-
-#ifdef SCFD_BACKEND_ENABLE_MPI
-#    include <scfd/runtime/mpi.h>
-#endif
 
 #endif

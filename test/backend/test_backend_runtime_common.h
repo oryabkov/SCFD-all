@@ -85,7 +85,7 @@ int run_backend_runtime_tests( const char *backend_name )
             std::cout << backend_name << ": FAILED init_device result" << std::endl;
             return 22;
         }
-        if ( !runtime_t::is_device_backend() && init_device_result != -1 )
+        if ( !runtime_t::is_device_backend() && init_device_result != 0 )
         {
             std::cout << backend_name << ": FAILED host init_device result" << std::endl;
             return 23;
@@ -122,6 +122,18 @@ int run_backend_runtime_tests( const char *backend_name )
         {
             std::cout << backend_name << ": FAILED memory_info alias" << std::endl;
             return 18;
+        }
+
+        const scfd::backend::host_memory_info host_info = runtime_t::get_host_memory_info();
+        if ( host_info.process_memory_known && host_info.rss_bytes == 0 )
+        {
+            std::cout << backend_name << ": FAILED host memory RSS value" << std::endl;
+            return 24;
+        }
+        if ( host_info.system_memory_known && host_info.system_available_bytes > host_info.system_total_bytes )
+        {
+            std::cout << backend_name << ": FAILED host memory ordering" << std::endl;
+            return 25;
         }
 
         scfd::backend::timer_event begin;

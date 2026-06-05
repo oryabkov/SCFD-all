@@ -18,47 +18,28 @@
 #ifndef __SCFD_BACKEND_SERIAL_CPU_H__
 #define __SCFD_BACKEND_SERIAL_CPU_H__
 
-#include <scfd/memory/host.h>
-#include <scfd/for_each/serial_cpu.h>
-#include <scfd/for_each/serial_cpu_nd.h>
-#include <scfd/reduce/serial_cpu.h>
-#include <scfd/sort/serial_cpu.h>
-#include <scfd/unique/serial_cpu.h>
-#include <scfd/exclusive_scan/serial_cpu.h>
-#include <scfd/copy/serial_cpu.h>
-#include <scfd/inclusive_scan/serial_cpu.h>
-#include <scfd/sort_by_key/serial_cpu.h>
-#include <scfd/reduce_by_key/serial_cpu.h>
-#include <scfd/set_intersection/serial_cpu.h>
-#include <scfd/sequence/serial_cpu.h>
-#include <scfd/count_by_key/serial_cpu.h>
-#include <scfd/runtime/serial_cpu.h>
+#include <scfd/backend/serial_cpu_common.h>
+
 namespace scfd
 {
 namespace backend
 {
 
-struct serial_cpu
+struct serial_cpu : public serial_cpu_common
 {
-    using memory_type = scfd::memory::host;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::serial_cpu<Ordinal>;
-    template <int Dim, class Ordinal = int>
-    using for_each_nd_type      = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::serial_cpu_reduce<>;
-    using sort_type             = scfd::serial_cpu_sort<>;
-    using unique_type           = scfd::serial_cpu_unique<>;
-    using exclusive_scan_type   = scfd::serial_cpu_exclusive_scan<>;
-    using copy_type             = scfd::serial_cpu_copy<>;
-    using inclusive_scan_type   = scfd::serial_cpu_inclusive_scan<>;
-    using sort_by_key_type      = scfd::serial_cpu_sort_by_key<>;
-    using reduce_by_key_type    = scfd::serial_cpu_reduce_by_key<>;
-    using set_intersection_type = scfd::serial_cpu_set_intersection<>;
-    using sequence_type         = scfd::serial_cpu_sequence<>;
-    using count_by_key_type     = scfd::serial_cpu_count_by_key<>;
-    using runtime_type          = scfd::backend::detail::serial_cpu_runtime;
-};
+    using runtime_type = serial_cpu;
 
+    template <class Log>
+    static int init_device( Log &, int = 0 )
+    {
+        return 0;
+    }
+
+    static int init_device( int = 0 )
+    {
+        return 0;
+    }
+};
 
 }
 }

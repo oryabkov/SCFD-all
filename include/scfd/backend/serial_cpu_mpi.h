@@ -14,23 +14,37 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_BACKEND_RUNTIME_OMP_H__
-#define __SCFD_BACKEND_RUNTIME_OMP_H__
+#ifndef __SCFD_BACKEND_SERIAL_CPU_MPI_H__
+#define __SCFD_BACKEND_SERIAL_CPU_MPI_H__
 
-#include <scfd/runtime/serial_cpu.h>
+#include <scfd/backend/serial_cpu.h>
+#include <scfd/communication/mpi_comm_info.h>
 
 namespace scfd
 {
 namespace backend
 {
-namespace detail
-{
 
-struct omp_runtime : public serial_cpu_runtime
+struct serial_cpu_mpi : public serial_cpu
 {
+    using serial_cpu::init_device;
+    using communicator_type = scfd::communication::mpi_comm_info;
+    using runtime_type      = serial_cpu_mpi;
+
+    template <class Log, class Comm>
+    static int init_device( Log &, const Comm &, int = 0, bool = false )
+    {
+        return 0;
+    }
+
+    template <class Comm>
+    static int init_device( const Comm &, int = 0, bool = false )
+    {
+        return 0;
+    }
+
 };
 
-}
 }
 }
 

@@ -24,14 +24,14 @@ int main( int argc, char *argv[] )
     auto                          comm = mpi.comm_world();
     scfd::utils::log_mpi          log;
 
-    const int device = scfd::backend::runtime::init_device_mpi( log, comm, 0, true );
+    const int device = scfd::backend::current::init_device( log, comm, 0, true );
     if ( device < 0 )
     {
-        log.error_f( "%s backend init_device_mpi(log, comm, 0, true) returned %i", backend_name, device );
+        log.error_f( "%s backend init_device(log, comm, 0, true) returned %i", backend_name, device );
         return 1;
     }
 
-    scfd::backend::runtime::synchronize();
+    scfd::backend::current::synchronize();
     log.info_f( "PASSED" );
     return 0;
 }

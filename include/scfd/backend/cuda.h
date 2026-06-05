@@ -17,48 +17,28 @@
 #ifndef __SCFD_BACKEND_CUDA_H__
 #define __SCFD_BACKEND_CUDA_H__
 
-
+#include <scfd/backend/cuda_common.h>
 #include <scfd/utils/init_cuda.h>
-#include <scfd/memory/cuda.h>
-#include <scfd/for_each/cuda_impl.cuh>
-#include <scfd/for_each/cuda_nd_impl.cuh>
-#include <scfd/reduce/thrust.h>
-#include <scfd/sort/thrust.h>
-#include <scfd/unique/thrust.h>
-#include <scfd/exclusive_scan/thrust.h>
-#include <scfd/copy/cuda.h>
-#include <scfd/inclusive_scan/thrust.h>
-#include <scfd/sort_by_key/thrust.h>
-#include <scfd/reduce_by_key/thrust.h>
-#include <scfd/set_intersection/thrust.h>
-#include <scfd/sequence/thrust.h>
-#include <scfd/count_by_key/thrust.h>
-#include <scfd/runtime/cuda.h>
 
 namespace scfd
 {
 namespace backend
 {
 
-struct cuda
+struct cuda : public cuda_common
 {
-    using memory_type = scfd::memory::cuda_device;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::cuda<Ordinal>;
-    template <int Dim, class Ordinal = int>
-    using for_each_nd_type      = scfd::for_each::cuda_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::thrust_reduce<>;
-    using sort_type             = scfd::thrust_sort<>;
-    using unique_type           = scfd::thrust_unique<>;
-    using exclusive_scan_type   = scfd::thrust_exclusive_scan<>;
-    using copy_type             = scfd::cuda_copy<>;
-    using inclusive_scan_type   = scfd::thrust_inclusive_scan<>;
-    using sort_by_key_type      = scfd::thrust_sort_by_key<>;
-    using reduce_by_key_type    = scfd::thrust_reduce_by_key<>;
-    using set_intersection_type = scfd::thrust_set_intersection<>;
-    using sequence_type         = scfd::thrust_sequence<>;
-    using count_by_key_type     = scfd::thrust_count_by_key<>;
-    using runtime_type          = scfd::backend::detail::cuda_runtime;
+    using runtime_type = cuda;
+
+    template <class Log>
+    static int init_device( Log &log, int device_id = 0 )
+    {
+        return scfd::utils::init_cuda( log, -2, device_id );
+    }
+
+    static int init_device( int device_id = 0 )
+    {
+        return scfd::utils::init_cuda( -2, device_id );
+    }
 };
 
 }
