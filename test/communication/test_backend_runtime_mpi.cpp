@@ -13,17 +13,17 @@ int main( int argc, char *argv[] )
     auto                          comm = mpi.comm_world();
     scfd::utils::log_mpi          log;
 
-    const int device_with_log = scfd::backend::runtime::init_device_mpi<true>( log, comm );
+    const int device_with_log = scfd::backend::runtime::init_device_mpi( log, comm, 0, true );
     if ( device_with_log != -1 )
     {
-        log.error_f( "serial backend init_device_mpi<true>(log, comm) returned %i instead of -1", device_with_log );
+        log.error_f( "serial backend init_device_mpi(log, comm, 0, true) returned %i instead of -1", device_with_log );
         return 1;
     }
 
-    const int device_without_log = scfd::backend::runtime::init_device_mpi<false>( comm );
+    const int device_without_log = scfd::backend::runtime::init_device_mpi( comm );
     if ( device_without_log != -1 )
     {
-        log.error_f( "serial backend init_device_mpi<false>(comm) returned %i instead of -1", device_without_log );
+        log.error_f( "serial backend init_device_mpi(comm) returned %i instead of -1", device_without_log );
         return 2;
     }
 

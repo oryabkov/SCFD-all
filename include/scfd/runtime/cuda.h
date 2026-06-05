@@ -45,11 +45,11 @@ struct cuda_runtime
         return scfd::utils::init_cuda( -2, device_id );
     }
 
-    template <bool WrapProcsDevices = false, class Log, class Comm>
-    static int init_device_mpi( Log &log, const Comm &comm, int shift_index = 0 );
+    template <class Log, class Comm>
+    static int init_device_mpi( Log &log, const Comm &comm, int shift_index = 0, bool wrap_procs_devices = false );
 
-    template <bool WrapProcsDevices = false, class Comm>
-    static int init_device_mpi( const Comm &comm, int shift_index = 0 );
+    template <class Comm>
+    static int init_device_mpi( const Comm &comm, int shift_index = 0, bool wrap_procs_devices = false );
 
     static void synchronize()
     {

@@ -42,14 +42,14 @@ struct serial_cpu_runtime
         return -1;
     }
 
-    template <bool WrapProcsDevices = false, class Log, class Comm>
-    static int init_device_mpi( Log &, const Comm &, int = 0 )
+    template <class Log, class Comm>
+    static int init_device_mpi( Log &, const Comm &, int = 0, bool = false )
     {
         return -1;
     }
 
-    template <bool WrapProcsDevices = false, class Comm>
-    static int init_device_mpi( const Comm &, int = 0 )
+    template <class Comm>
+    static int init_device_mpi( const Comm &, int = 0, bool = false )
     {
         return -1;
     }

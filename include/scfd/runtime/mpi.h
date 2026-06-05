@@ -40,38 +40,38 @@ namespace detail
 {
 
 #if defined( PLATFORM_CUDA )
-template <bool WrapProcsDevices, class Log, class Comm>
-int cuda_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index )
+template <class Log, class Comm>
+int cuda_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index, bool wrap_procs_devices )
 {
-    return scfd::utils::init_cuda_mpi<Log, WrapProcsDevices>( log, comm, shift_index );
+    return scfd::utils::init_cuda_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 
-template <bool WrapProcsDevices, class Comm>
-int cuda_runtime::init_device_mpi( const Comm &comm, int shift_index )
+template <class Comm>
+int cuda_runtime::init_device_mpi( const Comm &comm, int shift_index, bool wrap_procs_devices )
 {
     scfd::utils::log_std log;
-    return init_device_mpi<WrapProcsDevices>( log, comm, shift_index );
+    return init_device_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 #endif
 
 #if defined( PLATFORM_HIP )
-template <bool WrapProcsDevices, class Log, class Comm>
-int hip_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index )
+template <class Log, class Comm>
+int hip_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index, bool wrap_procs_devices )
 {
-    return scfd::utils::init_hip_mpi<Log, WrapProcsDevices>( log, comm, shift_index );
+    return scfd::utils::init_hip_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 
-template <bool WrapProcsDevices, class Comm>
-int hip_runtime::init_device_mpi( const Comm &comm, int shift_index )
+template <class Comm>
+int hip_runtime::init_device_mpi( const Comm &comm, int shift_index, bool wrap_procs_devices )
 {
     scfd::utils::log_std log;
-    return init_device_mpi<WrapProcsDevices>( log, comm, shift_index );
+    return init_device_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 #endif
 
 #if defined( PLATFORM_SYCL )
-template <bool WrapProcsDevices, class Log, class Comm>
-int sycl_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index )
+template <class Log, class Comm>
+int sycl_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index, bool wrap_procs_devices )
 {
     auto node_comm = comm.split_type( MPI_COMM_TYPE_SHARED );
     int  node_size = node_comm.num_procs();
@@ -82,7 +82,7 @@ int sycl_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index )
     const int                   number_of_devices_on_node = static_cast<int>( devices.size() );
     if ( number_of_devices_on_node <= 0 )
         throw std::runtime_error( "sycl_runtime::init_device_mpi: no visible SYCL GPU devices" );
-    if ( number_of_devices_on_node < node_size && !WrapProcsDevices )
+    if ( number_of_devices_on_node < node_size && !wrap_procs_devices )
     {
         throw std::runtime_error(
             "sycl_runtime::init_device_mpi: number of nproc = " + std::to_string( node_size ) +
@@ -92,7 +92,7 @@ int sycl_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index )
     }
 
     const int device_id = ( my_id + shift_index ) % number_of_devices_on_node;
-    if ( number_of_devices_on_node < node_size && WrapProcsDevices && my_id == 0 )
+    if ( number_of_devices_on_node < node_size && wrap_procs_devices && my_id == 0 )
     {
         log.info_f(
             "WARNING: sycl_runtime::init_device_mpi is wrapping %i MPI processes over %i visible device(s). "
@@ -109,11 +109,11 @@ int sycl_runtime::init_device_mpi( Log &log, const Comm &comm, int shift_index )
     return device_id;
 }
 
-template <bool WrapProcsDevices, class Comm>
-int sycl_runtime::init_device_mpi( const Comm &comm, int shift_index )
+template <class Comm>
+int sycl_runtime::init_device_mpi( const Comm &comm, int shift_index, bool wrap_procs_devices )
 {
     scfd::utils::log_std log;
-    return init_device_mpi<WrapProcsDevices>( log, comm, shift_index );
+    return init_device_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 #endif
 

@@ -44,8 +44,10 @@ inline const char *spsfd_env_or_na( const char *name )
     return value && value[0] ? value : "n/a";
 }
 
-template <class Log, bool WrapProcsGPUs = false>
-inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
+template <class Log>
+inline int init_cuda_mpi(
+    Log &log, const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false
+)
 {
     int node_size                 = 0;
     int my_id                     = 0;
@@ -66,7 +68,7 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
             "init_cuda_mpi: node name " + std::string( node_name ) + "\n no visible CUDA devices"
         );
     }
-    if ( number_of_devices_on_node < node_size && !WrapProcsGPUs )
+    if ( number_of_devices_on_node < node_size && !wrap_procs_devices )
     {
         throw std::runtime_error(
             "init_cuda_mpi: node name " + std::string( node_name ) + "\n number of nproc = " +
@@ -75,7 +77,7 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
         );
     }
     device_id = ( my_id + shift_index ) % number_of_devices_on_node;
-    if ( number_of_devices_on_node < node_size && WrapProcsGPUs && my_id == 0 )
+    if ( number_of_devices_on_node < node_size && wrap_procs_devices && my_id == 0 )
     {
         log.info_f(
             "WARNING: init_cuda_mpi is wrapping %i MPI processes over %i visible GPU(s) on node %s. "
@@ -131,11 +133,12 @@ inline int init_cuda_mpi( Log &log, const scfd::communication::mpi_comm_info &co
 }
 
 
-template <bool WrapProcsGPUs = false>
-inline int init_cuda_mpi( const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
+inline int init_cuda_mpi(
+    const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false
+)
 {
     log_std log;
-    return init_cuda_mpi<log_std, WrapProcsGPUs>( log, comm, shift_index );
+    return init_cuda_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 
 

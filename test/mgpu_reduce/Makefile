@@ -16,6 +16,9 @@ NVCC = $(ROOT_CUDA)/bin/nvcc
 HIPCC = $(ROOT_HIP)/bin/hipcc
 MPICC = $(ROOT_MPI)/bin/mpic++
 OPENMP = -fopenmp -lpthread
+HIP_OPENMP = $(OPENMP)
+HIP_OPENMP_F = -fopenmp
+HIP_DEVICE_FPIE = -fPIE
 
 cuda:
 	$(NVCC) -O3 -std=c++17 -x cu $(CUDA_ARCHITECTURE) -I$(INCLUDE_SCFD) -I$(INCLUDE_SRC) -I$(INCLUDE_CUDA) -I$(INCLUDE_MPI) -DCUDA src/mgpu_reduce.cpp -c -o mgpu_reduce.obj -Xcompiler -fopenmp
@@ -23,6 +26,6 @@ cuda:
 	rm mgpu_reduce.obj
 
 hip:
-	$(HIPCC) -O3 -std=c++17 $(HIP_ARCHITECTURE) -I$(INCLUDE_SCFD) -I$(INCLUDE_SRC) -I$(INCLUDE_HIP) -I$(INCLUDE_MPI) -DHIP src/mgpu_reduce.cpp -c -o mgpu_reduce.obj -fopenmp -fPIE
-	$(HIPCC) mgpu_reduce.obj -L$(LIB_HIP) -L$(LIB_MPI) -lmpi  -o mgpu_reduce.bin $(OPENMP) 
+	$(HIPCC) -O3 -std=c++17 $(HIP_ARCHITECTURE) -I$(INCLUDE_SCFD) -I$(INCLUDE_SRC) -I$(INCLUDE_HIP) -I$(INCLUDE_MPI) -DHIP src/mgpu_reduce.cpp -c -o mgpu_reduce.obj $(HIP_OPENMP_F) $(HIP_DEVICE_FPIE)
+	$(HIPCC) mgpu_reduce.obj -L$(LIB_HIP) -L$(LIB_MPI) -lmpi  -o mgpu_reduce.bin $(HIP_OPENMP)
 	rm mgpu_reduce.obj
