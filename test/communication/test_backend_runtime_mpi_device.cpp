@@ -17,6 +17,7 @@ static const char *backend_name = "sycl";
 #include <scfd/backend/backend.h>
 #include <scfd/communication/mpi_wrap.h>
 #include <scfd/utils/log_mpi.h>
+#include "../backend/test_backend_runtime_common.h"
 
 int main( int argc, char *argv[] )
 {
@@ -31,7 +32,27 @@ int main( int argc, char *argv[] )
         return 1;
     }
 
+    const int device_without_log = scfd::backend::current::init_device( comm, 0, true );
+    if ( device_without_log < 0 )
+    {
+        log.error_f( "%s backend init_device(comm, 0, true) returned %i", backend_name, device_without_log );
+        return 2;
+    }
+    if ( device_without_log != device )
+    {
+        log.error_f(
+            "%s backend MPI init_device overloads returned different device ids: %i and %i",
+            backend_name, device, device_without_log
+        );
+        return 3;
+    }
+
     scfd::backend::current::synchronize();
+    const int backend_runtime_status =
+        scfd_backend_tests::run_backend_runtime_tests<scfd::backend::current>( backend_name );
+    if ( backend_runtime_status != 0 )
+        return 10 + backend_runtime_status;
+
     log.info_f( "PASSED" );
     return 0;
 }

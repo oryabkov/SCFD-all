@@ -6,6 +6,7 @@
 #include <scfd/backend/backend.h>
 #include <scfd/communication/mpi_wrap.h>
 #include <scfd/utils/log_mpi.h>
+#include "../backend/test_backend_runtime_common.h"
 
 int main( int argc, char *argv[] )
 {
@@ -33,6 +34,11 @@ int main( int argc, char *argv[] )
         log.error_f( "serial backend init_device returned %i instead of 0", device );
         return 3;
     }
+
+    const int backend_runtime_status =
+        scfd_backend_tests::run_backend_runtime_tests<scfd::backend::current>( "serial_cpu_mpi_runtime" );
+    if ( backend_runtime_status != 0 )
+        return 10 + backend_runtime_status;
 
     log.info_f( "PASSED" );
     return 0;

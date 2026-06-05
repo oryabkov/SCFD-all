@@ -17,6 +17,7 @@
 #ifndef __SCFD_BACKEND_SERIAL_CPU_MPI_H__
 #define __SCFD_BACKEND_SERIAL_CPU_MPI_H__
 
+#include <type_traits>
 #include <scfd/backend/serial_cpu.h>
 #include <scfd/communication/mpi_comm_info.h>
 
@@ -31,7 +32,9 @@ struct serial_cpu_mpi : public serial_cpu
     using communicator_type = scfd::communication::mpi_comm_info;
     using runtime_type      = serial_cpu_mpi;
 
-    template <class Log, class Comm>
+    template <
+        class Log, class Comm,
+        typename std::enable_if<!std::is_integral<typename std::decay<Comm>::type>::value, int>::type = 0>
     static int init_device( Log &, const Comm &, int = 0, bool = false )
     {
         return 0;

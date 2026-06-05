@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <mpi.h>
 #include <scfd/backend/sycl.h>
@@ -37,7 +38,9 @@ struct sycl_mpi : public sycl
     using communicator_type = scfd::communication::mpi_comm_info;
     using runtime_type      = sycl_mpi;
 
-    template <class Log, class Comm>
+    template <
+        class Log, class Comm,
+        typename std::enable_if<!std::is_integral<typename std::decay<Comm>::type>::value, int>::type = 0>
     static int init_device( Log &log, const Comm &comm, int shift_index = 0, bool wrap_procs_devices = false )
     {
         auto node_comm = comm.split_type( MPI_COMM_TYPE_SHARED );

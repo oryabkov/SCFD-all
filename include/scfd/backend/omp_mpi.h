@@ -17,6 +17,7 @@
 #ifndef __SCFD_BACKEND_OMP_MPI_H__
 #define __SCFD_BACKEND_OMP_MPI_H__
 
+#include <type_traits>
 #include <scfd/backend/omp.h>
 #include <scfd/communication/mpi_comm_info.h>
 
@@ -31,7 +32,9 @@ struct omp_mpi : public omp
     using communicator_type = scfd::communication::mpi_comm_info;
     using runtime_type      = omp_mpi;
 
-    template <class Log, class Comm>
+    template <
+        class Log, class Comm,
+        typename std::enable_if<!std::is_integral<typename std::decay<Comm>::type>::value, int>::type = 0>
     static int init_device( Log &, const Comm &, int = 0, bool = false )
     {
         return 0;

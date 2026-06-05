@@ -17,6 +17,7 @@
 #ifndef __SCFD_BACKEND_CUDA_MPI_H__
 #define __SCFD_BACKEND_CUDA_MPI_H__
 
+#include <type_traits>
 #include <scfd/backend/cuda.h>
 #include <scfd/communication/mpi_comm_info.h>
 #include <scfd/utils/init_cuda_mpi.h>
@@ -33,7 +34,9 @@ struct cuda_mpi : public cuda
     using communicator_type = scfd::communication::mpi_comm_info;
     using runtime_type      = cuda_mpi;
 
-    template <class Log, class Comm>
+    template <
+        class Log, class Comm,
+        typename std::enable_if<!std::is_integral<typename std::decay<Comm>::type>::value, int>::type = 0>
     static int init_device( Log &log, const Comm &comm, int shift_index = 0, bool wrap_procs_devices = false )
     {
         return scfd::utils::init_cuda_mpi( log, comm, shift_index, wrap_procs_devices );
