@@ -127,17 +127,20 @@ public:
     typedef typename complex_type_hlp<float>::type complex_type;
     typedef typename thrust::complex<float>        thrust_complex_type;
 
-    cufft_wrap_C2C( size_t size_x )
+    cufft_wrap_C2C( size_t size_x ) : plan_created( false )
     {
         CUFFT_SAFE_CALL( cufftPlan1d( &planC2C, size_x, CUFFT_C2C, 1 ) );
+        plan_created = true;
     }
-    cufft_wrap_C2C( size_t size_x, size_t size_y )
+    cufft_wrap_C2C( size_t size_x, size_t size_y ) : plan_created( false )
     {
         CUFFT_SAFE_CALL( cufftPlan2d( &planC2C, size_x, size_y, CUFFT_C2C ) );
+        plan_created = true;
     }
-    cufft_wrap_C2C( size_t size_x, size_t size_y, size_t size_z )
+    cufft_wrap_C2C( size_t size_x, size_t size_y, size_t size_z ) : plan_created( false )
     {
         CUFFT_SAFE_CALL( cufftPlan3d( &planC2C, size_x, size_y, size_z, CUFFT_C2C ) );
+        plan_created = true;
     }
 
     cufft_wrap_C2C( const cufft_wrap_C2C & )            = delete;
