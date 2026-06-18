@@ -71,34 +71,28 @@ struct trivial_comm
     {
     }
 
-    /// Park buf into the queue as message (myid -> dest, tag). No copy is made here.
+    /// Parks buf into the shared queue as message (myid -> dest, tag). No copy is made.
     template <class T>
     void isend( const T *buf, int count, int dest, int tag, request_type &request ) const
     {
-        // TODO: queue->push( myid, dest, tag, buf, count * sizeof(T) );
-        //       optionally stamp dest/tag into request.
         queue->push( myid, dest, tag, buf, count * sizeof(T) );
     }
 
-    /// Synchronously receive message (source -> myid, tag) into buf (copy happens here).
+    /// Synchronously receives message (source -> myid, tag) into buf (copy happens here)
+    /// and records source/tag in the request so waitany can report them later.
     template <class T>
     void irecv( T *buf, int count, int source, int tag, request_type &request ) const
     {
-        // TODO: queue->recv( source, myid, tag, buf, count * sizeof(T) );
-        //       record source/tag into request so waitany can report them.
         queue->recv( source, myid, tag, buf, count * sizeof(T) );
         request.source = source;
         request.tag = tag;
         request.reported = false;
     }
 
-    /// Return the index of the next not-yet-reported request and fill *status with its
-    /// source/tag. All transfers already happened, so just walk requests in order.
+    /// Returns the index of the next not-yet-reported request and fills *status with its
+    /// source/tag. Everything already completed synchronously, so we just walk in order.
     int waitany( int count, request_type *requests, status_type *status ) const
     {
-        // TODO: find first requests[i] with reported == false; set it true;
-        //       status->source_ = requests[i].source; status->tag_ = requests[i].tag;
-        //       return i.
         for ( int i = 0; i < count; i++ )
         {
             if ( requests[i].reported == false )
@@ -114,10 +108,9 @@ struct trivial_comm
         throw std::logic_error( "trivial_comm::waitany: no un-reported request left" );
     }
 
-    /// isend requests need no real waiting in the synchronous trivial impl.
+    /// No-op: isend requests carry no pending work (irecv consumed them synchronously).
     void waitall( int count, request_type *requests ) const
     {
-        // TODO: nothing to wait for (messages were consumed synchronously by irecv).
     }
 };
 
