@@ -48,7 +48,7 @@ namespace scfd
 namespace communication
 {
 
-std::string mpi_error_code_to_str( int error )
+inline std::string mpi_error_code_to_str( int error )
 {
     if ( error == MPI_SUCCESS )
         return std::string( "success(" ) + std::to_string( error ) + std::string( ")" );
@@ -488,6 +488,18 @@ inline int waitany( int count, mpi_request *requests )
     return waitany( count, requests, static_cast<mpi_status *>( nullptr ) );
 }
 
+inline int testany( int count, mpi_request *requests, int *flag, mpi_status *status )
+{
+    int index = MPI_UNDEFINED;
+    SCFD_MPI_SAFE_CALL( MPI_Testany( count, raw_requests( requests ), &index, flag, raw_status( status ) ) );
+    return index;
+}
+
+inline int testany( int count, mpi_request *requests, int *flag )
+{
+    return testany( count, requests, flag, static_cast<mpi_status *>( nullptr ) );
+}
+
 inline mpi_data_type type_vector( int count, int blocklength, int stride, const mpi_data_type &oldtype )
 {
     mpi_data_type newtype;
@@ -757,6 +769,14 @@ struct mpi_comm_info
     int waitany( int count, detail::mpi_request *requests ) const
     {
         return detail::waitany( count, requests );
+    }
+    int testany( int count, detail::mpi_request *requests, int *flag, detail::mpi_status *status ) const
+    {
+        return detail::testany( count, requests, flag, status );
+    }
+    int testany( int count, detail::mpi_request *requests, int *flag ) const
+    {
+        return detail::testany( count, requests, flag );
     }
 
     double wtime() const
