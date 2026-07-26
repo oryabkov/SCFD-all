@@ -29,7 +29,7 @@ extern "C" void dgeev_(
     int *ldvr, double *work, int *lwork, int *info
 );
 
-extern "C" void cgeev_(
+extern "C" void sgeev_(
     char *jobvl, char *jobvr, int *n, float *a, int *lda, float *wR, float *wI, float *vl, int *ldvl, float *vr,
     int *ldvr, float *work, int *lwork, int *info
 );
@@ -901,7 +901,7 @@ inline void lapack_wrap<float>::eigs( const float *A, size_t Nl, float *eig_real
     float *VL    = NULL;
     float *VR    = NULL;
 
-    lapack_exters::cgeev_(
+    lapack_exters::sgeev_(
         &JOBVL, &JOBVR, &N, A_, &N, eig_real, eig_imag, VL, &LDVL, VR, &LDVR, worker, &LWORK, &INFO
     );
 
@@ -970,7 +970,7 @@ inline void lapack_wrap<float>::eigsv( const float *A, size_t Nl, float *eig_rea
     float *VL    = NULL;
     float *VR    = eigv_R;
 
-    lapack_exters::cgeev_(
+    lapack_exters::sgeev_(
         &JOBVL, &JOBVR, &N, A_, &N, eig_real, eig_imag, VL, &LDVL, VR, &LDVR, worker, &LWORK, &INFO
     );
 
