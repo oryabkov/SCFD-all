@@ -112,6 +112,20 @@ struct trivial_comm
     void waitall( int count, request_type *requests ) const
     {
     }
+
+    /// Collectives over a single rank are the identity.
+    template <class T>
+    void all_reduce_sum( const T *loc_data, T *res_data, int count ) const
+    {
+        for ( int i = 0; i < count; ++i )
+            res_data[i] = loc_data[i];
+    }
+
+    template <class T>
+    T all_reduce_sum( T loc_val ) const
+    {
+        return loc_val;
+    }
 };
 
 } // namespace communication
