@@ -17,6 +17,7 @@
 #ifndef __SCFD_ARRAYS_TENSOR_ARRAY_ND_H__
 #define __SCFD_ARRAYS_TENSOR_ARRAY_ND_H__
 
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <scfd/utils/device_tag.h>
@@ -518,12 +519,12 @@ __DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::tensor_a
 
 template <
     class T, ordinal_type ND, class Memory, template <ordinal_type... Dims> class Arranger, ordinal_type... TensorDims>
-__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...> &
+__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>                &
 tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::operator=( const tensor_array_nd &t ) = default;
 
 template <
     class T, ordinal_type ND, class Memory, template <ordinal_type... Dims> class Arranger, ordinal_type... TensorDims>
-__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...> &
+__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>                &
 tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::operator=( tensor_array_nd &&t ) = default;
 
 }

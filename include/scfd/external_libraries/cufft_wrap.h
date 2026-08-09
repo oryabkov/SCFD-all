@@ -127,17 +127,20 @@ public:
     typedef typename complex_type_hlp<float>::type complex_type;
     typedef typename thrust::complex<float>        thrust_complex_type;
 
-    cufft_wrap_C2C( size_t size_x )
+    cufft_wrap_C2C( size_t size_x ) : plan_created( false )
     {
         CUFFT_SAFE_CALL( cufftPlan1d( &planC2C, size_x, CUFFT_C2C, 1 ) );
+        plan_created = true;
     }
-    cufft_wrap_C2C( size_t size_x, size_t size_y )
+    cufft_wrap_C2C( size_t size_x, size_t size_y ) : plan_created( false )
     {
         CUFFT_SAFE_CALL( cufftPlan2d( &planC2C, size_x, size_y, CUFFT_C2C ) );
+        plan_created = true;
     }
-    cufft_wrap_C2C( size_t size_x, size_t size_y, size_t size_z )
+    cufft_wrap_C2C( size_t size_x, size_t size_y, size_t size_z ) : plan_created( false )
     {
         CUFFT_SAFE_CALL( cufftPlan3d( &planC2C, size_x, size_y, size_z, CUFFT_C2C ) );
+        plan_created = true;
     }
 
     cufft_wrap_C2C( const cufft_wrap_C2C & )            = delete;
@@ -201,7 +204,7 @@ public:
         planR2C_created = true;
         CUFFT_SAFE_CALL( cufftPlan1d( &planC2R, size_x, CUFFT_Z2D, 1 ) );
         planC2R_created = true;
-        size_j_F        = floor( size_x / 2 ) + 1;
+        size_j_F        = size_x / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y ) : planR2C_created( false ), planC2R_created( false )
     {
@@ -209,7 +212,7 @@ public:
         planR2C_created = true;
         CUFFT_SAFE_CALL( cufftPlan2d( &planC2R, size_x, size_y, CUFFT_Z2D ) );
         planC2R_created = true;
-        size_j_F        = floor( size_y / 2 ) + 1;
+        size_j_F        = size_y / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y, size_t size_z ) : planR2C_created( false ), planC2R_created( false )
     {
@@ -217,7 +220,7 @@ public:
         planR2C_created = true;
         CUFFT_SAFE_CALL( cufftPlan3d( &planC2R, size_x, size_y, size_z, CUFFT_Z2D ) );
         planC2R_created = true;
-        size_j_F        = floor( size_z / 2 ) + 1;
+        size_j_F        = size_z / 2 + 1;
     }
 
     cufft_wrap_R2C( const cufft_wrap_R2C & )            = delete;
@@ -284,7 +287,7 @@ public:
         planR2C_created = true;
         CUFFT_SAFE_CALL( cufftPlan1d( &planC2R, size_x, CUFFT_C2R, 1 ) );
         planC2R_created = true;
-        size_j_F        = floor( size_x / 2 ) + 1;
+        size_j_F        = size_x / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y ) : planR2C_created( false ), planC2R_created( false )
     {
@@ -292,7 +295,7 @@ public:
         planR2C_created = true;
         CUFFT_SAFE_CALL( cufftPlan2d( &planC2R, size_x, size_y, CUFFT_C2R ) );
         planC2R_created = true;
-        size_j_F        = floor( size_y / 2 ) + 1;
+        size_j_F        = size_y / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y, size_t size_z ) : planR2C_created( false ), planC2R_created( false )
     {
@@ -300,7 +303,7 @@ public:
         planR2C_created = true;
         CUFFT_SAFE_CALL( cufftPlan3d( &planC2R, size_x, size_y, size_z, CUFFT_C2R ) );
         planC2R_created = true;
-        size_j_F        = floor( size_z / 2 ) + 1;
+        size_j_F        = size_z / 2 + 1;
     }
 
     cufft_wrap_R2C( const cufft_wrap_R2C & )            = delete;

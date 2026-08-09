@@ -1,0 +1,122 @@
+// Copyright © 2016-2026 Ryabkov Oleg Igorevich, Evstigneev Nikolay Mikhaylovitch, Sorokin Ivan Antonovich
+
+// This file is part of SCFD.
+
+// SCFD is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 2 only of the License.
+
+// SCFD is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef __SCFD_BACKEND_SERIAL_CPU_COMMON_H__
+#define __SCFD_BACKEND_SERIAL_CPU_COMMON_H__
+
+#include <scfd/backend/common.h>
+#include <scfd/copy/serial_cpu.h>
+#include <scfd/count_by_key/serial_cpu.h>
+#include <scfd/exclusive_scan/serial_cpu.h>
+#include <scfd/for_each/serial_cpu.h>
+#include <scfd/for_each/serial_cpu_nd.h>
+#include <scfd/inclusive_scan/serial_cpu.h>
+#include <scfd/memory/host.h>
+#include <scfd/reduce/serial_cpu.h>
+#include <scfd/reduce_by_key/serial_cpu.h>
+#include <scfd/sequence/serial_cpu.h>
+#include <scfd/set_intersection/serial_cpu.h>
+#include <scfd/sort/serial_cpu.h>
+#include <scfd/sort_by_key/serial_cpu.h>
+#include <scfd/unique/serial_cpu.h>
+#include <scfd/utils/system_timer_event.h>
+
+namespace scfd
+{
+namespace backend
+{
+
+struct serial_cpu_common
+{
+    using memory_type             = scfd::memory::host;
+    using device_memory_info_type = scfd::backend::detail::device_memory_info;
+    using host_memory_info_type   = scfd::backend::detail::host_memory_info;
+    using timer_event_type        = scfd::utils::system_timer_event;
+    template <class Ordinal = int>
+    using for_each_type = scfd::for_each::serial_cpu<Ordinal>;
+    template <int Dim, class Ordinal = int>
+    using for_each_nd_type      = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
+    using reduce_type           = scfd::serial_cpu_reduce<>;
+    using sort_type             = scfd::serial_cpu_sort<>;
+    using unique_type           = scfd::serial_cpu_unique<>;
+    using exclusive_scan_type   = scfd::serial_cpu_exclusive_scan<>;
+    using copy_type             = scfd::serial_cpu_copy<>;
+    using inclusive_scan_type   = scfd::serial_cpu_inclusive_scan<>;
+    using sort_by_key_type      = scfd::serial_cpu_sort_by_key<>;
+    using reduce_by_key_type    = scfd::serial_cpu_reduce_by_key<>;
+    using set_intersection_type = scfd::serial_cpu_set_intersection<>;
+    using sequence_type         = scfd::serial_cpu_sequence<>;
+    using count_by_key_type     = scfd::serial_cpu_count_by_key<>;
+
+    static const char *name()
+    {
+        return "serial_cpu";
+    }
+
+    static void synchronize()
+    {
+    }
+
+    static void device_synchronize()
+    {
+        synchronize();
+    }
+
+    static device_memory_info_type get_device_memory_info()
+    {
+        return device_memory_info_type();
+    }
+
+    static device_memory_info_type get_memory_info()
+    {
+        return get_device_memory_info();
+    }
+
+    static device_memory_info_type memory_info()
+    {
+        return get_memory_info();
+    }
+
+    static host_memory_info_type get_host_memory_info()
+    {
+        return scfd::backend::detail::get_host_memory_info();
+    }
+
+    static bool uses_device_timer()
+    {
+        return false;
+    }
+
+    static bool is_device_backend()
+    {
+        return false;
+    }
+
+    static bool reports_free_memory()
+    {
+        return false;
+    }
+
+    static bool reports_total_memory()
+    {
+        return false;
+    }
+};
+
+}
+}
+
+#endif

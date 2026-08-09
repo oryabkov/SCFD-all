@@ -17,9 +17,8 @@
 #ifndef __SCFD_SERIAL_CPU_REDUCE_H__
 #define __SCFD_SERIAL_CPU_REDUCE_H__
 
-///TODO this is PLUS only operation reduce
-
 #include "reduce_config.h"
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
@@ -35,10 +34,16 @@ struct serial_cpu_reduce
     template <class T>
     T operator()( Ord size, const T *input, T init_val ) const
     {
+        return operator()( size, input, init_val, functional::plus<T>() );
+    }
+
+    template <class T, class BinaryOp>
+    T operator()( Ord size, const T *input, T init_val, BinaryOp binary_op ) const
+    {
         T res( init_val );
         for ( Ord i = 0; i < size; ++i )
         {
-            res += input[i];
+            res = binary_op( res, input[i] );
         }
         return res;
     }

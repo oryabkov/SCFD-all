@@ -20,8 +20,6 @@
 #include <iostream>
 #include <cuda_runtime.h>
 #include <cusolverDn.h>
-#include <thrust/device_ptr.h>
-#include <thrust/device_vector.h>
 // #include <thrust/complex.h>
 #include <scfd/external_libraries/cublas_wrap.h>
 #include <scfd/utils/cusolver_safe_call.h>
@@ -69,6 +67,32 @@ class cusolver_wrap : public utils::manual_init_singleton<cusolver_wrap>
         void copy( const T *A ) const
         {
             CUDA_SAFE_CALL( cudaMemcpy( data_, A, sizeof( T ) * sz_, cudaMemcpyDeviceToDevice ) );
+        }
+    };
+
+    struct dev_info_t
+    {
+        int *data_ = nullptr;
+
+        dev_info_t()
+        {
+            CUDA_SAFE_CALL( cudaMalloc( (void **)&data_, sizeof( int ) ) );
+        }
+
+        dev_info_t( const dev_info_t & )            = delete;
+        dev_info_t &operator=( const dev_info_t & ) = delete;
+
+        ~dev_info_t()
+        {
+            if ( data_ != nullptr )
+            {
+                cudaFree( data_ );
+            }
+        }
+
+        int *data() const
+        {
+            return data_;
         }
     };
 
@@ -403,8 +427,8 @@ inline void cusolver_wrap::geqrf_ormqr(
     char operation_, char side_, size_t rows, size_t cols, double *A, size_t lda, double *b, size_t ldb
 )
 {
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
@@ -446,8 +470,8 @@ inline void cusolver_wrap::geqrf_ormqr(
 {
     //int *devInfo = nullptr;
     //CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
@@ -579,8 +603,8 @@ template <>
 inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, double *A, size_t lda, double *tau )
 {
     //std::cout << "test:" << rows << " " << cols << " " << lda << std::endl;
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_d, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
@@ -595,8 +619,8 @@ inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, double *A, s
 template <>
 inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, float *A, size_t lda, float *tau )
 {
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_f, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
@@ -637,8 +661,8 @@ template <>
 inline void cusolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, double *A, size_t lda, const double *tau )
 {
 
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
     CUSOLVER_SAFE_CALL(
         cusolverDnDorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_d, work_size, devInfo )
@@ -655,8 +679,8 @@ template <>
 inline void cusolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, float *A, size_t lda, const float *tau )
 {
 
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
     CUSOLVER_SAFE_CALL(
         cusolverDnSorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_f, work_size, devInfo )
@@ -729,8 +753,8 @@ inline void cusolver_wrap::ormqr_perform(
     double *C, size_t ldc
 )
 {
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
 
     cublasSideMode_t side = CUBLAS_SIDE_LEFT;
@@ -762,8 +786,8 @@ inline void cusolver_wrap::ormqr_perform(
     size_t ldc
 )
 {
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
 
     cublasSideMode_t side = CUBLAS_SIDE_LEFT;
@@ -798,8 +822,8 @@ inline void cusolver_wrap::eig( size_t rows_cols, double *A, double *lambda )
     int               lda   = m;
     int               lwork = 0;
 
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
 
     CUSOLVER_SAFE_CALL( cusolverDnDsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
@@ -823,8 +847,8 @@ inline void cusolver_wrap::eig( size_t rows_cols, float *A, float *lambda )
     int               lda   = m;
     int               lwork = 0;
 
-    thrust::device_vector<int> devInfo_dv( 1 );
-    int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
+    dev_info_t devInfo_dv;
+    int       *devInfo = devInfo_dv.data();
     int                        info_gpu;
 
     CUSOLVER_SAFE_CALL( cusolverDnSsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );

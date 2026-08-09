@@ -42,7 +42,7 @@ struct access_index_<Ind, false, Dim1, DimsTail...>
 
     static int get( int i1, index_t<DimsTail>... is_tail )
     {
-        return access_index_<Ind - 1, Ind == 1, DimsTail...>::get( is_tail... );
+        return access_index_ < Ind - 1, Ind == 1, DimsTail... > ::get( is_tail... );
     }
 };
 
@@ -54,7 +54,7 @@ struct access_index
 
     static int get( index_t<Dims>... is, int test )
     {
-        return access_index_<Ind, Ind == 0, Dims...>::get( is... );
+        return access_index_ < Ind, Ind == 0, Dims... > ::get( is... );
     }
 };
 

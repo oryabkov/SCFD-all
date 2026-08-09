@@ -18,25 +18,28 @@
 #ifndef __SCFD_BACKEND_SERIAL_CPU_H__
 #define __SCFD_BACKEND_SERIAL_CPU_H__
 
-#include <scfd/memory/host.h>
-#include <scfd/for_each/serial_cpu.h>
-#include <scfd/for_each/serial_cpu_nd.h>
-#include <scfd/reduce/serial_cpu.h>
+#include <scfd/backend/serial_cpu_common.h>
+
 namespace scfd
 {
 namespace backend
 {
 
-struct serial_cpu
+struct serial_cpu : public serial_cpu_common
 {
-    using memory_type = scfd::memory::host;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::serial_cpu<Ordinal>;
-    template <int Dim, class Ordinal = int>
-    using for_each_nd_type = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::serial_cpu_reduce<>;
-};
+    using runtime_type = serial_cpu;
 
+    template <class Log>
+    static int init_device( Log &, int = 0 )
+    {
+        return 0;
+    }
+
+    static int init_device( int = 0 )
+    {
+        return 0;
+    }
+};
 
 }
 }

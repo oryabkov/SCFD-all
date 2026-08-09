@@ -18,25 +18,27 @@
 #ifndef __SCFD_BACKEND_OMP_H__
 #define __SCFD_BACKEND_OMP_H__
 
-#include <scfd/memory/host.h>
-#include <scfd/for_each/openmp_impl.h>
-#include <scfd/for_each/openmp_nd_impl.h>
-#include <scfd/reduce/omp_reduce_impl.h>
-
+#include <scfd/backend/omp_common.h>
 
 namespace scfd
 {
 namespace backend
 {
 
-struct omp
+struct omp : public omp_common
 {
-    using memory_type = scfd::memory::host;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::openmp<Ordinal>;
-    template <int Dim, class Ordinal = int>
-    using for_each_nd_type = scfd::for_each::openmp_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::omp_reduce<>;
+    using runtime_type = omp;
+
+    template <class Log>
+    static int init_device( Log &, int = 0 )
+    {
+        return 0;
+    }
+
+    static int init_device( int = 0 )
+    {
+        return 0;
+    }
 };
 
 }

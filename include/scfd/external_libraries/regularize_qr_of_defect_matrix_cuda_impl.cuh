@@ -39,7 +39,7 @@ __global__ void ker_get_matrix_diag_with_indices( int n, const T *A, thrust::pai
     if ( !( i < n ) )
         return;
     //TODO fabs->scalar_trait
-    diag_with_indices[i] = thrust::make_pair<T, int>( fabs( A[i * n + i] ), i );
+    diag_with_indices[i] = thrust::make_pair( static_cast<T>( fabs( A[i * n + i] ) ), i );
 }
 
 template <class T>

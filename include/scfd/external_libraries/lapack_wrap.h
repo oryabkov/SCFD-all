@@ -1,5 +1,5 @@
-#ifndef __LAPACK_WRAP_H__
-#define __LAPACK_WRAP_H__
+#ifndef __SCFD_LAPACK_WRAP_H__
+#define __SCFD_LAPACK_WRAP_H__
 
 /*//
     wrap over some specific LAPACK routines, mainly used for eigenvalue estimation.
@@ -9,7 +9,6 @@
 #include <fstream>
 #include <complex>
 #include <vector>
-#include <utils/cuda_support.h>
 #include <cstring>
 #include <limits>
 
@@ -30,7 +29,7 @@ extern "C" void dgeev_(
     int *ldvr, double *work, int *lwork, int *info
 );
 
-extern "C" void cgeev_(
+extern "C" void sgeev_(
     char *jobvl, char *jobvr, int *n, float *a, int *lda, float *wR, float *wI, float *vl, int *ldvl, float *vr,
     int *ldvr, float *work, int *lwork, int *info
 );
@@ -89,6 +88,9 @@ extern "C" void sgels_(
 );
 
 }
+
+namespace scfd
+{
 
 template <class T>
 class lapack_wrap
@@ -281,51 +283,6 @@ public:
             eigs[j] = Ct( eig_real[j], eig_imag[j] );
         }
     }
-
-    //direct upper Hessenberg matrix eigs from the device
-    void hessinberg_eigs_from_gpu( const T *H_device, size_t Nl, T *eig_real, T *eig_imag )
-    {
-
-        device_2_host_cpy<T>( A_, (T *)H_device, Nl * Nl );
-        hessinberg_eigs( A_, Nl, eig_real, eig_imag );
-    }
-    template <class C_t>
-    void hessinberg_eigs_from_gpu( const T *H_device, size_t Nl, C_t *eig )
-    {
-        std::vector<T> eig_real( Nl );
-        std::vector<T> eig_imag( Nl );
-        hessinberg_eigs_from_gpu( H_device, Nl, eig_real.data(), eig_imag.data() );
-        for ( int j = 0; j < Nl; j++ )
-        {
-            eig[j] = C_t( eig_real[j], eig_imag[j] );
-        }
-    }
-    void
-    hessinberg_schur_from_gpu( const T *H_device, size_t Nl, T *Q, T *R, T *eig_real = nullptr, T *eig_imag = nullptr )
-    {
-        device_2_host_cpy<T>( A_, (T *)H_device, Nl * Nl );
-        hessinberg_schur( A_, Nl, Q, R, eig_real, eig_imag );
-    }
-    template <class C_t>
-    void hessinberg_schur_from_gpu( const T *H_device, size_t Nl, T *Q, T *R, C_t *eig )
-    {
-        device_2_host_cpy<T>( A_, (T *)H_device, Nl * Nl );
-        hessinberg_schur( A_, Nl, Q, R, eig );
-    }
-    void eigs_schur_from_gpu( const T *A_device, size_t Nl, T *Q, T *R, T *eig_real = nullptr, T *eig_imag = nullptr )
-    {
-        device_2_host_cpy<T>( A_, (T *)A_device, Nl * Nl );
-        eigs_schur( A_, Nl, eig_real, eig_imag, Q, R );
-    }
-    template <class C_t>
-    void eigs_schur_from_gpu( const T *A_device, size_t Nl, T *Q, T *R, C_t *eig )
-    {
-        std::vector<T> A_l( Nl * Nl );
-
-        device_2_host_cpy<T>( A_l.data(), (T *)A_device, Nl * Nl );
-        eigs_schur( A_l.data(), Nl, eig, Q, R );
-    }
-
 
     void qr( const T *H, size_t Nl, T *Q, T *R = nullptr )
     {
@@ -541,23 +498,6 @@ public:
         f.close();
     }
 
-
-    template <class T_l>
-    void
-    write_matrix_from_device( const std::string &f_name, size_t Row, size_t Col, T_l *matrix, unsigned int prec = 17 )
-    {
-        std::vector<T_l> A_l( Row * Col, 0 );
-        device_2_host_cpy<T_l>( A_l.data(), (T_l *)matrix, Row * Col );
-        write_matrix( f_name, Row, Col, A_l.data(), prec );
-    }
-
-    template <class T_l>
-    void write_vector_from_device( const std::string &f_name, size_t N, T_l *vec, unsigned int prec = 17 )
-    {
-        std::vector<T_l> v_l( N, 0 );
-        device_2_host_cpy<T_l>( v_l.data(), (T_l *)vec, N );
-        write_vector( f_name, N, v_l, prec );
-    }
 
 private:
     void qr_no_R_( T *A, T *Q );
@@ -961,7 +901,7 @@ inline void lapack_wrap<float>::eigs( const float *A, size_t Nl, float *eig_real
     float *VL    = NULL;
     float *VR    = NULL;
 
-    lapack_exters::cgeev_(
+    lapack_exters::sgeev_(
         &JOBVL, &JOBVR, &N, A_, &N, eig_real, eig_imag, VL, &LDVL, VR, &LDVR, worker, &LWORK, &INFO
     );
 
@@ -1030,7 +970,7 @@ inline void lapack_wrap<float>::eigsv( const float *A, size_t Nl, float *eig_rea
     float *VL    = NULL;
     float *VR    = eigv_R;
 
-    lapack_exters::cgeev_(
+    lapack_exters::sgeev_(
         &JOBVL, &JOBVR, &N, A_, &N, eig_real, eig_imag, VL, &LDVL, VR, &LDVR, worker, &LWORK, &INFO
     );
 
@@ -1344,5 +1284,7 @@ lapack_wrap<float>::eigs_schur( const float *A, size_t Nl, float *eigs_real, flo
     }
 }
 
+
+} // namespace scfd
 
 #endif

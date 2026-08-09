@@ -20,11 +20,7 @@
 #include "reduce_config.h"
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
-
-/// TODO how to specify memory type in thrust?
-
-///TODO this is PLUS only operation reduce
-///TODO now it's in cpp code also because for simple types we can call thrust from cpp, later - move to _impl
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
@@ -35,9 +31,15 @@ struct thrust_reduce
     template <class T>
     T operator()( Ord size, const T *input, T init_val ) const
     {
+        return operator()( size, input, init_val, functional::plus<T>() );
+    }
+
+    template <class T, class BinaryOp>
+    T operator()( Ord size, const T *input, T init_val, BinaryOp binary_op ) const
+    {
         ::thrust::device_ptr<const T> input_begin = ::thrust::device_pointer_cast( input ),
                                       input_end   = input_begin + size;
-        return ::thrust::reduce( input_begin, input_end, init_val );
+        return ::thrust::reduce( input_begin, input_end, init_val, binary_op );
     }
     void wait() const
     {

@@ -19,6 +19,9 @@
 
 #include "sycl_reduce.h"
 #include "scfd/utils/init_sycl.h"
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/numeric>
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
@@ -27,8 +30,15 @@ template <class Ord>
 template <class T>
 T sycl_reduce<Ord>::operator()( Ord size, const T *input, T init_val ) const
 {
+    return operator()( size, input, init_val, functional::plus<T>() );
+}
+
+template <class Ord>
+template <class T, class BinaryOp>
+T sycl_reduce<Ord>::operator()( Ord size, const T *input, T init_val, BinaryOp binary_op ) const
+{
     auto policy = dpl::execution::make_device_policy( sycl_device_queue );
-    return dpl::reduce( policy, input, input + size, init_val, std::plus<T>{} );
+    return dpl::reduce( policy, input, input + size, init_val, binary_op );
 }
 
 }

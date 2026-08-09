@@ -18,24 +18,27 @@
 #ifndef __SCFD_BACKEND_HIP_H__
 #define __SCFD_BACKEND_HIP_H__
 
+#include <scfd/backend/hip_common.h>
 #include <scfd/utils/init_hip.h>
-#include <scfd/memory/hip.h>
-#include <scfd/for_each/hip_impl.h>
-#include <scfd/for_each/hip_nd_impl.h>
-#include <scfd/reduce/thrust.h>
 
 namespace scfd
 {
 namespace backend
 {
-struct hip
+struct hip : public hip_common
 {
-    using memory_type = scfd::memory::hip_device;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::hip<Ordinal>;
-    template <int Dim, class Ordinal = int>
-    using for_each_nd_type = scfd::for_each::hip_nd<Dim, Ordinal>;
-    using reduce_type      = scfd::thrust_reduce<>;
+    using runtime_type = hip;
+
+    template <class Log>
+    static int init_device( Log &log, int device_id = 0 )
+    {
+        return scfd::utils::init_hip( log, -2, device_id );
+    }
+
+    static int init_device( int device_id = 0 )
+    {
+        return scfd::utils::init_hip( -2, device_id );
+    }
 };
 }
 }

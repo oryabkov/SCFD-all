@@ -31,7 +31,9 @@ namespace utils
 {
 
 template <class Log>
-inline int init_hip_mpi( Log &log, const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
+inline int init_hip_mpi(
+    Log &log, const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false
+)
 {
     int node_size                 = 0;
     int my_id                     = 0;
@@ -51,7 +53,11 @@ inline int init_hip_mpi( Log &log, const scfd::communication::mpi_comm_info &com
     my_id           = comm_split.myid();
     comm_split.free();
     HIP_SAFE_CALL( hipGetDeviceCount( &number_of_devices_on_node ) );
-    if ( number_of_devices_on_node < node_size )
+    if ( number_of_devices_on_node <= 0 )
+    {
+        throw std::runtime_error( "init_hip_mpi: node name " + std::string( node_name ) + "\n no visible HIP devices" );
+    }
+    if ( number_of_devices_on_node < node_size && !wrap_procs_devices )
     {
         throw std::runtime_error(
             "init_hip_mpi: node name " + std::string( node_name ) + "\n number of nproc = " +
@@ -60,6 +66,14 @@ inline int init_hip_mpi( Log &log, const scfd::communication::mpi_comm_info &com
         );
     }
     device_id = ( my_id + shift_index ) % number_of_devices_on_node;
+    if ( number_of_devices_on_node < node_size && wrap_procs_devices && my_id == 0 )
+    {
+        log.info_f(
+            "WARNING: init_hip_mpi is wrapping %i MPI processes over %i visible GPU(s) on node %s. "
+            "Several MPI processes will share one GPU.",
+            node_size, number_of_devices_on_node, node_name
+        );
+    }
     log.info_f(
         "init_hip_mpi split_color: node_name = %s, node_color = %i, global_size = %i, global_id = %i, node_size = %i, "
         "devices_on_node = %i, node_device_id = %i, node_my_id = %i",
@@ -69,10 +83,12 @@ inline int init_hip_mpi( Log &log, const scfd::communication::mpi_comm_info &com
 }
 
 
-inline int init_hip_mpi( const scfd::communication::mpi_comm_info &comm, int shift_index = 0 )
+inline int init_hip_mpi(
+    const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false
+)
 {
     log_std log;
-    return init_hip_mpi( log, comm, shift_index );
+    return init_hip_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 
 

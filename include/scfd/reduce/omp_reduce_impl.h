@@ -18,8 +18,7 @@
 #define __SCFD_OMP_REDUCE_IMPL_H__
 
 #include "omp_reduce.h"
-
-///TODO this is PLUS only operation reduce
+#include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
@@ -28,16 +27,33 @@ template <class Ord>
 template <class T>
 T omp_reduce<Ord>::operator()( Ord size, const T *input, T init_val ) const
 {
+    return operator()( size, input, init_val, functional::plus<T>() );
+}
+
+template <class Ord>
+template <class T, class BinaryOp>
+T omp_reduce<Ord>::operator()( Ord size, const T *input, T init_val, BinaryOp binary_op ) const
+{
     T res = init_val;
 #pragma omp parallel
     {
-        T res_private( 0 );
+        T    res_private = T();
+        bool has_private = false;
 #pragma omp for nowait
         for ( Ord i = 0; i < size; ++i )
-            res_private = res_private + input[i];
+        {
+            if ( has_private )
+                res_private = binary_op( res_private, input[i] );
+            else
+            {
+                res_private = input[i];
+                has_private = true;
+            }
+        }
 #pragma omp critical
         {
-            res = res + res_private;
+            if ( has_private )
+                res = binary_op( res, res_private );
         }
     }
     return res;

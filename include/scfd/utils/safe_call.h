@@ -30,8 +30,8 @@
     }                                                                                                                  \
     catch ( ... )                                                                                                      \
     {                                                                                                                  \
-        std::throw_with_nested( std::runtime_error( std::string( "SCFD_SAFE_CALL " __FILE__                            \
-                                                                 " " __STR( __LINE__ ) " : " #__VA_ARGS__ " failed: " ) ) );     \
+        std::throw_with_nested( std::runtime_error( std::string( "SCFD_SAFE_CALL " __FILE__ " " __STR( __LINE__        \
+        ) " : " #__VA_ARGS__ " failed: " ) ) );                                                                        \
     }
 
 #endif

@@ -63,13 +63,26 @@ public:
         return work_area_;
     }
 
+    void take( bool activate_inplace = true )
+    {
+        if ( activate_inplace )
+        {
+            if ( taken_ )
+            {
+                throw std::logic_error( "shared_buffer::take(activate_inplace): the buffer ref is already taken" );
+            }
+            activate();
+            taken_ = true;
+        }
+        else
+        {
+            take_activated_();
+        }
+    }
+
     void take() const
     {
-        if ( ( taken_ ) || ( work_area_size_previous_ == 0 ) )
-        {
-            throw std::logic_error( "shared_buffer::take: the buffer ref is already taken or not activated" );
-        }
-        taken_ = true;
+        take_activated_();
     }
 
     void release() const
@@ -86,6 +99,15 @@ public:
     }
 
 private:
+    void take_activated_() const
+    {
+        if ( ( taken_ ) || ( work_area_size_previous_ == 0 ) )
+        {
+            throw std::logic_error( "shared_buffer::take: the buffer ref is already taken or not activated" );
+        }
+        taken_ = true;
+    }
+
     std::size_t  work_area_size_, work_area_size_previous_;
     pointer_t    work_area_;
     mutable bool taken_;
