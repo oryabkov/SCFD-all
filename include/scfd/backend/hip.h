@@ -20,6 +20,7 @@
 
 #include <scfd/backend/hip_common.h>
 #include <scfd/utils/init_hip.h>
+#include <scfd/external_libraries/hipsolver_wrap.h>
 
 namespace scfd
 {
@@ -39,6 +40,9 @@ struct hip : public hip_common
     {
         return scfd::utils::init_hip( -2, device_id );
     }
+
+    using blas_wrap_type   = scfd::hipblas_wrap;
+    using solver_wrap_type = scfd::hipsolver_wrap;
 };
 }
 }

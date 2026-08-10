@@ -19,6 +19,7 @@
 
 #include <scfd/backend/cuda_common.h>
 #include <scfd/utils/init_cuda.h>
+#include <scfd/external_libraries/cusolver_wrap.h>
 
 namespace scfd
 {
@@ -39,6 +40,9 @@ struct cuda : public cuda_common
     {
         return scfd::utils::init_cuda( -2, device_id );
     }
+
+    using blas_wrap_type   = scfd::cublas_wrap;
+    using solver_wrap_type = scfd::cusolver_wrap;
 };
 
 }
