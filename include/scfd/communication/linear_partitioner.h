@@ -29,70 +29,94 @@ namespace communication
 
 struct linear_partitioner
 {
-    int                     total_size;
-    std::vector<int>        starts, ends;
-    int                     my_rank;
-    bool                    is_complete;
+    int              total_size;
+    std::vector<int> starts, ends;
+    int              my_rank;
+    bool             is_complete;
 
-    linear_partitioner() {}
-    linear_partitioner(const linear_partitioner &part) 
+    linear_partitioner()
     {
-        total_size = part.total_size;
-        starts = part.starts;
-        ends = part.ends;
-        my_rank = part.my_rank;
+    }
+    linear_partitioner( const linear_partitioner &part )
+    {
+        total_size  = part.total_size;
+        starts      = part.starts;
+        ends        = part.ends;
+        my_rank     = part.my_rank;
         is_complete = part.is_complete;
     }
-    linear_partitioner(int N, int comm_size, int _my_rank) : is_complete(false)
+    linear_partitioner( int N, int comm_size, int _my_rank ) : is_complete( false )
     {
-        int     sz_per_proc = (int)ceil(float(N)/comm_size);
-        int     curr = 0;
-        for (int iproc = 0;iproc < comm_size;++iproc) {
-            starts.push_back(curr);
-            curr += sz_per_proc; if (curr > N) curr = N;
-            ends.push_back(curr);
+        int sz_per_proc = (int)ceil( float( N ) / comm_size );
+        int curr        = 0;
+        for ( int iproc = 0; iproc < comm_size; ++iproc )
+        {
+            starts.push_back( curr );
+            curr += sz_per_proc;
+            if ( curr > N )
+                curr = N;
+            ends.push_back( curr );
         }
         total_size = N;
-        my_rank = _my_rank;
+        my_rank    = _my_rank;
     }
 
     //'read' before construction part:
-    int     get_own_rank()const { return my_rank; }
-    bool    check_glob_owned(int i)const { return check_glob_owned(i, get_own_rank()); }
-    int     get_total_size()const { return total_size; }
+    int get_own_rank() const
+    {
+        return my_rank;
+    }
+    bool check_glob_owned( int i ) const
+    {
+        return check_glob_owned( i, get_own_rank() );
+    }
+    int get_total_size() const
+    {
+        return total_size;
+    }
     //get_size is not part of PARTITIONER concept
-    int     get_size(int rank)const { return ends[rank]-starts[rank]; }
-    int     get_size()const { return get_size(get_own_rank()); }
-    int     own_glob_ind(int i)const
+    int get_size( int rank ) const
+    {
+        return ends[rank] - starts[rank];
+    }
+    int get_size() const
+    {
+        return get_size( get_own_rank() );
+    }
+    int own_glob_ind( int i ) const
     {
         return i + starts[get_own_rank()];
     }
-    int     own_glob_ind_2_ind(int i_glob)const
+    int own_glob_ind_2_ind( int i_glob ) const
     {
         return i_glob - starts[get_own_rank()];
     }
 
     //'construction' part:
-    void    add_stencil_element(int i_glob)
+    void add_stencil_element( int i_glob )
     {
     }
-    void    complete()
+    void complete()
     {
         is_complete = true;
     }
 
     //'read' after construction part:
     //here i and rank could be any (from existing range) both before and after construction; this exeeds demands of PARTITIONER concept
-    int     get_rank(int i)const
+    int get_rank( int i ) const
     {
-        int     res = 0;
-        while (i >= ends[res]) ++res;
+        int res = 0;
+        while ( i >= ends[res] )
+            ++res;
         return res;
     }
-    bool    check_glob_owned(int i, int rank)const { return ((i >= starts[rank])&&(i < ends[rank])); }
+    bool check_glob_owned( int i, int rank ) const
+    {
+        return ( ( i >= starts[rank] ) && ( i < ends[rank] ) );
+    }
 };
 
-}  /// namespace communication
-}  /// namespace scfd
+} /// namespace communication
+} /// namespace scfd
 
 #endif

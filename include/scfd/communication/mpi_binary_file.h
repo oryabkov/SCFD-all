@@ -60,7 +60,8 @@ struct mpi_binary_file
     {
         SCFD_MPI_SAFE_CALL( MPI_File_set_size( fh, size * sizeof( T ) ) );
     }
-    void preallocate( MPI_Offset size
+    void preallocate(
+        MPI_Offset size
     ) const //WARNING! seems to make file larger if repeatedly applied to the same existing file. Use 'size()' insted.
     {
         SCFD_MPI_SAFE_CALL( MPI_File_preallocate( fh, size * sizeof( T ) ) );

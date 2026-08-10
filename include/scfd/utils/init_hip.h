@@ -294,7 +294,8 @@ inline int init_hip_persistent( Log &log, std::size_t device_memory_in_MB, std::
 
     if ( !device_is_set )
     {
-        throw std::runtime_error( "init_hip_persistent: failed to find a suitable device for the given time interval.\n"
+        throw std::runtime_error(
+            "init_hip_persistent: failed to find a suitable device for the given time interval.\n"
         );
     }
     hipDeviceProp_t device_prop;

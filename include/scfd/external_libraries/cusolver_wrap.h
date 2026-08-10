@@ -429,7 +429,7 @@ inline void cusolver_wrap::geqrf_ormqr(
 {
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
@@ -472,7 +472,7 @@ inline void cusolver_wrap::geqrf_ormqr(
     //CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
@@ -605,7 +605,7 @@ inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, double *A, s
     //std::cout << "test:" << rows << " " << cols << " " << lda << std::endl;
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_d, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
@@ -621,7 +621,7 @@ inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, float *A, si
 {
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
     CUSOLVER_SAFE_CALL( cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_f, work_size, devInfo ) );
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
@@ -637,7 +637,8 @@ cusolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const double *A, 
 {
 
     int lwork_1 = 0;
-    CUSOLVER_SAFE_CALL( cusolverDnDorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
+    CUSOLVER_SAFE_CALL(
+        cusolverDnDorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
     int lwork = lwork_1;
@@ -650,7 +651,8 @@ cusolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const float *A, s
 {
 
     int lwork_1 = 0;
-    CUSOLVER_SAFE_CALL( cusolverDnSorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
+    CUSOLVER_SAFE_CALL(
+        cusolverDnSorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
     int lwork = lwork_1;
@@ -663,7 +665,7 @@ inline void cusolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, do
 
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
     CUSOLVER_SAFE_CALL(
         cusolverDnDorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_d, work_size, devInfo )
     );
@@ -681,7 +683,7 @@ inline void cusolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, fl
 
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
     CUSOLVER_SAFE_CALL(
         cusolverDnSorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_f, work_size, devInfo )
     );
@@ -755,7 +757,7 @@ inline void cusolver_wrap::ormqr_perform(
 {
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
 
     cublasSideMode_t side = CUBLAS_SIDE_LEFT;
     if ( ( side_ == 'r' ) || ( side_ == 'R' ) )
@@ -788,7 +790,7 @@ inline void cusolver_wrap::ormqr_perform(
 {
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
 
     cublasSideMode_t side = CUBLAS_SIDE_LEFT;
     if ( ( side_ == 'r' ) || ( side_ == 'R' ) )
@@ -824,7 +826,7 @@ inline void cusolver_wrap::eig( size_t rows_cols, double *A, double *lambda )
 
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
 
     CUSOLVER_SAFE_CALL( cusolverDnDsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
     set_d_work_double( lwork );
@@ -849,7 +851,7 @@ inline void cusolver_wrap::eig( size_t rows_cols, float *A, float *lambda )
 
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
-    int                        info_gpu;
+    int        info_gpu;
 
     CUSOLVER_SAFE_CALL( cusolverDnSsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
     set_d_work_float( lwork );

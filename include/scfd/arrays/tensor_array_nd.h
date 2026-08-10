@@ -60,9 +60,9 @@ public:
 
 private:
     template <class IndexVec, ordinal_type... I>
-    __DEVICE_TAG__ T &
-    index_get_( const IndexVec &idx, index_type<TensorDims>... tensor_indexes, detail::index_sequence<ordinal_type, I...> )
-        const
+    __DEVICE_TAG__ T &index_get_(
+        const IndexVec &idx, index_type<TensorDims>... tensor_indexes, detail::index_sequence<ordinal_type, I...>
+    ) const
     {
         return operator()( idx[I]..., tensor_indexes... );
     }
@@ -193,8 +193,8 @@ public:
     __DEVICE_TAG__ tensor_array_nd &operator=( const tensor_array_nd &t );
     __DEVICE_TAG__ tensor_array_nd &operator=( tensor_array_nd &&t );
 
-    tensor_array_nd &
-    operator=( std::initializer_list<typename detail::nested_initializer_list_gen<T, arranger_type::dims_num>::type> il
+    tensor_array_nd &operator=(
+        std::initializer_list<typename detail::nested_initializer_list_gen<T, arranger_type::dims_num>::type> il
     )
     {
         if ( !parent_t::is_free() && parent_t::is_own() )
@@ -514,12 +514,12 @@ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::tensor_array_nd( const 
 
 template <
     class T, ordinal_type ND, class Memory, template <ordinal_type... Dims> class Arranger, ordinal_type... TensorDims>
-__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::tensor_array_nd( tensor_array_nd &&t
-) = default;
+__DEVICE_TAG__
+tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::tensor_array_nd( tensor_array_nd &&t ) = default;
 
 template <
     class T, ordinal_type ND, class Memory, template <ordinal_type... Dims> class Arranger, ordinal_type... TensorDims>
-__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>                &
+__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...> &
 tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::operator=( const tensor_array_nd &t ) = default;
 
 template <

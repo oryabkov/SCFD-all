@@ -25,29 +25,28 @@ namespace communication
 class serial_communicator
 {
 public:
-    int size()const
+    int size() const
     {
         return 1;
     }
-    int my_rank()const
+    int my_rank() const
     {
         return 0;
     }
-    
-    template<class T>
-    T   reduce_max(const T &local_val)const
+
+    template <class T>
+    T reduce_max( const T &local_val ) const
     {
         return local_val;
     }
-    template<class T>
-    T   reduce_sum(const T &local_val)const
+    template <class T>
+    T reduce_sum( const T &local_val ) const
     {
         return local_val;
     }
 };
 
-}  /// namespace communication
-}  /// namespace scfd
+} /// namespace communication
+} /// namespace scfd
 
 #endif
-

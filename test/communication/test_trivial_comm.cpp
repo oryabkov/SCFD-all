@@ -15,14 +15,14 @@
 /// runs WITHOUT mpiexec and reproduces a periodic (x) halo exchange done as a self-send.
 using namespace scfd;
 
-using ordinal     = int;
-using big_ordinal = long int;
-using value_t     = unsigned int;
+using ordinal        = int;
+using big_ordinal    = long int;
+using value_t        = unsigned int;
 static const int dim = 3;
 
 using mem_t       = memory::host;
-using comm_t      = communication::trivial_platform<mem_t>;  // ~ mpi_wrap
-using comm_info_t = communication::trivial_comm<mem_t>;      // ~ mpi_comm_info
+using comm_t      = communication::trivial_platform<mem_t>; // ~ mpi_wrap
+using comm_info_t = communication::trivial_comm<mem_t>;     // ~ mpi_comm_info
 using part_t      = communication::rect_partitioner<dim, ordinal, big_ordinal, comm_info_t>;
 using for_each_t  = for_each::serial_cpu_nd<dim, ordinal>;
 
@@ -47,7 +47,7 @@ int main( int argc, char *args[] )
     part_t      part( comm_world, dom_sz );
     // single process owns the whole domain (no decomposition)
     part.proc_rects = { { { 0, 0, 0 }, { size, size, size } } };
-    periodic_flags_t periodic_flags( true, false, false );  // periodic in x => self-exchange
+    periodic_flags_t periodic_flags( true, false, false ); // periodic in x => self-exchange
     dist_t           dist;
 
     /* ------------------------ */
@@ -79,7 +79,7 @@ int main( int argc, char *args[] )
         for ( ordinal iy = my_loc_rect.i1[1]; iy < my_loc_rect.i2[1]; ++iy )
             for ( ordinal iz = my_loc_rect.i1[2]; iz < my_loc_rect.i2[2]; ++iz )
             {
-                bool interior_x = ( ix >= my_own_loc_rect.i1[0] && ix < my_own_loc_rect.i2[0] );
+                bool interior_x          = ( ix >= my_own_loc_rect.i1[0] && ix < my_own_loc_rect.i2[0] );
                 data_view1( ix, iy, iz ) = interior_x ? static_cast<value_t>( ix ) : ghost_sentinel;
             }
 

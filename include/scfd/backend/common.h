@@ -103,7 +103,7 @@ inline void read_system_meminfo( host_memory_info &info )
     std::string   line;
     while ( std::getline( meminfo, line ) )
     {
-        const char *fields[] = {"MemTotal:", "MemFree:", "MemAvailable:"};
+        const char *fields[] = { "MemTotal:", "MemFree:", "MemAvailable:" };
         for ( int i = 0; i < 3; ++i )
         {
             const std::string key( fields[i] );
@@ -150,7 +150,7 @@ inline host_memory_info get_host_memory_info()
     }
     if ( read_status_kb_field( "VmSwap:", value ) )
     {
-        info.swap_bytes       = value;
+        info.swap_bytes        = value;
         info.swap_memory_known = true;
     }
     read_system_meminfo( info );

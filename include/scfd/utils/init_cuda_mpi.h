@@ -94,11 +94,11 @@ inline int init_cuda_mpi(
 
     if ( spsfd_device_bind_debug_enabled() )
     {
-        int         active_device = -1;
+        int         active_device  = -1;
         char        pci_bus_id[64] = "n/a";
-        const char *device_name = "n/a";
-        std::size_t free_mem = 0;
-        std::size_t total_mem = 0;
+        const char *device_name    = "n/a";
+        std::size_t free_mem       = 0;
+        std::size_t total_mem      = 0;
 
         CUDA_SAFE_CALL( cudaGetDevice( &active_device ) );
         if ( active_device >= 0 )
@@ -117,14 +117,12 @@ inline int init_cuda_mpi(
             "pci=%s name=\"%s\" free_MB=%.3f total_MB=%.3f host=%s "
             "CUDA_VISIBLE_DEVICES=%s NVIDIA_VISIBLE_DEVICES=%s SLURM_PROCID=%s "
             "SLURM_LOCALID=%s SLURM_NODEID=%s PMI_RANK=%s PMIX_RANK=%s\n",
-            comm.myid, comm.num_procs, my_id, node_size, number_of_devices_on_node, device_id,
-            active_device, initialized_device, pci_bus_id, device_name,
-            static_cast<double>( free_mem ) / ( 1024.0 * 1024.0 ),
+            comm.myid, comm.num_procs, my_id, node_size, number_of_devices_on_node, device_id, active_device,
+            initialized_device, pci_bus_id, device_name, static_cast<double>( free_mem ) / ( 1024.0 * 1024.0 ),
             static_cast<double>( total_mem ) / ( 1024.0 * 1024.0 ), node_name,
             spsfd_env_or_na( "CUDA_VISIBLE_DEVICES" ), spsfd_env_or_na( "NVIDIA_VISIBLE_DEVICES" ),
-            spsfd_env_or_na( "SLURM_PROCID" ), spsfd_env_or_na( "SLURM_LOCALID" ),
-            spsfd_env_or_na( "SLURM_NODEID" ), spsfd_env_or_na( "PMI_RANK" ),
-            spsfd_env_or_na( "PMIX_RANK" )
+            spsfd_env_or_na( "SLURM_PROCID" ), spsfd_env_or_na( "SLURM_LOCALID" ), spsfd_env_or_na( "SLURM_NODEID" ),
+            spsfd_env_or_na( "PMI_RANK" ), spsfd_env_or_na( "PMIX_RANK" )
         );
         std::fflush( stderr );
     }
@@ -133,9 +131,8 @@ inline int init_cuda_mpi(
 }
 
 
-inline int init_cuda_mpi(
-    const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false
-)
+inline int
+init_cuda_mpi( const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false )
 {
     log_std log;
     return init_cuda_mpi( log, comm, shift_index, wrap_procs_devices );

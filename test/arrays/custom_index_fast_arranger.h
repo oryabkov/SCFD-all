@@ -161,8 +161,8 @@ struct custom_index_fast_arranger<First, Second, Third, Forth>
                    this->template get_dim<First>() *
                        ( ( detail::axis_size<Second>::get( i0, i1, i2, i3 ) - this->template get_index0<Second>() ) +
                          this->template get_dim<Second>() *
-                             ( ( detail::axis_size<Third>::get( i0, i1, i2, i3 ) - this->template get_index0<Third>()
-                               ) +
+                             ( ( detail::axis_size<Third>::get( i0, i1, i2, i3 ) -
+                                 this->template get_index0<Third>() ) +
                                this->template get_dim<Third>() * ( detail::axis_size<Forth>::get( i0, i1, i2, i3 ) -
                                                                    this->template get_index0<Forth>() ) ) );
 

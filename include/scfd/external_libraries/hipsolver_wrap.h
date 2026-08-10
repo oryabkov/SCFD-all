@@ -254,13 +254,13 @@ public:
     }
 
 private:
-    bool               handle_created = false;
+    bool                handle_created = false;
     hipsolverDnHandle_t handle;
-    double            *d_work_d  = nullptr;
-    float             *d_work_f  = nullptr;
-    int                work_size = 0;
-    blas_t            *hipblas;
-    bool               hipblas_set = false;
+    double             *d_work_d  = nullptr;
+    float              *d_work_f  = nullptr;
+    int                 work_size = 0;
+    blas_t             *hipblas;
+    bool                hipblas_set = false;
 
     float  *tau_f    = nullptr; //elementary reflections vector
     double *tau_d    = nullptr; //elementary reflections vector
@@ -405,16 +405,18 @@ inline void hipsolver_wrap::geqrf_ormqr(
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL( hipsolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo ) );
+    HIPSOLVER_SAFE_CALL(
+        hipsolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo )
+    );
     HIP_SAFE_CALL( hipDeviceSynchronize() );
     HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_ormqr.geqrf: info_gpu = " + std::to_string( info_gpu ) );
     }
-    int              m    = rows;
-    int              n    = 1;
-    int              k    = rows;
+    int               m    = rows;
+    int               n    = 1;
+    int               k    = rows;
     hipblasSideMode_t side = HIPBLAS_SIDE_LEFT;
     if ( ( side_ == 'r' ) || ( side_ == 'R' ) )
     {
@@ -448,16 +450,18 @@ inline void hipsolver_wrap::geqrf_ormqr(
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL( hipsolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo ) );
+    HIPSOLVER_SAFE_CALL(
+        hipsolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo )
+    );
     HIP_SAFE_CALL( hipDeviceSynchronize() );
     HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_ormqr.geqrf: info_gpu = " + std::to_string( info_gpu ) );
     }
-    int              m    = rows;
-    int              n    = 1;
-    int              k    = rows;
+    int               m    = rows;
+    int               n    = 1;
+    int               k    = rows;
     hipblasSideMode_t side = HIPBLAS_SIDE_LEFT;
     if ( ( side_ == 'r' ) || ( side_ == 'R' ) )
     {
@@ -490,11 +494,13 @@ inline void hipsolver_wrap::qr_size(
 
     int lwork_1 = 0;
     int lwork_2 = 0;
-    HIPSOLVER_SAFE_CALL( hipsolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 ) );
+    HIPSOLVER_SAFE_CALL(
+        hipsolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 )
+    );
 
-    int              m    = rows;
-    int              n    = 1;
-    int              k    = rows;
+    int               m    = rows;
+    int               n    = 1;
+    int               k    = rows;
     hipblasSideMode_t side = HIPBLAS_SIDE_LEFT;
     if ( ( side_ == 'r' ) || ( side_ == 'R' ) )
     {
@@ -527,9 +533,9 @@ inline void hipsolver_wrap::qr_size(
     int lwork_2 = 0;
     HIPSOLVER_SAFE_CALL( hipsolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 ) );
 
-    int              m    = rows;
-    int              n    = 1;
-    int              k    = rows;
+    int               m    = rows;
+    int               n    = 1;
+    int               k    = rows;
     hipblasSideMode_t side = HIPBLAS_SIDE_LEFT;
     if ( ( side_ == 'r' ) || ( side_ == 'R' ) )
     {
@@ -557,7 +563,9 @@ inline void hipsolver_wrap::geqrf_size( size_t rows, size_t cols, const double *
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL( hipsolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 ) );
+    HIPSOLVER_SAFE_CALL(
+        hipsolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 )
+    );
 
     int lwork = lwork_1;
     set_d_work_double( lwork );
@@ -612,7 +620,8 @@ hipsolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const double *A,
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL( hipsolverDnDorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
+    HIPSOLVER_SAFE_CALL(
+        hipsolverDnDorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
     int lwork = lwork_1;
@@ -625,7 +634,8 @@ hipsolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const float *A, 
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL( hipsolverDnSorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
+    HIPSOLVER_SAFE_CALL(
+        hipsolverDnSorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
     int lwork = lwork_1;
@@ -633,7 +643,8 @@ hipsolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const float *A, 
 }
 
 template <>
-inline void hipsolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, double *A, size_t lda, const double *tau )
+inline void
+hipsolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, double *A, size_t lda, const double *tau )
 {
 
     thrust::device_vector<int> devInfo_dv( 1 );
@@ -793,9 +804,9 @@ inline void hipsolver_wrap::eig( size_t rows_cols, double *A, double *lambda )
 {
     hipsolverEigMode_t jobz  = HIPSOLVER_EIG_MODE_VECTOR; // compute eigenvalues and eigenvectors.
     hipblasFillMode_t  uplo  = HIPBLAS_FILL_MODE_LOWER;
-    int               m     = rows_cols;
-    int               lda   = m;
-    int               lwork = 0;
+    int                m     = rows_cols;
+    int                lda   = m;
+    int                lwork = 0;
 
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
@@ -818,9 +829,9 @@ inline void hipsolver_wrap::eig( size_t rows_cols, float *A, float *lambda )
 {
     hipsolverEigMode_t jobz  = HIPSOLVER_EIG_MODE_VECTOR; // compute eigenvalues and eigenvectors.
     hipblasFillMode_t  uplo  = HIPBLAS_FILL_MODE_LOWER;
-    int               m     = rows_cols;
-    int               lda   = m;
-    int               lwork = 0;
+    int                m     = rows_cols;
+    int                lda   = m;
+    int                lwork = 0;
 
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );

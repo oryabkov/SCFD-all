@@ -18,9 +18,9 @@
 #define __SCFD_HIPBLAS_WRAP_H__
 
 #if !defined( __HIPCC__ )
-#ifndef THRUST_DEVICE_SYSTEM
-#define THRUST_DEVICE_SYSTEM 5
-#endif
+#    ifndef THRUST_DEVICE_SYSTEM
+#        define THRUST_DEVICE_SYSTEM 5
+#    endif
 #endif
 
 #include <hipblas/hipblas.h>
@@ -219,14 +219,18 @@ public:
         size_t vector_size, const T *vec_host, T *vec_device, hipStream_t stream, int incx = 1, int incy = 1
     )
     {
-        HIPBLAS_SAFE_CALL( hipblasSetVectorAsync( vector_size, sizeof( T ), vec_host, incx, vec_device, incy, stream ) );
+        HIPBLAS_SAFE_CALL(
+            hipblasSetVectorAsync( vector_size, sizeof( T ), vec_host, incx, vec_device, incy, stream )
+        );
     }
     template <typename T>
     void get_vector_async(
         size_t vector_size, const T *vec_device, T *vec_host, hipStream_t stream, int incx = 1, int incy = 1
     )
     {
-        HIPBLAS_SAFE_CALL( hipblasGetVectorAsync( vector_size, sizeof( T ), vec_device, incx, vec_host, incy, stream ) );
+        HIPBLAS_SAFE_CALL(
+            hipblasGetVectorAsync( vector_size, sizeof( T ), vec_device, incx, vec_host, incy, stream )
+        );
     }
     template <typename T>
     void set_matrix_async(
@@ -241,17 +245,15 @@ public:
     )
     {
         HIPBLAS_SAFE_CALL( hipblasGetMatrixAsync( rows, cols, sizeof( T ), mat_device, lda, mat_host, ldb, stream ) );
-
     }
-    
-    void use_tensor_core_operations(bool useTCO)
+
+    void use_tensor_core_operations( bool useTCO )
     {
         hipblasMath_t mode = HIPBLAS_DEFAULT_MATH;
-        if(useTCO)
+        if ( useTCO )
             mode = HIPBLAS_TENSOR_OP_MATH;
 
-        HIPBLAS_SAFE_CALL(hipblasSetMathMode(handle, mode));
-
+        HIPBLAS_SAFE_CALL( hipblasSetMathMode( handle, mode ) );
     }
 
     //===hipBLAS Level-1 Functions=== see: https://rocm.docs.amd.com/projects/hipBLAS/en/latest/reference/hipblas-api-functions.html#level-1-blas
@@ -276,12 +278,14 @@ public:
     //sbsolute sum of a vector
     template <typename T>
     void asum(
-        size_t vector_size, const T *x, typename hipblas_real_types::hipblas_real_type_hlp<T>::type *result, int incx = 1
+        size_t vector_size, const T *x, typename hipblas_real_types::hipblas_real_type_hlp<T>::type *result,
+        int incx = 1
     );
     //vector l2 norm.
     template <typename T>
     void norm2(
-        size_t vector_size, const T *x, typename hipblas_real_types::hipblas_real_type_hlp<T>::type *result, int incx = 1
+        size_t vector_size, const T *x, typename hipblas_real_types::hipblas_real_type_hlp<T>::type *result,
+        int incx = 1
     );
     //scale vector as x=x*a. 'a' can be real or complex
     template <typename T>
@@ -331,13 +335,15 @@ private:
             break;
         case 'T':
             operation = HIPBLAS_OP_C; // HIPBLAS_OP_H is defined in documentaiton?!?
-                                     //definition in:
-                                     // ../hip/include/hipblas_api.h
+                                      //definition in:
+                                      // ../hip/include/hipblas_api.h
             break;
         default:
             // invalid operation code throw
-            throw std::runtime_error( "switch_operation_complex: invalid code for original or transpose operations. "
-                                      "Only 'N' or 'T' (for Hermitian transpose) are defined." );
+            throw std::runtime_error(
+                "switch_operation_complex: invalid code for original or transpose operations. "
+                "Only 'N' or 'T' (for Hermitian transpose) are defined."
+            );
         }
         return operation;
     }
@@ -400,8 +406,8 @@ public:
 
 private:
     hipblasHandle_t handle;
-    bool           handle_created;
-    bool           scalar_pointer_on_device;
+    bool            handle_created;
+    bool            scalar_pointer_on_device;
 
 
     void hipblas_create()
@@ -419,9 +425,9 @@ private:
     void hipblas_create_info()
     {
         HIPBLAS_SAFE_CALL( hipblasCreate( &handle ) );
-        const int major_ver   = hipblasVersionMajor;
-        const int minor_ver   = hipblasVersionMinor;
-        const int patch_level = hipblasVersionPatch;
+        const int major_ver       = hipblasVersionMajor;
+        const int minor_ver       = hipblasVersionMinor;
+        const int patch_level     = hipblasVersionPatch;
         const int hipblas_version = major_ver * 1000 + minor_ver * 10 + patch_level;
 
         std::cout << "hipBLAS v." << hipblas_version << " (major=" << major_ver << ", minor=" << minor_ver
@@ -484,19 +490,22 @@ inline void hipblas_wrap::axpy( size_t vector_sizes, const float alpha, const fl
     HIPBLAS_SAFE_CALL( hipblasSaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
-inline void hipblas_wrap::axpy( size_t vector_sizes, const double alpha, const double *x, double *y, int incx, int incy )
+inline void
+hipblas_wrap::axpy( size_t vector_sizes, const double alpha, const double *x, double *y, int incx, int incy )
 {
     HIPBLAS_SAFE_CALL( hipblasDaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
-inline void
-hipblas_wrap::axpy( size_t vector_sizes, const hipblasComplex alpha, const hipblasComplex *x, hipblasComplex *y, int incx, int incy )
+inline void hipblas_wrap::axpy(
+    size_t vector_sizes, const hipblasComplex alpha, const hipblasComplex *x, hipblasComplex *y, int incx, int incy
+)
 {
     HIPBLAS_SAFE_CALL( hipblasCaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
 inline void hipblas_wrap::axpy(
-    size_t vector_sizes, const hipblasDoubleComplex alpha, const hipblasDoubleComplex *x, hipblasDoubleComplex *y, int incx, int incy
+    size_t vector_sizes, const hipblasDoubleComplex alpha, const hipblasDoubleComplex *x, hipblasDoubleComplex *y,
+    int incx, int incy
 )
 {
     HIPBLAS_SAFE_CALL( hipblasZaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
@@ -507,9 +516,9 @@ inline void hipblas_wrap::axpy(
     int incx, int incy
 )
 {
-    HIPBLAS_SAFE_CALL(
-        hipblasCaxpy( handle, vector_sizes, (hipblasComplex *)&alpha, (hipblasComplex *)x, incx, (hipblasComplex *)y, incy )
-    );
+    HIPBLAS_SAFE_CALL( hipblasCaxpy(
+        handle, vector_sizes, (hipblasComplex *)&alpha, (hipblasComplex *)x, incx, (hipblasComplex *)y, incy
+    ) );
 }
 template <>
 inline void hipblas_wrap::axpy(
@@ -518,7 +527,8 @@ inline void hipblas_wrap::axpy(
 )
 {
     HIPBLAS_SAFE_CALL( hipblasZaxpy(
-        handle, vector_sizes, (hipblasDoubleComplex *)&alpha, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy
+        handle, vector_sizes, (hipblasDoubleComplex *)&alpha, (hipblasDoubleComplex *)x, incx,
+        (hipblasDoubleComplex *)y, incy
     ) );
 }
 //
@@ -538,13 +548,15 @@ inline void hipblas_wrap::copy( size_t vector_sizes, const hipblasComplex *x, hi
     HIPBLAS_SAFE_CALL( hipblasCcopy( handle, vector_sizes, x, incx, y, incy ) );
 }
 template <>
-inline void hipblas_wrap::copy( size_t vector_sizes, const hipblasDoubleComplex *x, hipblasDoubleComplex *y, int incx, int incy )
+inline void
+hipblas_wrap::copy( size_t vector_sizes, const hipblasDoubleComplex *x, hipblasDoubleComplex *y, int incx, int incy )
 {
     HIPBLAS_SAFE_CALL( hipblasZcopy( handle, vector_sizes, x, incx, y, incy ) );
 }
 template <>
-inline void
-hipblas_wrap::copy( size_t vector_sizes, const thrust::complex<float> *x, thrust::complex<float> *y, int incx, int incy )
+inline void hipblas_wrap::copy(
+    size_t vector_sizes, const thrust::complex<float> *x, thrust::complex<float> *y, int incx, int incy
+)
 {
     HIPBLAS_SAFE_CALL( hipblasCcopy( handle, vector_sizes, (hipblasComplex *)x, incx, (hipblasComplex *)y, incy ) );
 }
@@ -553,7 +565,9 @@ inline void hipblas_wrap::copy(
     size_t vector_sizes, const thrust::complex<double> *x, thrust::complex<double> *y, int incx, int incy
 )
 {
-    HIPBLAS_SAFE_CALL( hipblasZcopy( handle, vector_sizes, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy ) );
+    HIPBLAS_SAFE_CALL(
+        hipblasZcopy( handle, vector_sizes, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy )
+    );
 }
 //
 template <>
@@ -572,7 +586,8 @@ inline void hipblas_wrap::swap( size_t vector_size, hipblasComplex *x, hipblasCo
     HIPBLAS_SAFE_CALL( hipblasCswap( handle, vector_size, x, incx, y, incy ) );
 }
 template <>
-inline void hipblas_wrap::swap( size_t vector_size, hipblasDoubleComplex *x, hipblasDoubleComplex *y, int incx, int incy )
+inline void
+hipblas_wrap::swap( size_t vector_size, hipblasDoubleComplex *x, hipblasDoubleComplex *y, int incx, int incy )
 {
     HIPBLAS_SAFE_CALL( hipblasZswap( handle, vector_size, x, incx, y, incy ) );
 }
@@ -586,7 +601,9 @@ template <>
 inline void
 hipblas_wrap::swap( size_t vector_size, thrust::complex<double> *x, thrust::complex<double> *y, int incx, int incy )
 {
-    HIPBLAS_SAFE_CALL( hipblasZswap( handle, vector_size, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy ) );
+    HIPBLAS_SAFE_CALL(
+        hipblasZswap( handle, vector_size, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy )
+    );
 }
 //
 template <>
@@ -595,19 +612,22 @@ inline void hipblas_wrap::dot( size_t vector_size, const float *x, const float *
     HIPBLAS_SAFE_CALL( hipblasSdot( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
-inline void hipblas_wrap::dot( size_t vector_size, const double *x, const double *y, double *result, int incx, int incy )
+inline void
+hipblas_wrap::dot( size_t vector_size, const double *x, const double *y, double *result, int incx, int incy )
 {
     HIPBLAS_SAFE_CALL( hipblasDdot( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
-inline void
-hipblas_wrap::dot( size_t vector_size, const hipblasComplex *x, const hipblasComplex *y, hipblasComplex *result, int incx, int incy )
+inline void hipblas_wrap::dot(
+    size_t vector_size, const hipblasComplex *x, const hipblasComplex *y, hipblasComplex *result, int incx, int incy
+)
 {
     HIPBLAS_SAFE_CALL( hipblasCdotc( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
 inline void hipblas_wrap::dot(
-    size_t vector_size, const hipblasDoubleComplex *x, const hipblasDoubleComplex *y, hipblasDoubleComplex *result, int incx, int incy
+    size_t vector_size, const hipblasDoubleComplex *x, const hipblasDoubleComplex *y, hipblasDoubleComplex *result,
+    int incx, int incy
 )
 {
     HIPBLAS_SAFE_CALL( hipblasZdotc( handle, vector_size, x, incx, y, incy, result ) );
@@ -618,9 +638,9 @@ inline void hipblas_wrap::dot(
     thrust::complex<float> *result, int incx, int incy
 )
 {
-    HIPBLAS_SAFE_CALL(
-        hipblasCdotc( handle, vector_size, (hipblasComplex *)x, incx, (hipblasComplex *)y, incy, (hipblasComplex *)result )
-    );
+    HIPBLAS_SAFE_CALL( hipblasCdotc(
+        handle, vector_size, (hipblasComplex *)x, incx, (hipblasComplex *)y, incy, (hipblasComplex *)result
+    ) );
 }
 template <>
 inline void hipblas_wrap::dot(
@@ -629,7 +649,8 @@ inline void hipblas_wrap::dot(
 )
 {
     HIPBLAS_SAFE_CALL( hipblasZdotc(
-        handle, vector_size, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy, (hipblasDoubleComplex *)result
+        handle, vector_size, (hipblasDoubleComplex *)x, incx, (hipblasDoubleComplex *)y, incy,
+        (hipblasDoubleComplex *)result
     ) );
 }
 //
@@ -645,8 +666,8 @@ inline void hipblas_wrap::asum( size_t vector_size, const double *x, double *res
 }
 template <>
 inline void hipblas_wrap::asum(
-    size_t vector_size, const hipblasComplex *x, typename hipblas_real_types::hipblas_real_type_hlp<hipblasComplex>::type *result,
-    int incx
+    size_t vector_size, const hipblasComplex *x,
+    typename hipblas_real_types::hipblas_real_type_hlp<hipblasComplex>::type *result, int incx
 )
 {
     HIPBLAS_SAFE_CALL( hipblasScasum( handle, vector_size, x, incx, result ) );
@@ -689,8 +710,8 @@ inline void hipblas_wrap::norm2( size_t vector_size, const double *x, double *re
 }
 template <>
 inline void hipblas_wrap::norm2(
-    size_t vector_size, const hipblasComplex *x, typename hipblas_real_types::hipblas_real_type_hlp<hipblasComplex>::type *result,
-    int incx
+    size_t vector_size, const hipblasComplex *x,
+    typename hipblas_real_types::hipblas_real_type_hlp<hipblasComplex>::type *result, int incx
 )
 {
     HIPBLAS_SAFE_CALL( hipblasScnrm2( handle, vector_size, x, incx, result ) );
@@ -736,7 +757,8 @@ inline void hipblas_wrap::scale( size_t vector_size, const hipblasComplex alpha,
     HIPBLAS_SAFE_CALL( hipblasCscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
-inline void hipblas_wrap::scale( size_t vector_size, const hipblasDoubleComplex alpha, hipblasDoubleComplex *x, int incx )
+inline void
+hipblas_wrap::scale( size_t vector_size, const hipblasDoubleComplex alpha, hipblasDoubleComplex *x, int incx )
 {
     HIPBLAS_SAFE_CALL( hipblasZscal( handle, vector_size, &alpha, x, incx ) );
 }
@@ -750,7 +772,9 @@ template <>
 inline void
 hipblas_wrap::scale( size_t vector_size, const thrust::complex<double> alpha, thrust::complex<double> *x, int incx )
 {
-    HIPBLAS_SAFE_CALL( hipblasZscal( handle, vector_size, (hipblasDoubleComplex *)&alpha, (hipblasDoubleComplex *)x, incx ) );
+    HIPBLAS_SAFE_CALL(
+        hipblasZscal( handle, vector_size, (hipblasDoubleComplex *)&alpha, (hipblasDoubleComplex *)x, incx )
+    );
 }
 template <>
 inline void hipblas_wrap::scale( size_t vector_size, const float alpha, hipblasComplex *x, int incx )
@@ -801,7 +825,8 @@ inline void hipblas_wrap::normalize( size_t vector_size, double *x, double *norm
 }
 template <>
 inline void hipblas_wrap::normalize(
-    size_t vector_size, hipblasComplex *x, typename hipblas_real_types::hipblas_real_type_hlp<hipblasComplex>::type *norm, int incx
+    size_t vector_size, hipblasComplex *x,
+    typename hipblas_real_types::hipblas_real_type_hlp<hipblasComplex>::type *norm, int incx
 )
 {
     norm2<hipblasComplex>( vector_size, (const hipblasComplex *)x, norm, incx );
@@ -912,8 +937,8 @@ inline void hipblas_wrap::gemv(
 {
 
     HIPBLAS_SAFE_CALL( hipblasCgemv(
-        handle, switch_operation_complex( op ), RowA, ColA, (const hipblasComplex *)&alpha, (const hipblasComplex *)A, LDimA,
-        (const hipblasComplex *)x, 1, (const hipblasComplex *)&beta, (hipblasComplex *)y, 1
+        handle, switch_operation_complex( op ), RowA, ColA, (const hipblasComplex *)&alpha, (const hipblasComplex *)A,
+        LDimA, (const hipblasComplex *)x, 1, (const hipblasComplex *)&beta, (hipblasComplex *)y, 1
     ) );
 }
 template <>
@@ -925,8 +950,9 @@ inline void hipblas_wrap::gemv(
 {
 
     HIPBLAS_SAFE_CALL( hipblasZgemv(
-        handle, switch_operation_complex( op ), RowA, ColA, (const hipblasDoubleComplex *)&alpha, (const hipblasDoubleComplex *)A,
-        LDimA, (const hipblasDoubleComplex *)x, 1, (const hipblasDoubleComplex *)&beta, (hipblasDoubleComplex *)y, 1
+        handle, switch_operation_complex( op ), RowA, ColA, (const hipblasDoubleComplex *)&alpha,
+        (const hipblasDoubleComplex *)A, LDimA, (const hipblasDoubleComplex *)x, 1, (const hipblasDoubleComplex *)&beta,
+        (hipblasDoubleComplex *)y, 1
     ) );
 }
 
@@ -989,8 +1015,8 @@ inline void hipblas_wrap::gemm(
 {
     HIPBLAS_SAFE_CALL( hipblasCgemm(
         handle, switch_operation_complex( opA ), switch_operation_complex( opB ), RowA, ColBC, ColARowB,
-        (const hipblasComplex *)&alpha, (const hipblasComplex *)A, LDimA, (const hipblasComplex *)B, LDimB, (const hipblasComplex *)&beta,
-        (hipblasComplex *)C, LDimC
+        (const hipblasComplex *)&alpha, (const hipblasComplex *)A, LDimA, (const hipblasComplex *)B, LDimB,
+        (const hipblasComplex *)&beta, (hipblasComplex *)C, LDimC
     ) );
 }
 template <>
@@ -1002,8 +1028,8 @@ inline void hipblas_wrap::gemm(
 {
     HIPBLAS_SAFE_CALL( hipblasZgemm(
         handle, switch_operation_complex( opA ), switch_operation_complex( opB ), RowA, ColBC, ColARowB,
-        (const hipblasDoubleComplex *)&alpha, (const hipblasDoubleComplex *)A, LDimA, (const hipblasDoubleComplex *)B, LDimB,
-        (const hipblasDoubleComplex *)&beta, (hipblasDoubleComplex *)C, LDimC
+        (const hipblasDoubleComplex *)&alpha, (const hipblasDoubleComplex *)A, LDimA, (const hipblasDoubleComplex *)B,
+        LDimB, (const hipblasDoubleComplex *)&beta, (hipblasDoubleComplex *)C, LDimC
     ) );
 }
 
@@ -1031,10 +1057,11 @@ inline void hipblas_wrap::trsm(
         diag = HIPBLAS_DIAG_UNIT;
     }
 
-    HIPBLAS_SAFE_CALL( hipblasDtrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A, int( LDimA ),
-        B, int( LDimB )
-    )
+    HIPBLAS_SAFE_CALL(
+        hipblasDtrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A,
+            int( LDimA ), B, int( LDimB )
+        )
 
     );
 }
@@ -1061,10 +1088,11 @@ inline void hipblas_wrap::trsm(
         diag = HIPBLAS_DIAG_UNIT;
     }
 
-    HIPBLAS_SAFE_CALL( hipblasStrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A, int( LDimA ),
-        B, int( LDimB )
-    )
+    HIPBLAS_SAFE_CALL(
+        hipblasStrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A,
+            int( LDimA ), B, int( LDimB )
+        )
 
     );
 }
@@ -1092,10 +1120,11 @@ inline void hipblas_wrap::trsm(
         diag = HIPBLAS_DIAG_UNIT;
     }
 
-    HIPBLAS_SAFE_CALL( hipblasCtrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
-        (const hipblasComplex *)&alpha, (const hipblasComplex *)A, int( LDimA ), (hipblasComplex *)B, int( LDimB )
-    )
+    HIPBLAS_SAFE_CALL(
+        hipblasCtrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
+            (const hipblasComplex *)&alpha, (const hipblasComplex *)A, int( LDimA ), (hipblasComplex *)B, int( LDimB )
+        )
 
     );
 }
@@ -1123,10 +1152,12 @@ inline void hipblas_wrap::trsm(
         diag = HIPBLAS_DIAG_UNIT;
     }
 
-    HIPBLAS_SAFE_CALL( hipblasZtrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
-        (const hipblasDoubleComplex *)&alpha, (const hipblasDoubleComplex *)A, int( LDimA ), (hipblasDoubleComplex *)B, int( LDimB )
-    )
+    HIPBLAS_SAFE_CALL(
+        hipblasZtrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
+            (const hipblasDoubleComplex *)&alpha, (const hipblasDoubleComplex *)A, int( LDimA ),
+            (hipblasDoubleComplex *)B, int( LDimB )
+        )
 
     );
 }
@@ -1182,9 +1213,10 @@ inline void hipblas_wrap::geam(
 {
 
     HIPBLAS_SAFE_CALL( hipblasZgeam(
-        handle, switch_operation_real( opA ), HIPBLAS_OP_N, int( RowAC ), int( ColBC ), (const hipblasDoubleComplex *)&alpha,
-        (const hipblasDoubleComplex *)A, int( LDimA ), (const hipblasDoubleComplex *)&beta, (const hipblasDoubleComplex *)B,
-        int( LDimB ), (hipblasDoubleComplex *)C, int( LDimC )
+        handle, switch_operation_real( opA ), HIPBLAS_OP_N, int( RowAC ), int( ColBC ),
+        (const hipblasDoubleComplex *)&alpha, (const hipblasDoubleComplex *)A, int( LDimA ),
+        (const hipblasDoubleComplex *)&beta, (const hipblasDoubleComplex *)B, int( LDimB ), (hipblasDoubleComplex *)C,
+        int( LDimC )
     ) );
 }
 

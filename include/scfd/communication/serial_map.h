@@ -26,45 +26,102 @@ namespace communication
 
 struct serial_map
 {
-    int         total_size;
+    int total_size;
 
     //creates uninitialized map
-    serial_map() {}
+    serial_map()
+    {
+    }
     //dummy constructor
-    serial_map(int N)
+    serial_map( int N )
     {
         total_size = N;
     }
 
     //'read' before construction part:
-    int     get_own_rank()const { return 0; }
-    bool    check_glob_owned(int i)const { return check_glob_owned(i, get_own_rank()); }
-    int     get_total_size()const { return total_size; }
-    int     get_size()const { return total_size; }
+    int get_own_rank() const
+    {
+        return 0;
+    }
+    bool check_glob_owned( int i ) const
+    {
+        return check_glob_owned( i, get_own_rank() );
+    }
+    int get_total_size() const
+    {
+        return total_size;
+    }
+    int get_size() const
+    {
+        return total_size;
+    }
     //in this map 'i' in own_glob_ind and own_loc_ind simply coincides with local index (not true for general MAP)
-    int     own_glob_ind(int i)const { return i; }
+    int own_glob_ind( int i ) const
+    {
+        return i;
+    }
 
     //'construction' part:
     //t_simple_map just ignores this information
-    void    add_stencil_element(int i) { }
-    void    complete() { }
+    void add_stencil_element( int i )
+    {
+    }
+    void complete()
+    {
+    }
 
     //'read' after construction part:
-    int     get_rank(int i)const { return 0; }
-    bool    check_glob_owned(int i, int rank)const { return ((i >= 0)&&(i < total_size)); }
-    int     loc2glob(int i_loc)const { return i_loc; }
-    int     glob2loc(int i_glob)const { return i_glob; }
-    int     own_loc_ind(int i)const { return i; }
-    int     min_loc_ind()const { return 0; }
-    int     max_loc_ind()const { return get_total_size()-1; }
-    int     min_own_loc_ind()const { return 0; }
-    int     max_own_loc_ind()const { return get_size()-1; }
-    bool    check_glob_has_loc_ind(int i_glob)const { return true; }
-    bool    check_loc_has_loc_ind(int i_loc)const { return true; }
-    bool    is_loc_glob_ind_order_preserv()const { return true; }
+    int get_rank( int i ) const
+    {
+        return 0;
+    }
+    bool check_glob_owned( int i, int rank ) const
+    {
+        return ( ( i >= 0 ) && ( i < total_size ) );
+    }
+    int loc2glob( int i_loc ) const
+    {
+        return i_loc;
+    }
+    int glob2loc( int i_glob ) const
+    {
+        return i_glob;
+    }
+    int own_loc_ind( int i ) const
+    {
+        return i;
+    }
+    int min_loc_ind() const
+    {
+        return 0;
+    }
+    int max_loc_ind() const
+    {
+        return get_total_size() - 1;
+    }
+    int min_own_loc_ind() const
+    {
+        return 0;
+    }
+    int max_own_loc_ind() const
+    {
+        return get_size() - 1;
+    }
+    bool check_glob_has_loc_ind( int i_glob ) const
+    {
+        return true;
+    }
+    bool check_loc_has_loc_ind( int i_loc ) const
+    {
+        return true;
+    }
+    bool is_loc_glob_ind_order_preserv() const
+    {
+        return true;
+    }
 };
 
-}  /// namespace communication
-}  /// namespace scfd
+} /// namespace communication
+} /// namespace scfd
 
 #endif

@@ -277,9 +277,11 @@ int main( int argc, char const *argv[] )
         cross_ptr_ok_host[IG( j, 2 )] = u_ptr_ok_host[IG( j, 0 )] * v_ptr_ok_host[IG( j, 1 )] -
                                         u_ptr_ok_host[IG( j, 1 )] * v_ptr_ok_host[IG( j, 0 )];
     }
-    HIP_SAFE_CALL( hipMemcpy( (void *)u_ptr_dev, (void *)u_ptr_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
+    HIP_SAFE_CALL(
+        hipMemcpy( (void *)u_ptr_dev, (void *)u_ptr_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
     );
-    HIP_SAFE_CALL( hipMemcpy( (void *)v_ptr_dev, (void *)v_ptr_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
+    HIP_SAFE_CALL(
+        hipMemcpy( (void *)v_ptr_dev, (void *)v_ptr_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
     );
     HIP_SAFE_CALL(
         hipMemcpy( (void *)u_ptr_ok_dev, (void *)u_ptr_ok_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
@@ -439,8 +441,8 @@ int main( int argc, char const *argv[] )
                 cross_ptr_host[IC( j, 0 )] =
                     u_ptr_host[IC( j, 1 )] * v_ptr_host[IC( j, 2 )] - u_ptr_host[IC( j, 2 )] * v_ptr_host[IC( j, 1 )];
                 cross_ptr_host[IC( j, 1 )] =
-                    -( u_ptr_host[IC( j, 0 )] * v_ptr_host[IC( j, 2 )] - u_ptr_host[IC( j, 2 )] * v_ptr_host[IC( j, 0 )]
-                    );
+                    -( u_ptr_host[IC( j, 0 )] * v_ptr_host[IC( j, 2 )] -
+                       u_ptr_host[IC( j, 2 )] * v_ptr_host[IC( j, 0 )] );
                 cross_ptr_host[IC( j, 2 )] =
                     u_ptr_host[IC( j, 0 )] * v_ptr_host[IC( j, 1 )] - u_ptr_host[IC( j, 1 )] * v_ptr_host[IC( j, 0 )];
             }

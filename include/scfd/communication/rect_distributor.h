@@ -349,8 +349,10 @@ private:
         {
             if ( static_cast<Ord>( detail::get_array_tensor_dim( array ) ) >
                  detail::get_array_tensor_dim( buf_array_device() ) )
-                throw std::logic_error( "rect_distributor::packet_bucket::sync_from_array: array tensor dir "
-                                        "exceeds buffer tensor dim - incorrect distributor initialization" );
+                throw std::logic_error(
+                    "rect_distributor::packet_bucket::sync_from_array: array tensor dir "
+                    "exceeds buffer tensor dim - incorrect distributor initialization"
+                );
 
             detail::copy_array1_nd_rect(
                 for_each, static_cast<Ord>( detail::get_array_tensor_dim( array ) ),
@@ -365,8 +367,10 @@ private:
         {
             if ( static_cast<Ord>( detail::get_array_tensor_dim( array ) ) >
                  detail::get_array_tensor_dim( buf_array_device() ) )
-                throw std::logic_error( "rect_distributor::packet_bucket::sync_to_array: array tensor dir exceeds "
-                                        "buffer tensor dim - incorrect distributor initialization" );
+                throw std::logic_error(
+                    "rect_distributor::packet_bucket::sync_to_array: array tensor dir exceeds "
+                    "buffer tensor dim - incorrect distributor initialization"
+                );
 
 #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
             data_buf->sync_to_array();

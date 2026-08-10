@@ -110,7 +110,8 @@ inline int check_host_memory_info( const char *backend_name, const scfd::backend
         std::cout << backend_name << ": FAILED host memory peak RSS ordering" << std::endl;
         return 2;
     }
-    if ( host_info.virtual_memory_known && host_info.process_memory_known && host_info.virtual_bytes < host_info.rss_bytes )
+    if ( host_info.virtual_memory_known && host_info.process_memory_known &&
+         host_info.virtual_bytes < host_info.rss_bytes )
     {
         std::cout << backend_name << ": FAILED host memory virtual/RSS ordering" << std::endl;
         return 3;
@@ -203,9 +204,8 @@ int run_backend_runtime_tests( const char *backend_name )
         scfd::utils::log_std log;
         const int            init_device_with_log = runtime_t::init_device( log, 0 );
         const int            init_device_result   = runtime_t::init_device( 0 );
-        int                  init_check           = check_init_device_result<runtime_t>(
-            backend_name, "init_device(log, 0)", init_device_with_log
-        );
+        int                  init_check =
+            check_init_device_result<runtime_t>( backend_name, "init_device(log, 0)", init_device_with_log );
         if ( init_check != 0 )
             return 30 + init_check;
         init_check = check_init_device_result<runtime_t>( backend_name, "init_device(0)", init_device_result );
@@ -222,10 +222,8 @@ int run_backend_runtime_tests( const char *backend_name )
 
         const scfd::backend::device_memory_info device_info = runtime_t::get_device_memory_info();
         const scfd::backend::device_memory_info info        = runtime_t::get_memory_info();
-        const scfd::backend::device_memory_info info_alias = runtime_t::memory_info();
-        int memory_check = check_device_memory_info<runtime_t>(
-            backend_name, "get_device_memory_info()", device_info
-        );
+        const scfd::backend::device_memory_info info_alias  = runtime_t::memory_info();
+        int memory_check = check_device_memory_info<runtime_t>( backend_name, "get_device_memory_info()", device_info );
         if ( memory_check != 0 )
             return 40 + memory_check;
         memory_check = check_device_memory_info<runtime_t>( backend_name, "get_memory_info()", info );
@@ -242,15 +240,14 @@ int run_backend_runtime_tests( const char *backend_name )
             std::cout << backend_name << ": FAILED memory info alias capability consistency" << std::endl;
             return 70;
         }
-        if ( device_info.total_bytes_known && info.total_bytes_known &&
-             device_info.total_bytes != info.total_bytes )
+        if ( device_info.total_bytes_known && info.total_bytes_known && device_info.total_bytes != info.total_bytes )
         {
             std::cout << backend_name << ": FAILED memory total-bytes alias consistency" << std::endl;
             return 71;
         }
 
-        const scfd::backend::host_memory_info host_info = runtime_t::get_host_memory_info();
-        const int check_host_memory = check_host_memory_info( backend_name, host_info );
+        const scfd::backend::host_memory_info host_info         = runtime_t::get_host_memory_info();
+        const int                             check_host_memory = check_host_memory_info( backend_name, host_info );
         if ( check_host_memory != 0 )
             return 80 + check_host_memory;
 

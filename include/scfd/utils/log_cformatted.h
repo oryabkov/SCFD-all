@@ -142,10 +142,7 @@ public:
     {
         LOG__FORMATTED_OUT_V__( error, 1 )
     }
-    void v_debug_f( const std::string s, va_list arguments )
-    {
-        LOG__FORMATTED_OUT_V__( debug, 1 )
-    }
+    void v_debug_f( const std::string s, va_list arguments ){ LOG__FORMATTED_OUT_V__( debug, 1 ) }
 #undef LOG__FORMATTED_OUT_V__
 
 
