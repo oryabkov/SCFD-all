@@ -519,7 +519,7 @@ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::tensor_array_nd( tensor
 
 template <
     class T, ordinal_type ND, class Memory, template <ordinal_type... Dims> class Arranger, ordinal_type... TensorDims>
-__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...> &
+__DEVICE_TAG__ tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>                &
 tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::operator=( const tensor_array_nd &t ) = default;
 
 template <
