@@ -258,7 +258,7 @@ protected:
     }
 
 public:
-    __DEVICE_TAG__ tensor_base() : d_( NULL )
+    __DEVICE_TAG__ tensor_base() : d_( NULL ), own_( false )
     {
         arranger_type::set_zero_dyn_dims();
 #ifdef SCFD_ARRAYS_ENABLE_INDEX_SHIFT
@@ -278,11 +278,19 @@ public:
 
     tensor_base &operator=( const tensor_base &t )
     {
+        if ( this == &t )
+            return *this;
+        if ( !is_free() && own_ )
+            free();
         assign( t );
         return *this;
     }
     tensor_base &operator=( tensor_base &&t )
     {
+        if ( this == &t )
+            return *this;
+        if ( !is_free() && own_ )
+            free();
         move( std::move( t ) );
         return *this;
     }
@@ -378,7 +386,8 @@ public:
             return;
         assert( own_ );
         memory_type::free( d_ );
-        d_ = NULL;
+        d_   = NULL;
+        own_ = false;
     }
 
 #if !defined( __CUDA_ARCH__ ) && !defined( __SYCL_DEVICE_ONLY__ ) && !defined( __HIP_DEVICE_COMPILE__ )
