@@ -440,8 +440,8 @@ int main( int argc, char const *argv[] )
                 cross_ptr_host[IC( j, 0 )] =
                     u_ptr_host[IC( j, 1 )] * v_ptr_host[IC( j, 2 )] - u_ptr_host[IC( j, 2 )] * v_ptr_host[IC( j, 1 )];
                 cross_ptr_host[IC( j, 1 )] =
-                    -( u_ptr_host[IC( j, 0 )] * v_ptr_host[IC( j, 2 )] - u_ptr_host[IC( j, 2 )] * v_ptr_host[IC( j, 0 )]
-                    );
+                    -( u_ptr_host[IC( j, 0 )] * v_ptr_host[IC( j, 2 )] -
+                       u_ptr_host[IC( j, 2 )] * v_ptr_host[IC( j, 0 )] );
                 cross_ptr_host[IC( j, 2 )] =
                     u_ptr_host[IC( j, 0 )] * v_ptr_host[IC( j, 1 )] - u_ptr_host[IC( j, 1 )] * v_ptr_host[IC( j, 0 )];
             }

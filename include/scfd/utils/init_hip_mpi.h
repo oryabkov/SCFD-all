@@ -83,9 +83,8 @@ inline int init_hip_mpi(
 }
 
 
-inline int init_hip_mpi(
-    const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false
-)
+inline int
+init_hip_mpi( const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false )
 {
     log_std log;
     return init_hip_mpi( log, comm, shift_index, wrap_procs_devices );

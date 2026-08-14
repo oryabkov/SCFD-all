@@ -88,9 +88,9 @@ struct sycl_common
 
     static device_memory_info_type get_device_memory_info()
     {
-        const std::size_t total_bytes =
-            static_cast<std::size_t>( sycl_device_queue.get_device().get_info<::sycl::info::device::global_mem_size>()
-            );
+        const std::size_t total_bytes = static_cast<std::size_t>(
+            sycl_device_queue.get_device().get_info<::sycl::info::device::global_mem_size>()
+        );
         return device_memory_info_type( 0, total_bytes, false, true );
     }
 

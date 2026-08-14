@@ -76,8 +76,9 @@ static const char *_curandGetErrorEnum( curandStatus_t error )
         }                                                                                                              \
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
-                std::string( "CURAND_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X                               \
-                                                                                " failed cudaDeviceSynchronize: " ) +  \
+                std::string(                                                                                           \
+                    "CURAND_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "      \
+                ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \
     } while ( 0 )

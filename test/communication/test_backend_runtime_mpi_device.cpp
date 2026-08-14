@@ -41,8 +41,8 @@ int main( int argc, char *argv[] )
     if ( device_without_log != device )
     {
         log.error_f(
-            "%s backend MPI init_device overloads returned different device ids: %i and %i",
-            backend_name, device, device_without_log
+            "%s backend MPI init_device overloads returned different device ids: %i and %i", backend_name, device,
+            device_without_log
         );
         return 3;
     }

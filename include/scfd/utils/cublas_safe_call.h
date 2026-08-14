@@ -87,8 +87,9 @@ static const char *_cublasGetErrorEnum( cublasStatus_t error )
         }                                                                                                              \
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
-                std::string( "CUBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X                               \
-                                                                                " failed cudaDeviceSynchronize: " ) +  \
+                std::string(                                                                                           \
+                    "CUBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "      \
+                ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \
     } while ( 0 )

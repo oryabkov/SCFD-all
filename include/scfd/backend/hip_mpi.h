@@ -48,7 +48,6 @@ struct hip_mpi : public hip
         scfd::utils::log_std log;
         return init_device( log, comm, shift_index, wrap_procs_devices );
     }
-
 };
 
 }
