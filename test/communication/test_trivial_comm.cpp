@@ -45,8 +45,6 @@ int main( int argc, char *args[] )
     big_ordinal size = 10;
     big_idx_t   dom_sz( size, size, size );
     part_t      part( comm_world, dom_sz );
-    // single process owns the whole domain (no decomposition)
-    part.proc_rects = { { { 0, 0, 0 }, { size, size, size } } };
     periodic_flags_t periodic_flags( true, false, false );  // periodic in x => self-exchange
     dist_t           dist;
 
@@ -55,9 +53,8 @@ int main( int argc, char *args[] )
     std::cout << "init distributor" << std::endl;
     dist.init( part, periodic_flags, stencil, max_stencil_order );
 
-    big_rect_t my_own_glob_rect = part.proc_rects[comm_world.myid];
-    rect_t     my_own_loc_rect  = rect_t( idx_t::make_zero(), my_own_glob_rect.calc_size() );
-    rect_t     my_loc_rect      = my_own_loc_rect;
+    rect_t my_own_loc_rect = part.get_own_loc_rect();
+    rect_t my_loc_rect     = my_own_loc_rect;
     my_loc_rect.i1 -= idx_t( stencil, stencil, stencil );
     my_loc_rect.i2 += idx_t( stencil, stencil, stencil );
 
@@ -108,4 +105,34 @@ int main( int argc, char *args[] )
     std::cout << str2 << std::endl;
 
     std::cout << "expected     [9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, ] (periodic wrap in x)" << std::endl;
+
+    ordinal errors_num = 0;
+    for ( ordinal ix = my_loc_rect.i1[0]; ix < my_loc_rect.i2[0]; ++ix )
+        for ( ordinal iy = my_own_loc_rect.i1[1]; iy < my_own_loc_rect.i2[1]; ++iy )
+            for ( ordinal iz = my_own_loc_rect.i1[2]; iz < my_own_loc_rect.i2[2]; ++iz )
+            {
+                value_t expected = static_cast<value_t>( ( ix + size ) % size );
+                value_t got = data_view2( ix, iy, iz );
+                if ( got != expected )
+                {
+                    if ( errors_num < 10 )
+                    {
+                        std::cout << "mismatch at (" << ix << "," << iy << "," << iz << "): got " << got
+                                  << ", expected " << expected << std::endl;
+                    }
+                    ++errors_num;
+                }
+            }
+
+    data_view2.release( false );
+
+    if ( errors_num != 0 )
+    {
+        std::cout << "TEST FAILED: " << errors_num << " mismatched cells" << std::endl;
+        return 1;
+    }
+
+    std::cout << "TEST PASSED" << std::endl;
+
+    return 0;
 }

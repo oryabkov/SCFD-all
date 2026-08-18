@@ -29,18 +29,15 @@ namespace communication
 namespace detail
 {
 
-/// In-process "transport" for trivial_comm: the place where data lives between an
-/// isend and the matching irecv (the analog of "messages in flight" inside real MPI).
-/// One instance is owned by trivial_platform as a unique_ptr, so every trivial_comm
-/// copy shares the same queue by a single stable address.
+/// In-process "transport" for trivial_comm: the place where
+/// data lives between an isend and the matching irecv.
 template <class Memory>
 class trivial_message_queue
 {
 public:
     using mem_t = Memory;
 
-    /// who -> whom + message tag. For the single-rank case from/to are always 0;
-    /// tag distinguishes messages (in rect_distributor tag == bucket index).
+    /// who -> whom + message tag. For the single-rank case from/to are always 0.
     struct key_type
     {
         int from;
@@ -55,15 +52,21 @@ public:
         }
     };
 
-    /// Non-owning view onto the sender buffer (isend does NOT copy).
+    /// Non-owning view onto the sender buffer.
     struct entry_type
     {
         const void *data;  // pointer to the sender buffer
         int         size;  // size in bytes
     };
 
-    /// Called by trivial_comm::isend. Parks (data, size) under key {from, to, tag}
-    /// without copying. Throws if a message with the same key is already in flight.
+    trivial_message_queue() = default;
+
+    trivial_message_queue( const trivial_message_queue & )            = delete;
+    trivial_message_queue &operator=( const trivial_message_queue & ) = delete;
+    trivial_message_queue( trivial_message_queue && )                 = default;
+    trivial_message_queue &operator=( trivial_message_queue && )      = default;
+
+    /// Called by trivial_comm::isend. Parks (data, size) under key {from, to, tag} without copying.
     void push( int from, int to, int tag, const void *data, int size )
     {
         auto res = messages_.emplace( key_type{from, to, tag}, entry_type{data, size} );

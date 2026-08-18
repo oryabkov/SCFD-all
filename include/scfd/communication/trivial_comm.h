@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <scfd/utils/todo.h>
 #include "trivial_message_queue.h"
 
 namespace scfd
@@ -51,9 +52,7 @@ struct trivial_status
 } // namespace detail
 
 /// Single-rank stand-in for mpi_comm_info (num_procs == 1, myid == 0).
-/// A lightweight COPYABLE handle holding a non-owning pointer to the shared queue
-/// (the queue itself is owned by trivial_platform). This is the type plugged into
-/// rect_partitioner / rect_distributor as the Comm template parameter.
+/// A lightweight COPYABLE handle holding a non-owning pointer to the shared queue.
 template <class Memory>
 struct trivial_comm
 {
@@ -66,31 +65,31 @@ struct trivial_comm
     queue_type *queue     = nullptr;  // non-owning, points at trivial_platform's queue
 
     trivial_comm() = default;
-    trivial_comm( int num_procs_p, int myid_p, queue_type *queue_p )
-        : num_procs( num_procs_p ), myid( myid_p ), queue( queue_p )
+    explicit trivial_comm( queue_type *queue_p ) : queue( queue_p )
     {
     }
 
-    /// Parks buf into the shared queue as message (myid -> dest, tag). No copy is made.
     template <class T>
     void isend( const T *buf, int count, int dest, int tag, request_type &request ) const
     {
         queue->push( myid, dest, tag, buf, count * sizeof(T) );
+        request.source = myid;
+        request.tag = tag;
+        request.reported = false;
     }
 
-    /// Synchronously receives message (source -> myid, tag) into buf (copy happens here)
-    /// and records source/tag in the request so waitany can report them later.
     template <class T>
     void irecv( T *buf, int count, int source, int tag, request_type &request ) const
     {
-        queue->recv( source, myid, tag, buf, count * sizeof(T) );
+        if ( !queue->recv( source, myid, tag, buf, count * sizeof(T) ) )
+        {
+            SCFD_TODO( "trivial_comm::irecv: irecv posted before matching isend" );
+        }
         request.source = source;
         request.tag = tag;
         request.reported = false;
     }
 
-    /// Returns the index of the next not-yet-reported request and fills *status with its
-    /// source/tag. Everything already completed synchronously, so we just walk in order.
     int waitany( int count, request_type *requests, status_type *status ) const
     {
         for ( int i = 0; i < count; i++ )
@@ -108,12 +107,14 @@ struct trivial_comm
         throw std::logic_error( "trivial_comm::waitany: no un-reported request left" );
     }
 
-    /// No-op: isend requests carry no pending work (irecv consumed them synchronously).
     void waitall( int count, request_type *requests ) const
     {
+        for ( int i = 0; i < count; i++ )
+        {
+            requests[i].reported = true;
+        }
     }
 
-    /// Collectives over a single rank are the identity.
     template <class T>
     void all_reduce_sum( const T *loc_data, T *res_data, int count ) const
     {
