@@ -14,8 +14,8 @@ template <class Backend, class T>
 class lapack_wrap_device : public lapack_wrap<T>
 {
 public:
-    using backend_type = Backend;
-    using memory_type = typename backend_type::memory_type;
+    using backend_type     = Backend;
+    using memory_type      = typename backend_type::memory_type;
     using host_lapack_type = lapack_wrap<T>;
 
     explicit lapack_wrap_device( size_t expected_size ) : host_lapack_type( expected_size )
@@ -46,9 +46,8 @@ public:
         host_lapack_type::hessinberg_schur( host_matrix( H_device, Nl * Nl ), Nl, Q, R, eig );
     }
 
-    void eigs_schur_from_device(
-        const T *A_device, size_t Nl, T *Q, T *R, T *eig_real = nullptr, T *eig_imag = nullptr
-    )
+    void
+    eigs_schur_from_device( const T *A_device, size_t Nl, T *Q, T *R, T *eig_real = nullptr, T *eig_imag = nullptr )
     {
         host_lapack_type::eigs_schur( host_matrix( A_device, Nl * Nl ), Nl, eig_real, eig_imag, Q, R );
     }
@@ -60,7 +59,8 @@ public:
     }
 
     template <class T_l>
-    void write_matrix_from_device( const std::string &f_name, size_t Row, size_t Col, T_l *matrix, unsigned int prec = 17 )
+    void
+    write_matrix_from_device( const std::string &f_name, size_t Row, size_t Col, T_l *matrix, unsigned int prec = 17 )
     {
         if constexpr ( memory_type::is_host_visible )
         {
@@ -100,9 +100,8 @@ public:
         hessinberg_eigs_from_device( H_device, Nl, eig );
     }
 
-    void hessinberg_schur_from_gpu(
-        const T *H_device, size_t Nl, T *Q, T *R, T *eig_real = nullptr, T *eig_imag = nullptr
-    )
+    void
+    hessinberg_schur_from_gpu( const T *H_device, size_t Nl, T *Q, T *R, T *eig_real = nullptr, T *eig_imag = nullptr )
     {
         hessinberg_schur_from_device( H_device, Nl, Q, R, eig_real, eig_imag );
     }
@@ -143,8 +142,7 @@ private:
     static void copy_to_host( const T_l *device_ptr, T_l *host_ptr, size_t count )
     {
         memory_type::copy_to_host(
-            count * sizeof( T_l ),
-            static_cast<typename memory_type::const_pointer_type>( device_ptr ),
+            count * sizeof( T_l ), static_cast<typename memory_type::const_pointer_type>( device_ptr ),
             static_cast<typename memory_type::pointer_type>( host_ptr )
         );
     }

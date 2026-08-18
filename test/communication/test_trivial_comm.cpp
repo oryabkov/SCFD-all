@@ -15,14 +15,14 @@
 /// runs WITHOUT mpiexec and reproduces a periodic (x) halo exchange done as a self-send.
 using namespace scfd;
 
-using ordinal     = int;
-using big_ordinal = long int;
-using value_t     = unsigned int;
+using ordinal        = int;
+using big_ordinal    = long int;
+using value_t        = unsigned int;
 static const int dim = 3;
 
 using mem_t       = memory::host;
-using comm_t      = communication::trivial_platform<mem_t>;  // ~ mpi_wrap
-using comm_info_t = communication::trivial_comm<mem_t>;      // ~ mpi_comm_info
+using comm_t      = communication::trivial_platform<mem_t>; // ~ mpi_wrap
+using comm_info_t = communication::trivial_comm<mem_t>;     // ~ mpi_comm_info
 using part_t      = communication::rect_partitioner<dim, ordinal, big_ordinal, comm_info_t>;
 using for_each_t  = for_each::serial_cpu_nd<dim, ordinal>;
 
@@ -42,10 +42,10 @@ int main( int argc, char *args[] )
     comm_t      comm( argc, args );
     comm_info_t comm_world = comm.comm_world();
 
-    big_ordinal size = 10;
-    big_idx_t   dom_sz( size, size, size );
-    part_t      part( comm_world, dom_sz );
-    periodic_flags_t periodic_flags( true, false, false );  // periodic in x => self-exchange
+    big_ordinal      size = 10;
+    big_idx_t        dom_sz( size, size, size );
+    part_t           part( comm_world, dom_sz );
+    periodic_flags_t periodic_flags( true, false, false ); // periodic in x => self-exchange
     dist_t           dist;
 
     /* ------------------------ */
@@ -76,7 +76,7 @@ int main( int argc, char *args[] )
         for ( ordinal iy = my_loc_rect.i1[1]; iy < my_loc_rect.i2[1]; ++iy )
             for ( ordinal iz = my_loc_rect.i1[2]; iz < my_loc_rect.i2[2]; ++iz )
             {
-                bool interior_x = ( ix >= my_own_loc_rect.i1[0] && ix < my_own_loc_rect.i2[0] );
+                bool interior_x          = ( ix >= my_own_loc_rect.i1[0] && ix < my_own_loc_rect.i2[0] );
                 data_view1( ix, iy, iz ) = interior_x ? static_cast<value_t>( ix ) : ghost_sentinel;
             }
 
@@ -112,7 +112,7 @@ int main( int argc, char *args[] )
             for ( ordinal iz = my_own_loc_rect.i1[2]; iz < my_own_loc_rect.i2[2]; ++iz )
             {
                 value_t expected = static_cast<value_t>( ( ix + size ) % size );
-                value_t got = data_view2( ix, iy, iz );
+                value_t got      = data_view2( ix, iy, iz );
                 if ( got != expected )
                 {
                     if ( errors_num < 10 )

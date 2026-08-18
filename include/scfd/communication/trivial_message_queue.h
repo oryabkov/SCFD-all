@@ -46,8 +46,10 @@ public:
 
         bool operator<( const key_type &o ) const
         {
-            if ( from != o.from ) return from < o.from;
-            if ( to != o.to )     return to < o.to;
+            if ( from != o.from )
+                return from < o.from;
+            if ( to != o.to )
+                return to < o.to;
             return tag < o.tag;
         }
     };
@@ -55,8 +57,8 @@ public:
     /// Non-owning view onto the sender buffer.
     struct entry_type
     {
-        const void *data;  // pointer to the sender buffer
-        int         size;  // size in bytes
+        const void *data; // pointer to the sender buffer
+        int         size; // size in bytes
     };
 
     trivial_message_queue() = default;
@@ -69,11 +71,13 @@ public:
     /// Called by trivial_comm::isend. Parks (data, size) under key {from, to, tag} without copying.
     void push( int from, int to, int tag, const void *data, int size )
     {
-        auto res = messages_.emplace( key_type{from, to, tag}, entry_type{data, size} );
+        auto res = messages_.emplace( key_type{ from, to, tag }, entry_type{ data, size } );
 
         if ( !res.second )
         {
-            throw std::logic_error( "trivial_message_queue::push: message with this (from,to,tag) is already in flight" );
+            throw std::logic_error(
+                "trivial_message_queue::push: message with this (from,to,tag) is already in flight"
+            );
         }
     }
 
@@ -82,15 +86,15 @@ public:
     /// matching message is queued.
     bool recv( int from, int to, int tag, void *dst, int size )
     {
-        key_type key_{from, to, tag};
+        key_type key_{ from, to, tag };
 
-        auto it_ = messages_.find(key_);
+        auto it_ = messages_.find( key_ );
         if ( it_ != messages_.end() )
         {
             entry_type data_ = it_->second;
-            assert(size == data_.size);
-            mem_t::copy(data_.size, data_.data, dst);
-            messages_.erase(it_);
+            assert( size == data_.size );
+            mem_t::copy( data_.size, data_.data, dst );
+            messages_.erase( it_ );
 
             return true;
         }

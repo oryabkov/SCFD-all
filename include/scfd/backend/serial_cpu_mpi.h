@@ -45,7 +45,6 @@ struct serial_cpu_mpi : public serial_cpu
     {
         return 0;
     }
-
 };
 
 }

@@ -45,7 +45,6 @@ struct omp_mpi : public omp
     {
         return 0;
     }
-
 };
 
 }

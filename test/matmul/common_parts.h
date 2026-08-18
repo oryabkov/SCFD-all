@@ -285,9 +285,11 @@ if ( ( tests == 'd' ) || ( tests == 'a' ) )
 #endif
     {
 #ifndef __COMMON_PARTS_USING_SYCL__
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_func_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_func_dev, sizeof( T ) * total_size )
         );
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_func_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_func_dev, sizeof( T ) * total_size )
         );
         __COMMON_PARTS_SAFE_CALL__(
             __COMMON_PARTS_DEVICE_MALLOC__( (void **)&mat_mul_ptr_func_dev, sizeof( T ) * total_size )
@@ -344,9 +346,11 @@ if ( ( tests == 'd' ) || ( tests == 'a' ) )
     /***********************************************************************************************************/
     {
 #ifndef __COMMON_PARTS_USING_SYCL__
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_func_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_func_dev, sizeof( T ) * total_size )
         );
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_func_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_func_dev, sizeof( T ) * total_size )
         );
         __COMMON_PARTS_SAFE_CALL__(
             __COMMON_PARTS_DEVICE_MALLOC__( (void **)&mat_mul_ptr_func_dev, sizeof( T ) * total_size )
@@ -421,9 +425,11 @@ if ( ( tests == 'd' ) || ( tests == 'a' ) )
     /***********************************************************************************************************/
     {
 #ifndef __COMMON_PARTS_USING_SYCL__
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_func_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_func_dev, sizeof( T ) * total_size )
         );
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_func_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_func_dev, sizeof( T ) * total_size )
         );
         __COMMON_PARTS_SAFE_CALL__(
             __COMMON_PARTS_DEVICE_MALLOC__( (void **)&mat_mul_ptr_func_dev, sizeof( T ) * total_size )
@@ -559,9 +565,11 @@ if ( ( tests == 'd' ) || ( tests == 'a' ) )
     }
     /***************************************************************************************************************/
     {
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size )
         );
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size )
         );
         __COMMON_PARTS_SAFE_CALL__(
             __COMMON_PARTS_DEVICE_MALLOC__( (void **)&mat_mul_ptr_ok_dev, sizeof( T ) * total_size )
@@ -619,9 +627,11 @@ if ( ( tests == 'd' ) || ( tests == 'a' ) )
         __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__( u_ptr_ok_dev ) );
     }
     {
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size )
         );
-        __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size )
+        __COMMON_PARTS_SAFE_CALL__(
+            __COMMON_PARTS_DEVICE_MALLOC__( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size )
         );
         __COMMON_PARTS_SAFE_CALL__(
             __COMMON_PARTS_DEVICE_MALLOC__( (void **)&mat_mul_ptr_ok_dev, sizeof( T ) * total_size )

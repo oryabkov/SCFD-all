@@ -10,8 +10,10 @@ int main( int argc, char const *argv[] )
 
     try
     {
-        SCFD_TODO( "this is a TODO text cought by try-catch block with runtime_error. This TODO cannot be used in "
-                   "device kernels!" );
+        SCFD_TODO(
+            "this is a TODO text cought by try-catch block with runtime_error. This TODO cannot be used in "
+            "device kernels!"
+        );
     }
     catch ( const std::runtime_error &e )
     {

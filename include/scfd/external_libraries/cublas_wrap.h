@@ -352,8 +352,10 @@ private:
             break;
         default:
             // invalid operation code throw
-            throw std::runtime_error( "switch_operation_complex: invalid code for original or transpose operations. "
-                                      "Only 'N' or 'T' (for Hermitian transpose) are defined." );
+            throw std::runtime_error(
+                "switch_operation_complex: invalid code for original or transpose operations. "
+                "Only 'N' or 'T' (for Hermitian transpose) are defined."
+            );
         }
         return operation;
     }
@@ -1049,10 +1051,11 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL( cublasDtrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A, int( LDimA ),
-        B, int( LDimB )
-    )
+    CUBLAS_SAFE_CALL(
+        cublasDtrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A,
+            int( LDimA ), B, int( LDimB )
+        )
 
     );
 }
@@ -1079,10 +1082,11 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL( cublasStrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A, int( LDimA ),
-        B, int( LDimB )
-    )
+    CUBLAS_SAFE_CALL(
+        cublasStrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A,
+            int( LDimA ), B, int( LDimB )
+        )
 
     );
 }
@@ -1110,10 +1114,11 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL( cublasCtrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
-        (const cuComplex *)&alpha, (const cuComplex *)A, int( LDimA ), (cuComplex *)B, int( LDimB )
-    )
+    CUBLAS_SAFE_CALL(
+        cublasCtrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
+            (const cuComplex *)&alpha, (const cuComplex *)A, int( LDimA ), (cuComplex *)B, int( LDimB )
+        )
 
     );
 }
@@ -1141,10 +1146,12 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL( cublasZtrsm(
-        handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
-        (const cuDoubleComplex *)&alpha, (const cuDoubleComplex *)A, int( LDimA ), (cuDoubleComplex *)B, int( LDimB )
-    )
+    CUBLAS_SAFE_CALL(
+        cublasZtrsm(
+            handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
+            (const cuDoubleComplex *)&alpha, (const cuDoubleComplex *)A, int( LDimA ), (cuDoubleComplex *)B,
+            int( LDimB )
+        )
 
     );
 }

@@ -35,15 +35,21 @@ struct trivial_request
 {
     int  source   = 0;
     int  tag      = 0;
-    bool reported = false;  // waitany flips this once it has returned this request's index
+    bool reported = false; // waitany flips this once it has returned this request's index
 };
 
 /// Analog of detail::mpi_status. rect_distributor reads source()/tag() after waitany
 /// to find which packet/bucket the completed message belongs to.
 struct trivial_status
 {
-    int source() const { return source_; }
-    int tag() const { return tag_; }
+    int source() const
+    {
+        return source_;
+    }
+    int tag() const
+    {
+        return tag_;
+    }
 
     int source_ = 0;
     int tag_    = 0;
@@ -62,7 +68,7 @@ struct trivial_comm
 
     int         num_procs = 1;
     int         myid      = 0;
-    queue_type *queue     = nullptr;  // non-owning, points at trivial_platform's queue
+    queue_type *queue     = nullptr; // non-owning, points at trivial_platform's queue
 
     trivial_comm() = default;
     explicit trivial_comm( queue_type *queue_p ) : queue( queue_p )
@@ -72,21 +78,21 @@ struct trivial_comm
     template <class T>
     void isend( const T *buf, int count, int dest, int tag, request_type &request ) const
     {
-        queue->push( myid, dest, tag, buf, count * sizeof(T) );
-        request.source = myid;
-        request.tag = tag;
+        queue->push( myid, dest, tag, buf, count * sizeof( T ) );
+        request.source   = myid;
+        request.tag      = tag;
         request.reported = false;
     }
 
     template <class T>
     void irecv( T *buf, int count, int source, int tag, request_type &request ) const
     {
-        if ( !queue->recv( source, myid, tag, buf, count * sizeof(T) ) )
+        if ( !queue->recv( source, myid, tag, buf, count * sizeof( T ) ) )
         {
             SCFD_TODO( "trivial_comm::irecv: irecv posted before matching isend" );
         }
-        request.source = source;
-        request.tag = tag;
+        request.source   = source;
+        request.tag      = tag;
         request.reported = false;
     }
 
@@ -97,8 +103,8 @@ struct trivial_comm
             if ( requests[i].reported == false )
             {
                 requests[i].reported = true;
-                status->source_ = requests[i].source;
-                status->tag_ = requests[i].tag;
+                status->source_      = requests[i].source;
+                status->tag_         = requests[i].tag;
 
                 return i;
             }

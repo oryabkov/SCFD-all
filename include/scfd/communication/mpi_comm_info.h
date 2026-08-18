@@ -48,13 +48,15 @@ namespace scfd
 namespace communication
 {
 
-std::string mpi_error_code_to_str( int error )
+inline std::string mpi_error_code_to_str( int error )
 {
     if ( error == MPI_SUCCESS )
         return std::string( "success(" ) + std::to_string( error ) + std::string( ")" );
     else if ( error == MPI_ERR_COMM )
-        return std::string( "Invalid communicator. A common error is to use a null communicator in a call (not even "
-                            "allowed in MPI_Comm_rank). (" ) +
+        return std::string(
+                   "Invalid communicator. A common error is to use a null communicator in a call (not even "
+                   "allowed in MPI_Comm_rank). ("
+               ) +
                std::to_string( error ) + std::string( ")" );
     else if ( error == MPI_ERR_BUFFER )
         return std::string( "Invalid buffer pointer. Usually a null buffer where one is not valid. (" ) +
@@ -68,8 +70,10 @@ std::string mpi_error_code_to_str( int error )
         return std::string( "Invalid datatype argument. May be an uncommitted MPI_Datatype (see MPI_Type_commit). (" ) +
                std::to_string( error ) + std::string( ")" );
     else if ( error == MPI_ERR_OP )
-        return std::string( "Invalid operation. MPI operations (objects of type MPI_Op) must either be one of the "
-                            "predefined operations (e.g., MPI_SUM) or created with MPI_Op_create. (" ) +
+        return std::string(
+                   "Invalid operation. MPI operations (objects of type MPI_Op) must either be one of the "
+                   "predefined operations (e.g., MPI_SUM) or created with MPI_Op_create. ("
+               ) +
                std::to_string( error ) + std::string( ")" );
     else
         return std::string( "unknown error(" ) + std::to_string( error ) + std::string( ")" );
@@ -488,6 +492,18 @@ inline int waitany( int count, mpi_request *requests )
     return waitany( count, requests, static_cast<mpi_status *>( nullptr ) );
 }
 
+inline int testany( int count, mpi_request *requests, int *flag, mpi_status *status )
+{
+    int index = MPI_UNDEFINED;
+    SCFD_MPI_SAFE_CALL( MPI_Testany( count, raw_requests( requests ), &index, flag, raw_status( status ) ) );
+    return index;
+}
+
+inline int testany( int count, mpi_request *requests, int *flag )
+{
+    return testany( count, requests, flag, static_cast<mpi_status *>( nullptr ) );
+}
+
 inline mpi_data_type type_vector( int count, int blocklength, int stride, const mpi_data_type &oldtype )
 {
     mpi_data_type newtype;
@@ -682,13 +698,15 @@ struct mpi_comm_info
         detail::alltoallw( sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm );
     }
 
-    void isend( const void *buf, int count, const data_type &datatype, int dest, int tag, detail::mpi_request *request )
-        const
+    void isend(
+        const void *buf, int count, const data_type &datatype, int dest, int tag, detail::mpi_request *request
+    ) const
     {
         detail::isend( buf, count, datatype, dest, tag, comm, request );
     }
-    void isend( const void *buf, int count, const data_type &datatype, int dest, int tag, detail::mpi_request &request )
-        const
+    void isend(
+        const void *buf, int count, const data_type &datatype, int dest, int tag, detail::mpi_request &request
+    ) const
     {
         isend( buf, count, datatype, dest, tag, &request );
     }
@@ -757,6 +775,14 @@ struct mpi_comm_info
     int waitany( int count, detail::mpi_request *requests ) const
     {
         return detail::waitany( count, requests );
+    }
+    int testany( int count, detail::mpi_request *requests, int *flag, detail::mpi_status *status ) const
+    {
+        return detail::testany( count, requests, flag, status );
+    }
+    int testany( int count, detail::mpi_request *requests, int *flag ) const
+    {
+        return detail::testany( count, requests, flag );
     }
 
     double wtime() const
