@@ -30,7 +30,6 @@ using idx_t            = static_vec::vec<ordinal, dim>;
 using periodic_flags_t = static_vec::vec<bool, dim>;
 using rect_t           = static_vec::rect<ordinal, dim>;
 using big_idx_t        = static_vec::vec<big_ordinal, dim>;
-using big_rect_t       = static_vec::rect<big_ordinal, dim>;
 using array_t          = arrays::array_nd<value_t, dim, mem_t>;
 using dist_t = communication::rect_distributor<value_t, dim, mem_t, for_each_t, ordinal, big_ordinal, comm_info_t>;
 
