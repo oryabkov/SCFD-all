@@ -144,6 +144,29 @@ class profiler : public manual_init_singleton<profiler<Event,SHIFT_WIDTH>>
         }
 
         template<class Log>
+        struct scoped_ticker_print
+        {
+            profiler &prof;
+            Log *log;
+            std::string name;
+            scoped_ticker_print(profiler &prof, Log *log, const std::string &name) : prof(prof), log(log), name(name) {}
+            ~scoped_ticker_print() {
+                delta_type delta = prof.toc();
+                if (log != nullptr)
+                {
+                    log->info_f("%s: %.3f %s", name.c_str(), delta, Event::units().c_str());
+                }
+            }
+        };
+
+        template<class Log>
+        scoped_ticker_print<Log> scoped_tic_print(const std::string &name, Log *log)
+        {
+            tic(name);
+            return scoped_ticker_print<Log>(*this, log, name);
+        }
+
+        template<class Log>
         void log_print(Log &log)
         {
             std::stringstream sstream;
