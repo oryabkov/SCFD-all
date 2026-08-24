@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SimpleCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_SERIAL_MAP_H__
-#define __SCFD_SERIAL_MAP_H__
+#ifndef __SCFD_TRIVIAL_MAP_H__
+#define __SCFD_TRIVIAL_MAP_H__
 
 //supposed to satisfy MAP concept
 
@@ -24,16 +24,16 @@ namespace scfd
 namespace communication
 {
 
-struct serial_map
+struct trivial_map
 {
     int total_size;
 
     //creates uninitialized map
-    serial_map()
+    trivial_map()
     {
     }
     //dummy constructor
-    serial_map( int N )
+    trivial_map( int N )
     {
         total_size = N;
     }
