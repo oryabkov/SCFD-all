@@ -34,7 +34,7 @@ void omp_inclusive_scan<Ord>::operator()( Ord size, const T *input, T *output ) 
         return;
 
 #ifndef _OPENMP
-    T sum = T( 0 );
+    T sum{};
     for ( Ord i = 0; i < size; ++i )
     {
         sum += input[i];
@@ -50,10 +50,10 @@ void omp_inclusive_scan<Ord>::operator()( Ord size, const T *input, T *output ) 
 
 #    pragma omp single
         {
-            partial_sums.assign( threads_count + 1, T( 0 ) );
+            partial_sums.resize( threads_count + 1 );
         }
 
-        T local_sum = T( 0 );
+        T local_sum{};
 #    pragma omp for schedule( static )
         for ( Ord i = 0; i < size; ++i )
         {

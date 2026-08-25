@@ -1,10 +1,13 @@
 #include <complex>
 #include <iostream>
 #include <type_traits>
+#include <vector>
 
 #include "test_backend_config.h"
 #include <scfd/arrays/tensorN_array_nd.h>
 #include <scfd/backend/backend.h>
+#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
+#include <scfd/inclusive_scan/omp_inclusive_scan_impl.h>
 #include <scfd/static_vec/vec.h>
 
 namespace
@@ -39,6 +42,81 @@ struct fill_index
         values( idx ) = idx;
     }
 };
+
+class default_initialized_sum
+{
+public:
+    default_initialized_sum() : value_( 0 )
+    {
+    }
+
+    static default_initialized_sum from_value( int value )
+    {
+        default_initialized_sum result;
+        result.value_ = value;
+        return result;
+    }
+
+    default_initialized_sum &operator+=( const default_initialized_sum &other )
+    {
+        value_ += other.value_;
+        return *this;
+    }
+
+    int value() const
+    {
+        return value_;
+    }
+
+private:
+    int value_;
+};
+
+static_assert(
+    std::is_default_constructible<default_initialized_sum>::value, "the scan value must be default constructible"
+);
+static_assert(
+    !std::is_constructible<default_initialized_sum, int>::value,
+    "the regression type must not be constructible from int"
+);
+static_assert( !std::is_trivial<default_initialized_sum>::value, "the regression type must be non-POD" );
+
+bool test_default_initialized_scans()
+{
+    using value_t = default_initialized_sum;
+
+    const int            source[] = { 1, 2, 3, 4 };
+    std::vector<value_t> input( 4 );
+    std::vector<value_t> output( 4 );
+    for ( std::size_t i = 0; i < input.size(); ++i )
+    {
+        input[i] = value_t::from_value( source[i] );
+    }
+
+    scfd::omp_inclusive_scan<std::size_t> inclusive_scan;
+    inclusive_scan( input.size(), input.data(), output.data() );
+    const int inclusive_reference[] = { 1, 3, 6, 10 };
+    for ( std::size_t i = 0; i < output.size(); ++i )
+    {
+        if ( output[i].value() != inclusive_reference[i] )
+        {
+            return false;
+        }
+    }
+
+    scfd::omp_exclusive_scan<std::size_t> exclusive_scan;
+    exclusive_scan( input.size(), input.data(), output.data(), value_t::from_value( 5 ) );
+    const int exclusive_reference[] = { 5, 6, 8, 11 };
+    for ( std::size_t i = 0; i < output.size(); ++i )
+    {
+        if ( output[i].value() != exclusive_reference[i] )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 }
 
@@ -95,6 +173,12 @@ int main()
     {
         std::cout << "FAILED" << std::endl;
         return 1;
+    }
+
+    if ( !test_default_initialized_scans() )
+    {
+        std::cout << "FAILED DEFAULT-INITIALIZED OPENMP SCANS" << std::endl;
+        return 2;
     }
 
     std::cout << scfd_backend_tests::expected_backend_configuration_name() << ": PASSED" << std::endl;
