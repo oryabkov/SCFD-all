@@ -18,9 +18,11 @@
 #define __SCFD_SYCL_COUNT_BY_KEY_IMPL_H__
 
 #include "sycl_count_by_key.h"
+
+#include <vector>
+
 #include <scfd/count_by_key/serial_cpu.h>
 #include <scfd/utils/init_sycl.h>
-#include <vector>
 
 namespace scfd
 {

@@ -18,10 +18,12 @@
 #define __SCFD_SYCL_REDUCE_IMPL_H__
 
 #include "sycl_reduce.h"
-#include "scfd/utils/init_sycl.h"
+
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/numeric>
+
 #include <scfd/functional/basic_ops.h>
+#include <scfd/utils/init_sycl.h>
 
 namespace scfd
 {

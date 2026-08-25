@@ -19,7 +19,9 @@
 
 #include <cstddef>
 #include <type_traits>
+
 #include <sycl/sycl.hpp>
+
 #include <scfd/backend/common.h>
 #include <scfd/copy/sycl_copy_impl.h>
 #include <scfd/count_by_key/sycl_count_by_key_impl.h>

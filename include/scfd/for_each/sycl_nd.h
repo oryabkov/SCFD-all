@@ -18,11 +18,12 @@
 #define __SCFD_FOR_EACH_SYCL_ND_H__
 
 //for_each_nd implementation for OPENMP case
-#include "scfd/utils/init_sycl.h"
-#include "for_each_config.h"
 #include <sycl/sycl.hpp>
-#include <scfd/static_vec/vec.h>
+
+#include "for_each_config.h"
 #include <scfd/static_vec/rect.h>
+#include <scfd/static_vec/vec.h>
+#include <scfd/utils/init_sycl.h>
 
 namespace scfd
 {

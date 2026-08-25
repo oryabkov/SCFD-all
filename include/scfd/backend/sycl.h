@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
 #include <scfd/backend/sycl_common.h>
 
 namespace scfd

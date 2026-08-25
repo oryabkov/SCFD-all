@@ -18,6 +18,7 @@
 #define __SCFD_SYCL_COPY_IMPL_H__
 
 #include "sycl_copy.h"
+
 #include <scfd/utils/init_sycl.h>
 
 namespace scfd

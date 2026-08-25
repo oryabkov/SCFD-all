@@ -18,9 +18,11 @@
 #define __SCFD_SYCL_SET_INTERSECTION_IMPL_H__
 
 #include "sycl_set_intersection.h"
-#include <scfd/utils/init_sycl.h>
-#include <oneapi/dpl/algorithm>
+
 #include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+
+#include <scfd/utils/init_sycl.h>
 
 namespace scfd
 {

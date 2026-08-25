@@ -22,9 +22,10 @@
 #ifdef SCFD_FOR_EACH_ENABLE_PROPERTY_TREE_INIT
 #    include <boost/property_tree/ptree.hpp>
 #endif
-#include "scfd/utils/init_sycl.h"
-#include "for_each_config.h"
 #include <sycl/sycl.hpp>
+
+#include "for_each_config.h"
+#include <scfd/utils/init_sycl.h>
 
 namespace scfd
 {

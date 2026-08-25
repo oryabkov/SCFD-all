@@ -18,9 +18,11 @@
 #define __SCFD_SYCL_REDUCE_BY_KEY_IMPL_H__
 
 #include "sycl_reduce_by_key.h"
+
+#include <vector>
+
 #include <scfd/reduce_by_key/serial_cpu.h>
 #include <scfd/utils/init_sycl.h>
-#include <vector>
 
 namespace scfd
 {

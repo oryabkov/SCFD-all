@@ -18,6 +18,7 @@
 #define __SCFD_SYCL_SEQUENCE_IMPL_H__
 
 #include "sycl_sequence.h"
+
 #include <scfd/utils/init_sycl.h>
 
 namespace scfd

@@ -18,10 +18,12 @@
 #define __SCFD_SYCL_SORT_BY_KEY_IMPL_H__
 
 #include "sycl_sort_by_key.h"
+
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+
 #include <scfd/backend/value_pair.h>
 #include <scfd/utils/init_sycl.h>
-#include <oneapi/dpl/algorithm>
-#include <oneapi/dpl/execution>
 
 namespace scfd
 {

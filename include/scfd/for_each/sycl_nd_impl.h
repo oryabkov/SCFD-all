@@ -19,9 +19,11 @@
 
 //for_each_nd implementation for OPENMP case
 
-#include "for_each_config.h"
-#include <sycl/sycl.hpp>
 #include "sycl_nd.h"
+
+#include <sycl/sycl.hpp>
+
+#include "for_each_config.h"
 
 namespace scfd
 {

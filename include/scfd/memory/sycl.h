@@ -18,7 +18,9 @@
 #define __SCFD_MEMORY_SYCL_H__
 
 #include <stdexcept>
+
 #include <sycl/sycl.hpp>
+
 #include <scfd/utils/init_sycl.h>
 
 namespace scfd

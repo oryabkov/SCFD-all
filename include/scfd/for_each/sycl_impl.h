@@ -19,9 +19,11 @@
 
 //for_each implementation for SYCL case
 
-#include "for_each_config.h"
-#include <sycl/sycl.hpp>
 #include "sycl.h"
+
+#include <sycl/sycl.hpp>
+
+#include "for_each_config.h"
 
 namespace scfd
 {

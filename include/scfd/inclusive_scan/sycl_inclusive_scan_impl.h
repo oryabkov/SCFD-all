@@ -18,9 +18,11 @@
 #define __SCFD_SYCL_INCLUSIVE_SCAN_IMPL_H__
 
 #include "sycl_inclusive_scan.h"
-#include <scfd/utils/init_sycl.h>
+
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/numeric>
+
+#include <scfd/utils/init_sycl.h>
 
 namespace scfd
 {

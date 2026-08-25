@@ -21,7 +21,9 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+
 #include <mpi.h>
+
 #include <scfd/backend/sycl.h>
 #include <scfd/communication/mpi_comm.h>
 #include <scfd/communication/mpi_comm_info.h>
