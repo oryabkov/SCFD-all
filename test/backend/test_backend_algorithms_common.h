@@ -41,28 +41,6 @@ namespace scfd_backend_tests
 {
 
 template <class Array, int N>
-void fill_with_values( Array &array, const int ( &values )[N] )
-{
-    typename Array::view_type view( array, false );
-    for ( int i = 0; i < N; ++i )
-    {
-        view( i ) = values[i];
-    }
-    view.release( true );
-}
-
-template <class Array, class T, int N>
-void fill_with_typed_values( Array &array, const T ( &values )[N] )
-{
-    typename Array::view_type view( array, false );
-    for ( int i = 0; i < N; ++i )
-    {
-        view( i ) = values[i];
-    }
-    view.release( true );
-}
-
-template <class Array, int N>
 bool array_prefix_equal_to_expected( const Array &array, const int ( &expected )[N], int size = N )
 {
     typename Array::view_type view( array, true );
@@ -209,10 +187,7 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 19;
         }
 
-        const int host_values[] = { 4, 2, 2, 1, 3, 3, 3 };
-        array_t   values;
-        values.init( 7 );
-        fill_with_values( values, host_values );
+        array_t values = { 4, 2, 2, 1, 3, 3, 3 };
 
         sort( 7, values.raw_ptr() );
         sort.wait();
@@ -234,12 +209,9 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 21;
         }
 
-        const int host_scan_input[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-        array_t   scan_input;
-        array_t   scan_output;
-        scan_input.init( 8 );
+        array_t scan_input = { 1, 2, 3, 4, 5, 6, 7, 8 };
+        array_t scan_output;
         scan_output.init( 8 );
-        fill_with_values( scan_input, host_scan_input );
 
         exclusive_scan( 8, scan_input.raw_ptr(), scan_output.raw_ptr(), 10 );
         exclusive_scan.wait();
@@ -251,10 +223,7 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 22;
         }
 
-        const int host_in_place[] = { 1, 2, 3, 4 };
-        array_t   in_place;
-        in_place.init( 4 );
-        fill_with_values( in_place, host_in_place );
+        array_t in_place = { 1, 2, 3, 4 };
 
         exclusive_scan( 4, in_place.raw_ptr(), in_place.raw_ptr(), 0 );
         exclusive_scan.wait();
@@ -284,7 +253,8 @@ int run_backend_algorithm_tests( const char *backend_name )
         copied_values.init( 8 );
         backend_copy( 8, scan_input.raw_ptr(), copied_values.raw_ptr() );
         backend_copy.wait();
-        if ( !array_prefix_equal_to_expected( copied_values, host_scan_input ) )
+        const int expected_copied_values[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+        if ( !array_prefix_equal_to_expected( copied_values, expected_copied_values ) )
         {
             std::cout << backend_name << ": FAILED copy" << std::endl;
             return 29;
@@ -310,14 +280,8 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 31;
         }
 
-        const int key_values[]   = { 3, 1, 2, 5, 4 };
-        const int assoc_values[] = { 30, 10, 20, 50, 40 };
-        array_t   keys;
-        array_t   assoc;
-        keys.init( 5 );
-        assoc.init( 5 );
-        fill_with_values( keys, key_values );
-        fill_with_values( assoc, assoc_values );
+        array_t keys  = { 3, 1, 2, 5, 4 };
+        array_t assoc = { 30, 10, 20, 50, 40 };
         sort_by_key( 5, keys.raw_ptr(), assoc.raw_ptr() );
         sort_by_key.wait();
         const int expected_sorted_keys[]   = { 1, 2, 3, 4, 5 };
@@ -329,18 +293,12 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 32;
         }
 
-        const int rbk_keys_values[] = { 1, 1, 2, 2, 2, 4 };
-        const int rbk_vals_values[] = { 5, 7, 1, 2, 3, 9 };
-        array_t   rbk_keys;
-        array_t   rbk_vals;
-        array_t   rbk_keys_out;
-        array_t   rbk_vals_out;
-        rbk_keys.init( 6 );
-        rbk_vals.init( 6 );
+        array_t rbk_keys = { 1, 1, 2, 2, 2, 4 };
+        array_t rbk_vals = { 5, 7, 1, 2, 3, 9 };
+        array_t rbk_keys_out;
+        array_t rbk_vals_out;
         rbk_keys_out.init( 6 );
         rbk_vals_out.init( 6 );
-        fill_with_values( rbk_keys, rbk_keys_values );
-        fill_with_values( rbk_vals, rbk_vals_values );
         const int rbk_size =
             reduce_by_key( 6, rbk_keys.raw_ptr(), rbk_vals.raw_ptr(), rbk_keys_out.raw_ptr(), rbk_vals_out.raw_ptr() );
         reduce_by_key.wait();
@@ -353,8 +311,7 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 33;
         }
 
-        const int rbk_min_vals_values[] = { 8, 3, 7, 4, 9, 1 };
-        fill_with_values( rbk_vals, rbk_min_vals_values );
+        rbk_vals               = { 8, 3, 7, 4, 9, 1 };
         const int rbk_min_size = reduce_by_key(
             6, rbk_keys.raw_ptr(), rbk_vals.raw_ptr(), rbk_keys_out.raw_ptr(), rbk_vals_out.raw_ptr(),
             scfd::functional::equal_to<int>(), scfd::functional::minimum<int>()
@@ -417,16 +374,10 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 36;
         }
 
-        const int set1_values[] = { 1, 2, 3, 5, 7 };
-        const int set2_values[] = { 0, 2, 3, 4, 7 };
-        array_t   set1;
-        array_t   set2;
-        array_t   set_result;
-        set1.init( 5 );
-        set2.init( 5 );
+        array_t set1 = { 1, 2, 3, 5, 7 };
+        array_t set2 = { 0, 2, 3, 4, 7 };
+        array_t set_result;
         set_result.init( 5 );
-        fill_with_values( set1, set1_values );
-        fill_with_values( set2, set2_values );
         const int set_size = set_intersection( 5, set1.raw_ptr(), 5, set2.raw_ptr(), set_result.raw_ptr() );
         set_intersection.wait();
         const int expected_set[] = { 2, 3, 7 };
@@ -480,14 +431,11 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 37;
         }
 
-        const int count_keys_values[] = { 1, 1, 1, 3, 4, 4, 8 };
-        array_t   count_keys;
-        array_t   count_keys_out;
-        array_t   count_values_out;
-        count_keys.init( 7 );
+        array_t count_keys = { 1, 1, 1, 3, 4, 4, 8 };
+        array_t count_keys_out;
+        array_t count_values_out;
         count_keys_out.init( 7 );
         count_values_out.init( 7 );
-        fill_with_values( count_keys, count_keys_values );
         const int count_by_key_size =
             count_by_key( 7, count_keys.raw_ptr(), count_keys_out.raw_ptr(), count_values_out.raw_ptr() );
         count_by_key.wait();
@@ -501,10 +449,7 @@ int run_backend_algorithm_tests( const char *backend_name )
             return 39;
         }
 
-        const pair_t pair_values[] = { pair_t( 2, 3 ), pair_t( 1, 4 ), pair_t( 2, 1 ), pair_t( 1, 4 ), pair_t( 2, 1 ) };
-        pair_array_t pair_data;
-        pair_data.init( 5 );
-        fill_with_typed_values( pair_data, pair_values );
+        pair_array_t pair_data = { pair_t( 2, 3 ), pair_t( 1, 4 ), pair_t( 2, 1 ), pair_t( 1, 4 ), pair_t( 2, 1 ) };
         sort( 5, pair_data.raw_ptr() );
         sort.wait();
         const pair_t expected_pair_sorted[] = {
