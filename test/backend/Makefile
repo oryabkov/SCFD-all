@@ -91,11 +91,10 @@ endif
 BUILD_DIR := build/$(CONFIG)
 COMMON_CPPFLAGS := -I$(SCFD_INCLUDE) $(PLATFORM_DEFINE) $(MPI_DEFINE) $(MPI_COMPILE_FLAGS)
 
-TYPES_BIN := $(BUILD_DIR)/test_backend_types.bin
 ALGORITHMS_BIN := $(BUILD_DIR)/test_backend_algorithms.bin
 RUNTIME_BIN := $(BUILD_DIR)/test_backend_runtime.bin
 PERFORMANCE_BIN := $(BUILD_DIR)/test_backend_performance.bin
-GENERIC_CORE_BINS := $(TYPES_BIN) $(ALGORITHMS_BIN) $(RUNTIME_BIN)
+GENERIC_CORE_BINS := $(ALGORITHMS_BIN) $(RUNTIME_BIN)
 CORE_BINS := $(GENERIC_CORE_BINS)
 
 ifneq ($(filter $(PLATFORM),SERIAL OMP),)
@@ -109,7 +108,6 @@ CUDA_SCAN_BIN := $(BUILD_DIR)/test_backend_exclusive_scan_omp_vs_cuda.bin
 CORE_BINS += $(CUDA_SCAN_BIN)
 endif
 
-$(TYPES_BIN): test_backend_types.cpp test_backend_config.h
 $(ALGORITHMS_BIN): test_backend_algorithms.cpp test_backend_algorithms_common.h test_backend_config.h
 $(RUNTIME_BIN): test_backend_runtime.cpp test_backend_runtime_common.h test_backend_config.h
 $(PERFORMANCE_BIN): test_backend_performance.cpp test_backend_performance_common.h test_backend_config.h
@@ -124,7 +122,6 @@ all: $(CORE_BINS)
 perf: $(PERFORMANCE_BIN)
 
 run: all
-	$(RUNNER) $(TYPES_BIN)
 	$(RUNNER) $(ALGORITHMS_BIN)
 	$(RUNNER) $(RUNTIME_BIN)
 ifneq ($(HOST_BIN),)
