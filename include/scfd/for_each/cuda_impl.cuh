@@ -56,7 +56,7 @@ template <class T>
 void cuda<T>::wait() const
 {
     //TODO error check?
-    CUDA_SAFE_CALL( cudaStreamSynchronize( 0 ) );
+    SCFD_CUDA_SAFE_CALL( cudaStreamSynchronize( 0 ) );
 }
 
 }

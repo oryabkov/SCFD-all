@@ -41,26 +41,26 @@ struct cuda_device
     /// however it's not stated explicitly in documentation
     static void malloc( pointer_type *p, size_t size )
     {
-        CUDA_SAFE_CALL( cudaMalloc( p, size ) );
+        SCFD_CUDA_SAFE_CALL( cudaMalloc( p, size ) );
     }
     /// NOTE: cudaFree returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
     static void free( pointer_type p )
     {
-        CUDA_SAFE_CALL( cudaFree( p ) );
+        SCFD_CUDA_SAFE_CALL( cudaFree( p ) );
     }
 
     static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToHost ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToHost ) );
     }
     static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToDevice ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToDevice ) );
     }
     static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToDevice ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToDevice ) );
     }
 };
 
@@ -79,7 +79,7 @@ struct cuda_host
     {
         if ( size != 0 )
         {
-            CUDA_SAFE_CALL( cudaMallocHost( p, size, cudaHostAllocDefault ) );
+            SCFD_CUDA_SAFE_CALL( cudaMallocHost( p, size, cudaHostAllocDefault ) );
         }
         else
         {
@@ -90,20 +90,20 @@ struct cuda_host
     /// however it's not stated explicitly in documentation
     static void free( pointer_type p )
     {
-        CUDA_SAFE_CALL( cudaFreeHost( p ) );
+        SCFD_CUDA_SAFE_CALL( cudaFreeHost( p ) );
     }
 
     static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
     }
     static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
     }
     static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToHost ) );
     }
 };
 

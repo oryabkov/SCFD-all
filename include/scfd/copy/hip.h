@@ -31,7 +31,7 @@ struct hip_copy
     {
         if ( size <= 0 )
             return;
-        HIP_SAFE_CALL( hipMemcpy( output, input, sizeof( T ) * static_cast<size_t>( size ), hipMemcpyDefault ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( output, input, sizeof( T ) * static_cast<size_t>( size ), hipMemcpyDefault ) );
     }
     void wait() const
     {

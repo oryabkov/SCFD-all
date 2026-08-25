@@ -24,7 +24,7 @@
 #define __STR_HELPER( x ) #x
 #define __STR( x ) __STR_HELPER( x )
 
-#define CUSPARSE_SAFE_CALL( X )                                                                                        \
+#define SCFD_CUSPARSE_SAFE_CALL( X )                                                                                   \
     do                                                                                                                 \
     {                                                                                                                  \
         cusparseStatus_t status   = ( X );                                                                             \
@@ -32,7 +32,7 @@
         if ( status != CUSPARSE_STATUS_SUCCESS )                                                                       \
         {                                                                                                              \
             std::stringstream ss;                                                                                      \
-            ss << std::string( "CUSPARSE_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )             \
+            ss << std::string( "SCFD_CUSPARSE_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )        \
                << cusparseGetErrorName( status );                                                                      \
             std::string str = ss.str();                                                                                \
             throw std::runtime_error( str );                                                                           \
@@ -40,7 +40,8 @@
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
                 std::string(                                                                                           \
-                    "CUSOLVER_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "    \
+                    "SCFD_CUSPARSE_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X                                 \
+                                                                              " failed cudaDeviceSynchronize: "        \
                 ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \

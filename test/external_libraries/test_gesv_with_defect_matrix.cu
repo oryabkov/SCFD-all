@@ -194,7 +194,7 @@ void test_gesv_with_defect_matrix( matrix_t &mat, vector_t &b, vector_t &b_x, in
             'N', sz, r_inv_mat.array().raw_ptr(), sz, sz, real( 1 ), tmp.array().raw_ptr(), real( 0 ),
             b_x.array().raw_ptr()
         );
-        CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+        SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
         t2.record();
         std::cout << "solve time: " << t2.elapsed_time( t1 ) << "ms" << std::endl;
     }
@@ -224,7 +224,7 @@ void test_gesv_with_defect_matrix( matrix_t &mat, vector_t &b, vector_t &b_x, in
         c_array( 0 ) = r_inv_mat.array().raw_ptr();
         c_array.sync_to_array();
         int_vector_t info_array( 1 );
-        CUBLAS_SAFE_CALL( cublasDgetriBatched(
+        SCFD_CUBLAS_SAFE_CALL( cublasDgetriBatched(
             *cublas.get_handle(), sz, a_array.array().raw_ptr(), sz, nullptr, c_array.array().raw_ptr(), sz,
             info_array.array().raw_ptr(), 1
         ) );
@@ -239,7 +239,7 @@ void test_gesv_with_defect_matrix( matrix_t &mat, vector_t &b, vector_t &b_x, in
             'N', sz, r_inv_mat.array().raw_ptr(), sz, sz, real( 1 ), tmp.array().raw_ptr(), real( 0 ),
             b_x.array().raw_ptr()
         );
-        CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+        SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
         t2.record();
         std::cout << "solve time: " << t2.elapsed_time( t1 ) << "ms" << std::endl;
     }
@@ -267,7 +267,7 @@ void test_gesv_with_defect_matrix( matrix_t &mat, vector_t &b, vector_t &b_x, in
             'N', sz, r_inv_mat.array().raw_ptr(), sz, sz, real( 1 ), tmp.array().raw_ptr(), real( 0 ),
             b_x.array().raw_ptr()
         );
-        CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+        SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
         t2.record();
         std::cout << "solve time: " << t2.elapsed_time( t1 ) << "ms" << std::endl;
     }

@@ -72,7 +72,7 @@ static const char *_cublasGetErrorEnum( cublasStatus_t error )
     return "<unknown>";
 }
 
-#define CUBLAS_SAFE_CALL( X )                                                                                          \
+#define SCFD_CUBLAS_SAFE_CALL( X )                                                                                     \
     do                                                                                                                 \
     {                                                                                                                  \
         cublasStatus_t status   = ( X );                                                                               \
@@ -80,7 +80,7 @@ static const char *_cublasGetErrorEnum( cublasStatus_t error )
         if ( status != CUBLAS_STATUS_SUCCESS )                                                                         \
         {                                                                                                              \
             std::stringstream ss;                                                                                      \
-            ss << std::string( "CUBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )               \
+            ss << std::string( "SCFD_CUBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )          \
                << std::string( _cublasGetErrorEnum( status ) );                                                        \
             std::string str = ss.str();                                                                                \
             throw std::runtime_error( str );                                                                           \
@@ -88,7 +88,7 @@ static const char *_cublasGetErrorEnum( cublasStatus_t error )
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
                 std::string(                                                                                           \
-                    "CUBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "      \
+                    "SCFD_CUBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: " \
                 ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \

@@ -194,7 +194,7 @@ int main( int argc, char const *argv[] )
     scfd::utils::init_hip_persistent();
     //scfd::utils::init_hip(-1, -1);
     int device_id;
-    HIP_SAFE_CALL( hipGetDevice( &device_id ) );
+    SCFD_HIP_SAFE_CALL( hipGetDevice( &device_id ) );
 
     T *u_ptr_host, *v_ptr_host, *cross_ptr_host, *cross_ptr_host_check;
     T *u_ptr_ok_host, *v_ptr_ok_host, *cross_ptr_ok_host, *cross_ptr_ok_host_check;
@@ -221,12 +221,12 @@ int main( int argc, char const *argv[] )
     cross_ptr_ok_host       = reinterpret_cast<T *>( std::malloc( sizeof( T ) * total_size ) );
     cross_ptr_ok_host_check = reinterpret_cast<T *>( std::malloc( sizeof( T ) * total_size ) );
     //
-    HIP_SAFE_CALL( hipMalloc( (void **)&u_ptr_dev, sizeof( T ) * total_size ) );
-    HIP_SAFE_CALL( hipMalloc( (void **)&v_ptr_dev, sizeof( T ) * total_size ) );
-    HIP_SAFE_CALL( hipMalloc( (void **)&cross_ptr_dev, sizeof( T ) * total_size ) );
-    HIP_SAFE_CALL( hipMalloc( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size ) );
-    HIP_SAFE_CALL( hipMalloc( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size ) );
-    HIP_SAFE_CALL( hipMalloc( (void **)&cross_ptr_ok_dev, sizeof( T ) * total_size ) );
+    SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&u_ptr_dev, sizeof( T ) * total_size ) );
+    SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&v_ptr_dev, sizeof( T ) * total_size ) );
+    SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&cross_ptr_dev, sizeof( T ) * total_size ) );
+    SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size ) );
+    SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size ) );
+    SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&cross_ptr_ok_dev, sizeof( T ) * total_size ) );
 
 
     array_device_t u_dev, v_dev, cross_dev;
@@ -277,16 +277,16 @@ int main( int argc, char const *argv[] )
         cross_ptr_ok_host[IG( j, 2 )] = u_ptr_ok_host[IG( j, 0 )] * v_ptr_ok_host[IG( j, 1 )] -
                                         u_ptr_ok_host[IG( j, 1 )] * v_ptr_ok_host[IG( j, 0 )];
     }
-    HIP_SAFE_CALL(
+    SCFD_HIP_SAFE_CALL(
         hipMemcpy( (void *)u_ptr_dev, (void *)u_ptr_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
     );
-    HIP_SAFE_CALL(
+    SCFD_HIP_SAFE_CALL(
         hipMemcpy( (void *)v_ptr_dev, (void *)v_ptr_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
     );
-    HIP_SAFE_CALL(
+    SCFD_HIP_SAFE_CALL(
         hipMemcpy( (void *)u_ptr_ok_dev, (void *)u_ptr_ok_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
     );
-    HIP_SAFE_CALL(
+    SCFD_HIP_SAFE_CALL(
         hipMemcpy( (void *)v_ptr_ok_dev, (void *)v_ptr_ok_host, sizeof( T ) * total_size, hipMemcpyHostToDevice )
     );
     u_dev_view.release( true );
@@ -327,7 +327,7 @@ int main( int argc, char const *argv[] )
         {
             auto start = std::chrono::high_resolution_clock::now();
             cross_prod_kern<T><<<dimGrid, dimBlock>>>( N, u_ptr_dev, v_ptr_dev, cross_ptr_dev );
-            HIP_SAFE_CALL( hipDeviceSynchronize() );
+            SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
             auto                                      end             = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
             gpu_ptr.push_back( elapsed_seconds.count() );
@@ -343,7 +343,7 @@ int main( int argc, char const *argv[] )
         {
             auto start = std::chrono::high_resolution_clock::now();
             cross_prod_kern_ok<T><<<dimGrid, dimBlock>>>( N, u_ptr_ok_dev, v_ptr_ok_dev, cross_ptr_ok_dev );
-            HIP_SAFE_CALL( hipDeviceSynchronize() );
+            SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
             auto                                      end             = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
             gpu_ptr_ok.push_back( elapsed_seconds.count() );
@@ -356,11 +356,11 @@ int main( int argc, char const *argv[] )
         std::cout << "gpu tensor diff = " << check_coincide_tensor( N, cross_ptr_host, cross_dev_view ) << std::endl;
         cross_dev_view.release( false );
 
-        HIP_SAFE_CALL( hipMemcpy(
+        SCFD_HIP_SAFE_CALL( hipMemcpy(
             (void *)cross_ptr_host_check, (void *)cross_ptr_dev, sizeof( T ) * total_size, hipMemcpyDeviceToHost
         ) );
         std::cout << "gpu ptr diff    = " << check_coincide_ptr( N, cross_ptr_host, cross_ptr_host_check ) << std::endl;
-        HIP_SAFE_CALL( hipMemcpy(
+        SCFD_HIP_SAFE_CALL( hipMemcpy(
             (void *)cross_ptr_ok_host_check, (void *)cross_ptr_ok_dev, sizeof( T ) * total_size, hipMemcpyDeviceToHost
         ) );
         std::cout << "gpu ptr diff    = " << check_coincide_ptr( N, cross_ptr_ok_host, cross_ptr_ok_host_check )
@@ -473,17 +473,17 @@ int main( int argc, char const *argv[] )
     }
 
 
-    HIP_SAFE_CALL( hipFree( cross_ptr_ok_dev ) );
-    HIP_SAFE_CALL( hipFree( v_ptr_ok_dev ) );
-    HIP_SAFE_CALL( hipFree( u_ptr_ok_dev ) );
+    SCFD_HIP_SAFE_CALL( hipFree( cross_ptr_ok_dev ) );
+    SCFD_HIP_SAFE_CALL( hipFree( v_ptr_ok_dev ) );
+    SCFD_HIP_SAFE_CALL( hipFree( u_ptr_ok_dev ) );
     std::free( u_ptr_ok_host );
     std::free( v_ptr_ok_host );
     std::free( cross_ptr_ok_host );
     std::free( cross_ptr_ok_host_check );
 
-    HIP_SAFE_CALL( hipFree( cross_ptr_dev ) );
-    HIP_SAFE_CALL( hipFree( v_ptr_dev ) );
-    HIP_SAFE_CALL( hipFree( u_ptr_dev ) );
+    SCFD_HIP_SAFE_CALL( hipFree( cross_ptr_dev ) );
+    SCFD_HIP_SAFE_CALL( hipFree( v_ptr_dev ) );
+    SCFD_HIP_SAFE_CALL( hipFree( u_ptr_dev ) );
     std::free( u_ptr_host );
     std::free( v_ptr_host );
     std::free( cross_ptr_host );

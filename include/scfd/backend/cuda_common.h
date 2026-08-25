@@ -70,7 +70,7 @@ struct cuda_common
 
     static void synchronize()
     {
-        CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+        SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     }
 
     static void device_synchronize()
@@ -82,7 +82,7 @@ struct cuda_common
     {
         std::size_t free_bytes  = 0;
         std::size_t total_bytes = 0;
-        CUDA_SAFE_CALL( cudaMemGetInfo( &free_bytes, &total_bytes ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemGetInfo( &free_bytes, &total_bytes ) );
         return device_memory_info_type( free_bytes, total_bytes, true, true );
     }
 

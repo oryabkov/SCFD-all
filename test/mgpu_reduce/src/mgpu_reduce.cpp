@@ -57,9 +57,9 @@ std::vector<std::size_t> get_max_size_per_gpu( scfd::communication::mpi_comm_inf
     std::size_t free_mem_l;
     std::size_t total_mem_l;
 #if defined( CUDA )
-    CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem_l, &total_mem_l ) );
+    SCFD_CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem_l, &total_mem_l ) );
 #elif defined( HIP )
-    HIP_SAFE_CALL( hipMemGetInfo( &free_mem_l, &total_mem_l ) );
+    SCFD_HIP_SAFE_CALL( hipMemGetInfo( &free_mem_l, &total_mem_l ) );
 #endif
     auto                     max_array_size = free_mem_l / sizeof( BaseT );
     std::vector<std::size_t> r( mpi.num_procs, 0 );

@@ -66,17 +66,17 @@ public:
 
     cufft_wrap_C2C( size_t size_x ) : plan_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan1d( &planC2C, size_x, CUFFT_Z2Z, 1 ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan1d( &planC2C, size_x, CUFFT_Z2Z, 1 ) );
         plan_created = true;
     }
     cufft_wrap_C2C( size_t size_x, size_t size_y ) : plan_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan2d( &planC2C, size_x, size_y, CUFFT_Z2Z ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan2d( &planC2C, size_x, size_y, CUFFT_Z2Z ) );
         plan_created = true;
     }
     cufft_wrap_C2C( size_t size_x, size_t size_y, size_t size_z ) : plan_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan3d( &planC2C, size_x, size_y, size_z, CUFFT_Z2Z ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan3d( &planC2C, size_x, size_y, size_z, CUFFT_Z2Z ) );
         plan_created = true;
     }
 
@@ -96,22 +96,26 @@ public:
 
     void fft( complex_type *source, complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecZ2Z( planC2C, source, destination, CUFFT_FORWARD ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecZ2Z( planC2C, source, destination, CUFFT_FORWARD ) );
     }
 
     void ifft( complex_type *source, complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecZ2Z( planC2C, source, destination, CUFFT_INVERSE ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecZ2Z( planC2C, source, destination, CUFFT_INVERSE ) );
     }
 
     void fft( thrust_complex_type *source, thrust_complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecZ2Z( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_FORWARD ) );
+        SCFD_CUFFT_SAFE_CALL(
+            cufftExecZ2Z( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_FORWARD )
+        );
     }
 
     void ifft( thrust_complex_type *source, thrust_complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecZ2Z( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_INVERSE ) );
+        SCFD_CUFFT_SAFE_CALL(
+            cufftExecZ2Z( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_INVERSE )
+        );
     }
 
 private:
@@ -129,17 +133,17 @@ public:
 
     cufft_wrap_C2C( size_t size_x ) : plan_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan1d( &planC2C, size_x, CUFFT_C2C, 1 ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan1d( &planC2C, size_x, CUFFT_C2C, 1 ) );
         plan_created = true;
     }
     cufft_wrap_C2C( size_t size_x, size_t size_y ) : plan_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan2d( &planC2C, size_x, size_y, CUFFT_C2C ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan2d( &planC2C, size_x, size_y, CUFFT_C2C ) );
         plan_created = true;
     }
     cufft_wrap_C2C( size_t size_x, size_t size_y, size_t size_z ) : plan_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan3d( &planC2C, size_x, size_y, size_z, CUFFT_C2C ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan3d( &planC2C, size_x, size_y, size_z, CUFFT_C2C ) );
         plan_created = true;
     }
 
@@ -159,22 +163,26 @@ public:
 
     void fft( complex_type *source, complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecC2C( planC2C, source, destination, CUFFT_FORWARD ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecC2C( planC2C, source, destination, CUFFT_FORWARD ) );
     }
 
     void ifft( complex_type *source, complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecC2C( planC2C, source, destination, CUFFT_INVERSE ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecC2C( planC2C, source, destination, CUFFT_INVERSE ) );
     }
 
     void fft( thrust_complex_type *source, thrust_complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecC2C( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_FORWARD ) );
+        SCFD_CUFFT_SAFE_CALL(
+            cufftExecC2C( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_FORWARD )
+        );
     }
 
     void ifft( thrust_complex_type *source, thrust_complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecC2C( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_INVERSE ) );
+        SCFD_CUFFT_SAFE_CALL(
+            cufftExecC2C( planC2C, (complex_type *)source, (complex_type *)destination, CUFFT_INVERSE )
+        );
     }
 
 private:
@@ -200,25 +208,25 @@ public:
 
     cufft_wrap_R2C( size_t size_x ) : planR2C_created( false ), planC2R_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan1d( &planR2C, size_x, CUFFT_D2Z, 1 ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan1d( &planR2C, size_x, CUFFT_D2Z, 1 ) );
         planR2C_created = true;
-        CUFFT_SAFE_CALL( cufftPlan1d( &planC2R, size_x, CUFFT_Z2D, 1 ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan1d( &planC2R, size_x, CUFFT_Z2D, 1 ) );
         planC2R_created = true;
         size_j_F        = size_x / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y ) : planR2C_created( false ), planC2R_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan2d( &planR2C, size_x, size_y, CUFFT_D2Z ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan2d( &planR2C, size_x, size_y, CUFFT_D2Z ) );
         planR2C_created = true;
-        CUFFT_SAFE_CALL( cufftPlan2d( &planC2R, size_x, size_y, CUFFT_Z2D ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan2d( &planC2R, size_x, size_y, CUFFT_Z2D ) );
         planC2R_created = true;
         size_j_F        = size_y / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y, size_t size_z ) : planR2C_created( false ), planC2R_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan3d( &planR2C, size_x, size_y, size_z, CUFFT_D2Z ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan3d( &planR2C, size_x, size_y, size_z, CUFFT_D2Z ) );
         planR2C_created = true;
-        CUFFT_SAFE_CALL( cufftPlan3d( &planC2R, size_x, size_y, size_z, CUFFT_Z2D ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan3d( &planC2R, size_x, size_y, size_z, CUFFT_Z2D ) );
         planC2R_created = true;
         size_j_F        = size_z / 2 + 1;
     }
@@ -244,22 +252,22 @@ public:
 
     void fft( double *source, complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecD2Z( planR2C, source, destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecD2Z( planR2C, source, destination ) );
     }
 
     void ifft( complex_type *source, double *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecZ2D( planC2R, source, destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecZ2D( planC2R, source, destination ) );
     }
 
     void fft( double *source, thrust_complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecD2Z( planR2C, source, (complex_type *)destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecD2Z( planR2C, source, (complex_type *)destination ) );
     }
 
     void ifft( thrust_complex_type *source, double *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecZ2D( planC2R, (complex_type *)source, destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecZ2D( planC2R, (complex_type *)source, destination ) );
     }
 
     size_t get_reduced_size()
@@ -283,25 +291,25 @@ public:
 
     cufft_wrap_R2C( size_t size_x ) : planR2C_created( false ), planC2R_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan1d( &planR2C, size_x, CUFFT_R2C, 1 ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan1d( &planR2C, size_x, CUFFT_R2C, 1 ) );
         planR2C_created = true;
-        CUFFT_SAFE_CALL( cufftPlan1d( &planC2R, size_x, CUFFT_C2R, 1 ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan1d( &planC2R, size_x, CUFFT_C2R, 1 ) );
         planC2R_created = true;
         size_j_F        = size_x / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y ) : planR2C_created( false ), planC2R_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan2d( &planR2C, size_x, size_y, CUFFT_R2C ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan2d( &planR2C, size_x, size_y, CUFFT_R2C ) );
         planR2C_created = true;
-        CUFFT_SAFE_CALL( cufftPlan2d( &planC2R, size_x, size_y, CUFFT_C2R ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan2d( &planC2R, size_x, size_y, CUFFT_C2R ) );
         planC2R_created = true;
         size_j_F        = size_y / 2 + 1;
     }
     cufft_wrap_R2C( size_t size_x, size_t size_y, size_t size_z ) : planR2C_created( false ), planC2R_created( false )
     {
-        CUFFT_SAFE_CALL( cufftPlan3d( &planR2C, size_x, size_y, size_z, CUFFT_R2C ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan3d( &planR2C, size_x, size_y, size_z, CUFFT_R2C ) );
         planR2C_created = true;
-        CUFFT_SAFE_CALL( cufftPlan3d( &planC2R, size_x, size_y, size_z, CUFFT_C2R ) );
+        SCFD_CUFFT_SAFE_CALL( cufftPlan3d( &planC2R, size_x, size_y, size_z, CUFFT_C2R ) );
         planC2R_created = true;
         size_j_F        = size_z / 2 + 1;
     }
@@ -327,22 +335,22 @@ public:
 
     void fft( float *source, complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecR2C( planR2C, source, destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecR2C( planR2C, source, destination ) );
     }
 
     void ifft( complex_type *source, float *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecC2R( planC2R, source, destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecC2R( planC2R, source, destination ) );
     }
 
     void fft( float *source, thrust_complex_type *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecR2C( planR2C, source, (complex_type *)destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecR2C( planR2C, source, (complex_type *)destination ) );
     }
 
     void ifft( thrust_complex_type *source, float *destination )
     {
-        CUFFT_SAFE_CALL( cufftExecC2R( planC2R, (complex_type *)source, destination ) );
+        SCFD_CUFFT_SAFE_CALL( cufftExecC2R( planC2R, (complex_type *)source, destination ) );
     }
 
     size_t get_reduced_size()

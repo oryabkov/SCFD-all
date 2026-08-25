@@ -61,7 +61,7 @@ static const char *_curandGetErrorEnum( curandStatus_t error )
     return "<unknown>";
 }
 
-#define CURAND_SAFE_CALL( X )                                                                                          \
+#define SCFD_CURAND_SAFE_CALL( X )                                                                                     \
     do                                                                                                                 \
     {                                                                                                                  \
         curandStatus_t status   = ( X );                                                                               \
@@ -69,7 +69,7 @@ static const char *_curandGetErrorEnum( curandStatus_t error )
         if ( status != CURAND_STATUS_SUCCESS )                                                                         \
         {                                                                                                              \
             std::stringstream ss;                                                                                      \
-            ss << std::string( "CURAND_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )               \
+            ss << std::string( "SCFD_CURAND_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )          \
                << std::string( _curandGetErrorEnum( status ) );                                                        \
             std::string str = ss.str();                                                                                \
             throw std::runtime_error( str );                                                                           \
@@ -77,7 +77,7 @@ static const char *_curandGetErrorEnum( curandStatus_t error )
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
                 std::string(                                                                                           \
-                    "CURAND_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "      \
+                    "SCFD_CURAND_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: " \
                 ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \

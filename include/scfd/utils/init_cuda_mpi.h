@@ -61,7 +61,7 @@ inline int init_cuda_mpi(
     node_size       = comm_split.num_procs();
     my_id           = comm_split.myid();
     comm_split.free();
-    CUDA_SAFE_CALL( cudaGetDeviceCount( &number_of_devices_on_node ) );
+    SCFD_CUDA_SAFE_CALL( cudaGetDeviceCount( &number_of_devices_on_node ) );
     if ( number_of_devices_on_node <= 0 )
     {
         throw std::runtime_error(
@@ -100,14 +100,14 @@ inline int init_cuda_mpi(
         std::size_t free_mem       = 0;
         std::size_t total_mem      = 0;
 
-        CUDA_SAFE_CALL( cudaGetDevice( &active_device ) );
+        SCFD_CUDA_SAFE_CALL( cudaGetDevice( &active_device ) );
         if ( active_device >= 0 )
         {
             cudaDeviceProp prop;
-            CUDA_SAFE_CALL( cudaGetDeviceProperties( &prop, active_device ) );
+            SCFD_CUDA_SAFE_CALL( cudaGetDeviceProperties( &prop, active_device ) );
             device_name = prop.name;
-            CUDA_SAFE_CALL( cudaDeviceGetPCIBusId( pci_bus_id, sizeof( pci_bus_id ), active_device ) );
-            CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem, &total_mem ) );
+            SCFD_CUDA_SAFE_CALL( cudaDeviceGetPCIBusId( pci_bus_id, sizeof( pci_bus_id ), active_device ) );
+            SCFD_CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem, &total_mem ) );
         }
 
         std::fprintf(

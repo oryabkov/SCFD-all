@@ -295,7 +295,7 @@ bool test_array0()
         test_ker_array0<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array0: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -305,7 +305,7 @@ bool test_array0()
         test_ker_ptr0<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array0: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     array0_view_t view( f, false );
@@ -318,7 +318,7 @@ bool test_array0()
     //test correctness
     e1.record();
     test_ker_array0<<<dimGrid, dimBlock>>>( f );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     e2.record();
 
     bool result = true;
@@ -378,7 +378,7 @@ bool test_array1()
         test_ker_array1<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -388,7 +388,7 @@ bool test_array1()
         test_ker_ptr1<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     auto view = f.create_view( false );
@@ -518,7 +518,7 @@ bool test_array1_vec()
         test_ker_array1_vec<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1_vec: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -528,7 +528,7 @@ bool test_array1_vec()
         test_ker_ptr1<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1_vec: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     auto view = f.create_view( false );
@@ -587,7 +587,7 @@ bool test_array2()
         test_ker_array2<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array2: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -597,7 +597,7 @@ bool test_array2()
         test_ker_ptr2<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array2: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     array2_view_t view( f, false );
@@ -678,7 +678,7 @@ bool test_array3()
         test_ker_array3<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array3: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -688,7 +688,7 @@ bool test_array3()
         test_ker_ptr3<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array3: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     auto view = f.create_view( false );
@@ -767,7 +767,7 @@ bool test_array4()
         test_ker_array4<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array4: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -777,7 +777,7 @@ bool test_array4()
         test_ker_ptr4<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array4: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     array4_view_t view( f, false );
@@ -896,7 +896,7 @@ bool test_array0_nd( int shift1, int shift2 )
         test_ker_array0_nd<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array0_nd: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -906,7 +906,7 @@ bool test_array0_nd( int shift1, int shift2 )
         test_ker_ptr0_nd<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1, sz2, shift1, shift2 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array0_nd: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     array0_nd_view_t view( f, false );
@@ -991,7 +991,7 @@ bool test_array1_nd_1( int shift1, int shift2 )
         test_ker_array1_nd_1<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1_nd_1: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -1001,7 +1001,7 @@ bool test_array1_nd_1( int shift1, int shift2 )
         test_ker_ptr1_nd<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1, sz2, shift1, shift2 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1_nd_1: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     array1_nd_view_t view( f, false );
@@ -1077,7 +1077,7 @@ bool test_array1_nd_2( int shift1, int shift2 )
         test_ker_array1_nd_2<<<dimGrid, dimBlock>>>( f );
     }
     e2.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1_nd_2: array time = %f ms\n", e2.elapsed_time( e1 ) / reps_n );
 
     //test time with c kernel
@@ -1087,7 +1087,7 @@ bool test_array1_nd_2( int shift1, int shift2 )
         test_ker_ptr1_nd<<<dimGrid, dimBlock>>>( f.raw_ptr(), sz1, sz2, shift1, shift2 );
     }
     e4.record();
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
     printf( "test_array1_nd_2: plain c kernel time = %f ms\n", e4.elapsed_time( e3 ) / reps_n );
 
     array1_nd_dyn_view_t view( f, false );

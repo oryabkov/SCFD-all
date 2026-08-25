@@ -65,7 +65,7 @@ template <int dim, class T>
 void hip_nd<dim, T>::wait() const
 {
     //TODO error check?
-    HIP_SAFE_CALL( hipStreamSynchronize( 0 ) );
+    SCFD_HIP_SAFE_CALL( hipStreamSynchronize( 0 ) );
 }
 
 }

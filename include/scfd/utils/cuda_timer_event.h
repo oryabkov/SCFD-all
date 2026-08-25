@@ -34,11 +34,11 @@ struct cuda_timer_event : public timer_event
 
     cuda_timer_event()
     {
-        CUDA_SAFE_CALL( cudaEventCreate( &e_ ) );
+        SCFD_CUDA_SAFE_CALL( cudaEventCreate( &e_ ) );
     }
     virtual void record()
     {
-        CUDA_SAFE_CALL( cudaEventRecord( e_, 0 ) );
+        SCFD_CUDA_SAFE_CALL( cudaEventRecord( e_, 0 ) );
     }
     virtual double elapsed_time( const timer_event &e0 ) const
     {
@@ -50,8 +50,8 @@ struct cuda_timer_event : public timer_event
             );
         }
         float res;
-        CUDA_SAFE_CALL( cudaEventSynchronize( e_ ) );
-        CUDA_SAFE_CALL( cudaEventElapsedTime( &res, cuda_event->e_, e_ ) );
+        SCFD_CUDA_SAFE_CALL( cudaEventSynchronize( e_ ) );
+        SCFD_CUDA_SAFE_CALL( cudaEventElapsedTime( &res, cuda_event->e_, e_ ) );
         return (double)res;
     };
 

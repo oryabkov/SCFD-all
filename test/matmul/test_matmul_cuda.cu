@@ -74,7 +74,7 @@ int main( int argc, char const *argv[] )
 {
 
 #define __COMMON_PARTS_DEVICE_INIT__ scfd::utils::init_cuda_persistent();
-#define __COMMON_PARTS_SAFE_CALL__ CUDA_SAFE_CALL
+#define __COMMON_PARTS_SAFE_CALL__ SCFD_CUDA_SAFE_CALL
 #define __COMMON_PARTS_DEVICE_MALLOC__ cudaMalloc
 #define __COMMON_PARTS_DEVICE_MEMCPY__ cudaMemcpy
 #define __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ cudaMemcpyHostToDevice

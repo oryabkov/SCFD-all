@@ -47,18 +47,18 @@ class hipsolver_wrap : public utils::manual_init_singleton<hipsolver_wrap>
         {
             if ( data_ != nullptr )
             {
-                HIP_SAFE_CALL( hipFree( data_ ) );
+                SCFD_HIP_SAFE_CALL( hipFree( data_ ) );
             }
         }
         void init( size_t rows_, size_t cols_, const T *A ) const
         {
             if ( data_ != nullptr )
             {
-                HIP_SAFE_CALL( hipFree( data_ ) );
+                SCFD_HIP_SAFE_CALL( hipFree( data_ ) );
                 data_ = nullptr;
             }
             sz_ = rows_ * cols_;
-            HIP_SAFE_CALL( hipMalloc( (void **)&data_, sizeof( T ) * sz_ ) );
+            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&data_, sizeof( T ) * sz_ ) );
             copy( A );
         }
         size_t get_rowcols()
@@ -67,7 +67,7 @@ class hipsolver_wrap : public utils::manual_init_singleton<hipsolver_wrap>
         }
         void copy( const T *A ) const
         {
-            HIP_SAFE_CALL( hipMemcpy( data_, A, sizeof( T ) * sz_, hipMemcpyDeviceToDevice ) );
+            SCFD_HIP_SAFE_CALL( hipMemcpy( data_, A, sizeof( T ) * sz_, hipMemcpyDeviceToDevice ) );
         }
     };
 
@@ -194,7 +194,7 @@ public:
         check_blas();
         _A_t<T> _A_;
         _A_.init( rows_cols, rows_cols, A );
-        HIP_SAFE_CALL( hipMemcpy( x, b, sizeof( T ) * rows_cols, hipMemcpyDeviceToDevice ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( x, b, sizeof( T ) * rows_cols, hipMemcpyDeviceToDevice ) );
         gesv( rows_cols, _A_.data_, x );
     }
 
@@ -230,7 +230,7 @@ public:
     template <class T>
     void orgqr( size_t m, size_t n, size_t k, const T *A, const T *tau, T *Q )
     {
-        HIP_SAFE_CALL( hipMemcpy( Q, A, sizeof( T ) * m * n, hipMemcpyDeviceToDevice ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( Q, A, sizeof( T ) * m * n, hipMemcpyDeviceToDevice ) );
         orgqr( m, n, k, Q, tau );
     }
 
@@ -279,7 +279,7 @@ private:
     {
         if ( tau_d != nullptr )
         {
-            HIP_SAFE_CALL( hipFree( tau_d ) );
+            SCFD_HIP_SAFE_CALL( hipFree( tau_d ) );
             tau_d = nullptr;
         }
     }
@@ -287,7 +287,7 @@ private:
     {
         if ( tau_f != nullptr )
         {
-            HIP_SAFE_CALL( hipFree( tau_f ) );
+            SCFD_HIP_SAFE_CALL( hipFree( tau_f ) );
             tau_f = nullptr;
         }
     }
@@ -298,7 +298,7 @@ private:
             free_tau_d();
         }
         tau_size = tau_size_;
-        HIP_SAFE_CALL( hipMalloc( (void **)&tau_d, sizeof( double ) * tau_size ) );
+        SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&tau_d, sizeof( double ) * tau_size ) );
     }
     void set_tau_float( int tau_size_ )
     {
@@ -307,7 +307,7 @@ private:
             free_tau_f();
         }
         tau_size = tau_size_;
-        HIP_SAFE_CALL( hipMalloc( (void **)&tau_f, sizeof( float ) * tau_size ) );
+        SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&tau_f, sizeof( float ) * tau_size ) );
     }
 
     template <class T>
@@ -339,12 +339,12 @@ private:
 
     void hipsolver_destroy()
     {
-        HIPSOLVER_SAFE_CALL( hipsolverDnDestroy( handle ) );
+        SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnDestroy( handle ) );
     }
 
     void hipsolver_create()
     {
-        HIPSOLVER_SAFE_CALL( hipsolverDnCreate( &handle ) );
+        SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnCreate( &handle ) );
     }
 
     void hipsolver_create_info()
@@ -364,7 +364,7 @@ private:
     {
         if ( d_work_d != nullptr )
         {
-            HIP_SAFE_CALL( hipFree( d_work_d ) );
+            SCFD_HIP_SAFE_CALL( hipFree( d_work_d ) );
             d_work_d = nullptr;
         }
     }
@@ -372,7 +372,7 @@ private:
     {
         if ( d_work_f != nullptr )
         {
-            HIP_SAFE_CALL( hipFree( d_work_f ) );
+            SCFD_HIP_SAFE_CALL( hipFree( d_work_f ) );
             d_work_f = nullptr;
         }
     }
@@ -382,7 +382,7 @@ private:
         {
             work_size = work_size_;
             free_d_work_double();
-            HIP_SAFE_CALL( hipMalloc( (void **)&d_work_d, sizeof( double ) * work_size ) );
+            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&d_work_d, sizeof( double ) * work_size ) );
         }
     }
     void set_d_work_float( int work_size_ )
@@ -391,7 +391,7 @@ private:
         {
             work_size = work_size_;
             free_d_work_float();
-            HIP_SAFE_CALL( hipMalloc( (void **)&d_work_f, sizeof( float ) * work_size ) );
+            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&d_work_f, sizeof( float ) * work_size ) );
         }
     }
 };
@@ -405,11 +405,11 @@ inline void hipsolver_wrap::geqrf_ormqr(
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo )
     );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_ormqr.geqrf: info_gpu = " + std::to_string( info_gpu ) );
@@ -430,11 +430,11 @@ inline void hipsolver_wrap::geqrf_ormqr(
         trans = HIPBLAS_OP_T;
     }
 
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDormqr( handle, side, trans, m, n, k, A, lda, tau_d, b, ldb, d_work_d, work_size, devInfo )
     );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_ormqr.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -446,15 +446,15 @@ inline void hipsolver_wrap::geqrf_ormqr(
 )
 {
     //int *devInfo = nullptr;
-    //HIP_SAFE_CALL(hipMalloc ((void**)&devInfo, sizeof(int)) );
+    //SCFD_HIP_SAFE_CALL(hipMalloc ((void**)&devInfo, sizeof(int)) );
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo )
     );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_ormqr.geqrf: info_gpu = " + std::to_string( info_gpu ) );
@@ -475,11 +475,11 @@ inline void hipsolver_wrap::geqrf_ormqr(
         trans = HIPBLAS_OP_T;
     }
 
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnSormqr( handle, side, trans, m, n, k, A, lda, tau_f, b, ldb, d_work_f, work_size, devInfo )
     );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_ormqr.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -494,7 +494,7 @@ inline void hipsolver_wrap::qr_size(
 
     int lwork_1 = 0;
     int lwork_2 = 0;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 )
     );
 
@@ -515,7 +515,7 @@ inline void hipsolver_wrap::qr_size(
     }
 
     set_tau_double( int( rows ) );
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDormqr_bufferSize( handle, side, trans, m, n, k, A, lda, tau_d, b, (int)ldb, &lwork_2 )
     );
 
@@ -531,7 +531,9 @@ inline void hipsolver_wrap::qr_size(
 
     int lwork_1 = 0;
     int lwork_2 = 0;
-    HIPSOLVER_SAFE_CALL( hipsolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 ) );
+    SCFD_HIPSOLVER_SAFE_CALL(
+        hipsolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 )
+    );
 
     int               m    = rows;
     int               n    = 1;
@@ -550,7 +552,7 @@ inline void hipsolver_wrap::qr_size(
     }
 
     set_tau_float( int( rows ) );
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnSormqr_bufferSize( handle, side, trans, m, n, k, A, lda, tau_f, b, (int)ldb, &lwork_2 )
     );
 
@@ -563,7 +565,7 @@ inline void hipsolver_wrap::geqrf_size( size_t rows, size_t cols, const double *
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 )
     );
 
@@ -576,7 +578,9 @@ inline void hipsolver_wrap::geqrf_size( size_t rows, size_t cols, const float *A
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL( hipsolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 ) );
+    SCFD_HIPSOLVER_SAFE_CALL(
+        hipsolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 )
+    );
 
     int lwork = lwork_1;
     set_d_work_float( lwork );
@@ -589,9 +593,11 @@ inline void hipsolver_wrap::geqrf_perform( size_t rows, size_t cols, double *A, 
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL( hipsolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_d, work_size, devInfo ) );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIPSOLVER_SAFE_CALL(
+        hipsolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_d, work_size, devInfo )
+    );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     //std::cout << "test:" << info_gpu << std::endl;
     if ( info_gpu != 0 )
     {
@@ -605,9 +611,11 @@ inline void hipsolver_wrap::geqrf_perform( size_t rows, size_t cols, float *A, s
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL( hipsolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_f, work_size, devInfo ) );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIPSOLVER_SAFE_CALL(
+        hipsolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_f, work_size, devInfo )
+    );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::geqrf_perform.geqrf: info_gpu = " + std::to_string( info_gpu ) );
@@ -620,7 +628,7 @@ hipsolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const double *A,
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
@@ -634,7 +642,7 @@ hipsolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const float *A, 
 {
 
     int lwork_1 = 0;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnSorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
@@ -650,11 +658,11 @@ hipsolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, double *A, si
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnDorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_d, work_size, devInfo )
     );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::orgqr_perform.orgqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -668,11 +676,11 @@ inline void hipsolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, f
     thrust::device_vector<int> devInfo_dv( 1 );
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
-    HIPSOLVER_SAFE_CALL(
+    SCFD_HIPSOLVER_SAFE_CALL(
         hipsolverDnSorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_f, work_size, devInfo )
     );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::orgqr_perform.orgqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -698,7 +706,7 @@ inline void hipsolver_wrap::ormqr_size(
         trans = HIPBLAS_OP_T;
     }
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnDormqr_bufferSize(
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnDormqr_bufferSize(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, &lwork_2
     ) );
 
@@ -725,7 +733,7 @@ inline void hipsolver_wrap::ormqr_size(
         trans = HIPBLAS_OP_T;
     }
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnSormqr_bufferSize(
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnSormqr_bufferSize(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, &lwork_2
     ) );
 
@@ -754,12 +762,12 @@ inline void hipsolver_wrap::ormqr_perform(
         trans = HIPBLAS_OP_T;
     }
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnDormqr(
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnDormqr(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, d_work_d, work_size, devInfo
     ) );
 
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::ormqr_perform.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -787,12 +795,12 @@ inline void hipsolver_wrap::ormqr_perform(
         trans = HIPBLAS_OP_T;
     }
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnSormqr(
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnSormqr(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, d_work_f, work_size, devInfo
     ) );
 
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::ormqr_perform.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -812,12 +820,12 @@ inline void hipsolver_wrap::eig( size_t rows_cols, double *A, double *lambda )
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnDsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnDsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
     set_d_work_double( lwork );
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnDsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_d, lwork, devInfo ) );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnDsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_d, lwork, devInfo ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::eig: info_gpu = " + std::to_string( info_gpu ) );
@@ -837,12 +845,12 @@ inline void hipsolver_wrap::eig( size_t rows_cols, float *A, float *lambda )
     int                       *devInfo = thrust::raw_pointer_cast( &devInfo_dv[0] );
     int                        info_gpu;
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnSsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnSsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
     set_d_work_float( lwork );
 
-    HIPSOLVER_SAFE_CALL( hipsolverDnSsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_f, lwork, devInfo ) );
-    HIP_SAFE_CALL( hipDeviceSynchronize() );
-    HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
+    SCFD_HIPSOLVER_SAFE_CALL( hipsolverDnSsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_f, lwork, devInfo ) );
+    SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
+    SCFD_HIP_SAFE_CALL( hipMemcpy( &info_gpu, devInfo, sizeof( int ), hipMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "hipsolver_wrap::eig: info_gpu = " + std::to_string( info_gpu ) );

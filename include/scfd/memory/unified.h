@@ -46,27 +46,27 @@ struct unified
     /// however it's not stated explicitly in documentation
     static void malloc( pointer_type *p, size_t size, unsigned int flags = cudaMemAttachGlobal )
     {
-        CUDA_SAFE_CALL( cudaMallocManaged( p, size, flags ) );
+        SCFD_CUDA_SAFE_CALL( cudaMallocManaged( p, size, flags ) );
     }
     /// NOTE: cudaFree returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
     static void free( pointer_type p )
     {
-        CUDA_SAFE_CALL( cudaFree( p ) );
+        SCFD_CUDA_SAFE_CALL( cudaFree( p ) );
     }
 
     static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToHost ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToHost ) );
     }
     static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToDevice ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyHostToDevice ) );
     }
     static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
         /// ISSUE is it a best way to copy unified memory using DeviceToDevice?
-        CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToDevice ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( dst, src, size, cudaMemcpyDeviceToDevice ) );
     }
 };
 

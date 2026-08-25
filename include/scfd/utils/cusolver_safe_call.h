@@ -89,7 +89,7 @@ static const char *_cusolverGetErrorEnum( cusolverStatus_t error )
     return "<unknown>";
 }
 
-#define CUSOLVER_SAFE_CALL( X )                                                                                        \
+#define SCFD_CUSOLVER_SAFE_CALL( X )                                                                                   \
     do                                                                                                                 \
     {                                                                                                                  \
         cusolverStatus_t status   = ( X );                                                                             \
@@ -97,7 +97,7 @@ static const char *_cusolverGetErrorEnum( cusolverStatus_t error )
         if ( status != CUSOLVER_STATUS_SUCCESS )                                                                       \
         {                                                                                                              \
             std::stringstream ss;                                                                                      \
-            ss << std::string( "CUSOLVER_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )             \
+            ss << std::string( "SCFD_CUSOLVER_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )        \
                << std::string( _cusolverGetErrorEnum( status ) );                                                      \
             std::string str = ss.str();                                                                                \
             throw std::runtime_error( str );                                                                           \
@@ -105,7 +105,8 @@ static const char *_cusolverGetErrorEnum( cusolverStatus_t error )
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
                 std::string(                                                                                           \
-                    "CUSOLVER_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "    \
+                    "SCFD_CUSOLVER_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X                                 \
+                                                                              " failed cudaDeviceSynchronize: "        \
                 ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \

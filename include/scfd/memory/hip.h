@@ -41,26 +41,26 @@ struct hip_device
     /// however it's not stated explicitly in documentation
     static void malloc( pointer_type *p, size_t size )
     {
-        HIP_SAFE_CALL( hipMalloc( p, size ) );
+        SCFD_HIP_SAFE_CALL( hipMalloc( p, size ) );
     }
     /// NOTE: hipFree returns no error when called with NULL,
     /// however it's not stated explicitly in documentation
     static void free( pointer_type p )
     {
-        HIP_SAFE_CALL( hipFree( p ) );
+        SCFD_HIP_SAFE_CALL( hipFree( p ) );
     }
 
     static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyDeviceToHost ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyDeviceToHost ) );
     }
     static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToDevice ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToDevice ) );
     }
     static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyDeviceToDevice ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyDeviceToDevice ) );
     }
 };
 
@@ -79,7 +79,7 @@ struct hip_host
     {
         if ( size != 0 )
         {
-            HIP_SAFE_CALL( hipHostMalloc( p, size, 0 ) );
+            SCFD_HIP_SAFE_CALL( hipHostMalloc( p, size, 0 ) );
         }
         else
         {
@@ -90,20 +90,20 @@ struct hip_host
     /// however it's not stated explicitly in documentation
     static void free( pointer_type p )
     {
-        HIP_SAFE_CALL( hipHostFree( p ) );
+        SCFD_HIP_SAFE_CALL( hipHostFree( p ) );
     }
 
     static void copy_to_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
     }
     static void copy_from_host( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
     }
     static void copy( size_t size, const_pointer_type src, pointer_type dst )
     {
-        HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
+        SCFD_HIP_SAFE_CALL( hipMemcpy( dst, src, size, hipMemcpyHostToHost ) );
     }
 };
 

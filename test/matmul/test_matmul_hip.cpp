@@ -73,7 +73,7 @@ int main( int argc, char const *argv[] )
 {
 
 #define __COMMON_PARTS_DEVICE_INIT__ scfd::utils::init_hip_persistent();
-#define __COMMON_PARTS_SAFE_CALL__ HIP_SAFE_CALL
+#define __COMMON_PARTS_SAFE_CALL__ SCFD_HIP_SAFE_CALL
 #define __COMMON_PARTS_DEVICE_MALLOC__ hipMalloc
 #define __COMMON_PARTS_DEVICE_MEMCPY__ hipMemcpy
 #define __COMMON_PARTS_DEVICE_MEMCPY_HOST_TO_DEVICE__ hipMemcpyHostToDevice

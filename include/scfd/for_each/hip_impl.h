@@ -56,7 +56,7 @@ template <class T>
 void hip<T>::wait() const
 {
     //TODO error check?
-    HIP_SAFE_CALL( hipStreamSynchronize( 0 ) );
+    SCFD_HIP_SAFE_CALL( hipStreamSynchronize( 0 ) );
 }
 
 }

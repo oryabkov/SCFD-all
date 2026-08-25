@@ -17,9 +17,9 @@ int main( int argc, char **argv )
 
         int *p;
         if ( !do_error )
-            CUDA_SAFE_CALL( cudaMalloc( (void **)&p, sizeof( int ) * 512 ) );
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&p, sizeof( int ) * 512 ) );
         else
-            CUDA_SAFE_CALL( cudaMalloc( (void **)&p, -100 ) );
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&p, -100 ) );
 
         return 0;
     }

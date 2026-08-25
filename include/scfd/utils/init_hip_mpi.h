@@ -52,7 +52,7 @@ inline int init_hip_mpi(
     node_size       = comm_split.num_procs();
     my_id           = comm_split.myid();
     comm_split.free();
-    HIP_SAFE_CALL( hipGetDeviceCount( &number_of_devices_on_node ) );
+    SCFD_HIP_SAFE_CALL( hipGetDeviceCount( &number_of_devices_on_node ) );
     if ( number_of_devices_on_node <= 0 )
     {
         throw std::runtime_error( "init_hip_mpi: node name " + std::string( node_name ) + "\n no visible HIP devices" );

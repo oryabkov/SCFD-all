@@ -76,7 +76,7 @@ static const char *_cufftGetErrorEnum( cufftResult error )
     return "<unknown>";
 }
 
-#define CUFFT_SAFE_CALL( X )                                                                                           \
+#define SCFD_CUFFT_SAFE_CALL( X )                                                                                      \
     do                                                                                                                 \
     {                                                                                                                  \
         cufftResult status   = ( X );                                                                                  \
@@ -84,7 +84,7 @@ static const char *_cufftGetErrorEnum( cufftResult error )
         if ( status != CUFFT_SUCCESS )                                                                                 \
         {                                                                                                              \
             std::stringstream ss;                                                                                      \
-            ss << std::string( "CUFFT_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )                \
+            ss << std::string( "SCFD_CUFFT_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )           \
                << std::string( _cufftGetErrorEnum( status ) );                                                         \
             std::string str = ss.str();                                                                                \
             throw std::runtime_error( str );                                                                           \
@@ -92,7 +92,7 @@ static const char *_cufftGetErrorEnum( cufftResult error )
         if ( cuda_res != cudaSuccess )                                                                                 \
             throw std::runtime_error(                                                                                  \
                 std::string(                                                                                           \
-                    "CUFFT_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "       \
+                    "SCFD_CUFFT_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed cudaDeviceSynchronize: "  \
                 ) +                                                                                                    \
                 std::string( cudaGetErrorString( cuda_res ) )                                                          \
             );                                                                                                         \

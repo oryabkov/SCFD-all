@@ -76,7 +76,7 @@ public:
     void init()
     {
         assert( !is_inited_ );
-        CUDA_SAFE_CALL( cudaStreamCreate( &stream_ ) );
+        SCFD_CUDA_SAFE_CALL( cudaStreamCreate( &stream_ ) );
         is_inited_ = true;
     }
     /// NOTE exception here means in fact logic error
@@ -85,7 +85,7 @@ public:
         if ( !is_inited_ )
             return;
         is_inited_ = false;
-        CUDA_SAFE_CALL( cudaStreamDestroy( stream_ ) );
+        SCFD_CUDA_SAFE_CALL( cudaStreamDestroy( stream_ ) );
     }
 
 private:

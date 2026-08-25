@@ -31,7 +31,9 @@ struct cuda_copy
     {
         if ( size <= 0 )
             return;
-        CUDA_SAFE_CALL( cudaMemcpy( output, input, sizeof( T ) * static_cast<size_t>( size ), cudaMemcpyDefault ) );
+        SCFD_CUDA_SAFE_CALL(
+            cudaMemcpy( output, input, sizeof( T ) * static_cast<size_t>( size ), cudaMemcpyDefault )
+        );
     }
     void wait() const
     {

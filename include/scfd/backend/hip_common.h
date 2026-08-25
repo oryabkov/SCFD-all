@@ -70,7 +70,7 @@ struct hip_common
 
     static void synchronize()
     {
-        HIP_SAFE_CALL( hipDeviceSynchronize() );
+        SCFD_HIP_SAFE_CALL( hipDeviceSynchronize() );
     }
 
     static void device_synchronize()
@@ -82,7 +82,7 @@ struct hip_common
     {
         std::size_t free_bytes  = 0;
         std::size_t total_bytes = 0;
-        HIP_SAFE_CALL( hipMemGetInfo( &free_bytes, &total_bytes ) );
+        SCFD_HIP_SAFE_CALL( hipMemGetInfo( &free_bytes, &total_bytes ) );
         return device_memory_info_type( free_bytes, total_bytes, true, true );
     }
 

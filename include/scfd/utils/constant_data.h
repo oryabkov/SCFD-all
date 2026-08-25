@@ -93,7 +93,7 @@ struct utils_argument_type<T( U )>
         {                                                                                                              \
             __CONSTANT_BUFFER__CTASTR( __t_buf, buf_name ) _data;                                                      \
             memcpy( &_data, &data, sizeof( data ) );                                                                   \
-            CUDA_SAFE_CALL( cudaMemcpyToSymbol(                                                                        \
+            SCFD_CUDA_SAFE_CALL( cudaMemcpyToSymbol(                                                                   \
                 __CONSTANT_BUFFER__CTASTR( __, buf_name ), &_data, sizeof( _data ), 0, cudaMemcpyHostToDevice          \
             ) );                                                                                                       \
             memcpy( &( __CONSTANT_BUFFER__CTASTR( __h_, buf_name ) ), &data, sizeof( data ) );                         \
@@ -104,7 +104,7 @@ struct utils_argument_type<T( U )>
         {                                                                                                              \
             __CONSTANT_BUFFER__CTASTR( __t_buf, buf_name ) _data;                                                      \
             memcpy( &_data, data_ptr, data_sz );                                                                       \
-            CUDA_SAFE_CALL( cudaMemcpyToSymbol(                                                                        \
+            SCFD_CUDA_SAFE_CALL( cudaMemcpyToSymbol(                                                                   \
                 __CONSTANT_BUFFER__CTASTR( __, buf_name ), &_data, sizeof( _data ), 0, cudaMemcpyHostToDevice          \
             ) );                                                                                                       \
             memcpy( &( __CONSTANT_BUFFER__CTASTR( __h_, buf_name ) ), data_ptr, data_sz );                             \

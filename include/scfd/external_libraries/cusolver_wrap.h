@@ -57,7 +57,7 @@ class cusolver_wrap : public utils::manual_init_singleton<cusolver_wrap>
                 data_ = nullptr;
             }
             sz_ = rows_ * cols_;
-            CUDA_SAFE_CALL( cudaMalloc( (void **)&data_, sizeof( T ) * sz_ ) );
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&data_, sizeof( T ) * sz_ ) );
             copy( A );
         }
         size_t get_rowcols()
@@ -66,7 +66,7 @@ class cusolver_wrap : public utils::manual_init_singleton<cusolver_wrap>
         }
         void copy( const T *A ) const
         {
-            CUDA_SAFE_CALL( cudaMemcpy( data_, A, sizeof( T ) * sz_, cudaMemcpyDeviceToDevice ) );
+            SCFD_CUDA_SAFE_CALL( cudaMemcpy( data_, A, sizeof( T ) * sz_, cudaMemcpyDeviceToDevice ) );
         }
     };
 
@@ -76,7 +76,7 @@ class cusolver_wrap : public utils::manual_init_singleton<cusolver_wrap>
 
         dev_info_t()
         {
-            CUDA_SAFE_CALL( cudaMalloc( (void **)&data_, sizeof( int ) ) );
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&data_, sizeof( int ) ) );
         }
 
         dev_info_t( const dev_info_t & )            = delete;
@@ -219,7 +219,7 @@ public:
         check_blas();
         _A_t<T> _A_;
         _A_.init( rows_cols, rows_cols, A );
-        CUDA_SAFE_CALL( cudaMemcpy( x, b, sizeof( T ) * rows_cols, cudaMemcpyDeviceToDevice ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( x, b, sizeof( T ) * rows_cols, cudaMemcpyDeviceToDevice ) );
         gesv( rows_cols, _A_.data_, x );
     }
 
@@ -255,7 +255,7 @@ public:
     template <class T>
     void orgqr( size_t m, size_t n, size_t k, const T *A, const T *tau, T *Q )
     {
-        CUDA_SAFE_CALL( cudaMemcpy( Q, A, sizeof( T ) * m * n, cudaMemcpyDeviceToDevice ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy( Q, A, sizeof( T ) * m * n, cudaMemcpyDeviceToDevice ) );
         orgqr( m, n, k, Q, tau );
     }
 
@@ -323,7 +323,7 @@ private:
             free_tau_d();
         }
         tau_size = tau_size_;
-        CUDA_SAFE_CALL( cudaMalloc( (void **)&tau_d, sizeof( double ) * tau_size ) );
+        SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&tau_d, sizeof( double ) * tau_size ) );
     }
     void set_tau_float( int tau_size_ )
     {
@@ -332,7 +332,7 @@ private:
             free_tau_f();
         }
         tau_size = tau_size_;
-        CUDA_SAFE_CALL( cudaMalloc( (void **)&tau_f, sizeof( float ) * tau_size ) );
+        SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&tau_f, sizeof( float ) * tau_size ) );
     }
 
     template <class T>
@@ -364,12 +364,12 @@ private:
 
     void cusolver_destroy()
     {
-        CUSOLVER_SAFE_CALL( cusolverDnDestroy( handle ) );
+        SCFD_CUSOLVER_SAFE_CALL( cusolverDnDestroy( handle ) );
     }
 
     void cusolver_create()
     {
-        CUSOLVER_SAFE_CALL( cusolverDnCreate( &handle ) );
+        SCFD_CUSOLVER_SAFE_CALL( cusolverDnCreate( &handle ) );
     }
 
     void cusolver_create_info()
@@ -377,10 +377,10 @@ private:
         cusolver_create();
         int cusolver_version;
         int major_ver, minor_ver, patch_level;
-        CUSOLVER_SAFE_CALL( cusolverGetVersion( &cusolver_version ) );
-        CUSOLVER_SAFE_CALL( cusolverGetProperty( MAJOR_VERSION, &major_ver ) );
-        CUSOLVER_SAFE_CALL( cusolverGetProperty( MINOR_VERSION, &minor_ver ) );
-        CUSOLVER_SAFE_CALL( cusolverGetProperty( PATCH_LEVEL, &patch_level ) );
+        SCFD_CUSOLVER_SAFE_CALL( cusolverGetVersion( &cusolver_version ) );
+        SCFD_CUSOLVER_SAFE_CALL( cusolverGetProperty( MAJOR_VERSION, &major_ver ) );
+        SCFD_CUSOLVER_SAFE_CALL( cusolverGetProperty( MINOR_VERSION, &minor_ver ) );
+        SCFD_CUSOLVER_SAFE_CALL( cusolverGetProperty( PATCH_LEVEL, &patch_level ) );
         std::cout << "cuSOLVER v." << cusolver_version << " (major=" << major_ver << ", minor=" << minor_ver
                   << ", patch level=" << patch_level << ") handle created." << std::endl;
     }
@@ -407,7 +407,7 @@ private:
         {
             work_size = work_size_;
             free_d_work_double();
-            CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_d, sizeof( double ) * work_size ) );
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_d, sizeof( double ) * work_size ) );
         }
     }
     void set_d_work_float( int work_size_ )
@@ -416,7 +416,7 @@ private:
         {
             work_size = work_size_;
             free_d_work_float();
-            CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_f, sizeof( float ) * work_size ) );
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_f, sizeof( float ) * work_size ) );
         }
     }
 };
@@ -430,9 +430,11 @@ inline void cusolver_wrap::geqrf_ormqr(
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
-    CUSOLVER_SAFE_CALL( cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo ) );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau_d, d_work_d, work_size, devInfo )
+    );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::geqrf_ormqr.geqrf: info_gpu = " + std::to_string( info_gpu ) );
@@ -453,11 +455,11 @@ inline void cusolver_wrap::geqrf_ormqr(
         trans = CUBLAS_OP_T;
     }
 
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnDormqr( handle, side, trans, m, n, k, A, lda, tau_d, b, ldb, d_work_d, work_size, devInfo )
     );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::geqrf_ormqr.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -469,13 +471,15 @@ inline void cusolver_wrap::geqrf_ormqr(
 )
 {
     //int *devInfo = nullptr;
-    //CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
+    //SCFD_CUDA_SAFE_CALL(cudaMalloc ((void**)&devInfo, sizeof(int)) );
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
-    CUSOLVER_SAFE_CALL( cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo ) );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau_f, d_work_f, work_size, devInfo )
+    );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::geqrf_ormqr.geqrf: info_gpu = " + std::to_string( info_gpu ) );
@@ -496,11 +500,11 @@ inline void cusolver_wrap::geqrf_ormqr(
         trans = CUBLAS_OP_T;
     }
 
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnSormqr( handle, side, trans, m, n, k, A, lda, tau_f, b, ldb, d_work_f, work_size, devInfo )
     );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::geqrf_ormqr.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -515,7 +519,9 @@ inline void cusolver_wrap::qr_size(
 
     int lwork_1 = 0;
     int lwork_2 = 0;
-    CUSOLVER_SAFE_CALL( cusolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 )
+    );
 
     int              m    = rows;
     int              n    = 1;
@@ -534,7 +540,7 @@ inline void cusolver_wrap::qr_size(
     }
 
     set_tau_double( int( rows ) );
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnDormqr_bufferSize( handle, side, trans, m, n, k, A, lda, tau_d, b, (int)ldb, &lwork_2 )
     );
 
@@ -550,7 +556,9 @@ inline void cusolver_wrap::qr_size(
 
     int lwork_1 = 0;
     int lwork_2 = 0;
-    CUSOLVER_SAFE_CALL( cusolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 )
+    );
 
     int              m    = rows;
     int              n    = 1;
@@ -569,7 +577,7 @@ inline void cusolver_wrap::qr_size(
     }
 
     set_tau_float( int( rows ) );
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnSormqr_bufferSize( handle, side, trans, m, n, k, A, lda, tau_f, b, (int)ldb, &lwork_2 )
     );
 
@@ -582,7 +590,9 @@ inline void cusolver_wrap::geqrf_size( size_t rows, size_t cols, const double *A
 {
 
     int lwork_1 = 0;
-    CUSOLVER_SAFE_CALL( cusolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnDgeqrf_bufferSize( handle, (int)rows, (int)cols, (double *)A, (int)lda, &lwork_1 )
+    );
 
     int lwork = lwork_1;
     set_d_work_double( lwork );
@@ -593,7 +603,9 @@ inline void cusolver_wrap::geqrf_size( size_t rows, size_t cols, const float *A,
 {
 
     int lwork_1 = 0;
-    CUSOLVER_SAFE_CALL( cusolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnSgeqrf_bufferSize( handle, (int)rows, (int)cols, (float *)A, (int)lda, &lwork_1 )
+    );
 
     int lwork = lwork_1;
     set_d_work_float( lwork );
@@ -606,9 +618,11 @@ inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, double *A, s
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
-    CUSOLVER_SAFE_CALL( cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_d, work_size, devInfo ) );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnDgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_d, work_size, devInfo )
+    );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     //std::cout << "test:" << info_gpu << std::endl;
     if ( info_gpu != 0 )
     {
@@ -622,9 +636,11 @@ inline void cusolver_wrap::geqrf_perform( size_t rows, size_t cols, float *A, si
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
-    CUSOLVER_SAFE_CALL( cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_f, work_size, devInfo ) );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUSOLVER_SAFE_CALL(
+        cusolverDnSgeqrf( handle, (int)rows, (int)cols, A, lda, tau, d_work_f, work_size, devInfo )
+    );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::geqrf_perform.geqrf: info_gpu = " + std::to_string( info_gpu ) );
@@ -637,7 +653,7 @@ cusolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const double *A, 
 {
 
     int lwork_1 = 0;
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnDorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
@@ -651,7 +667,7 @@ cusolver_wrap::orgqr_size( size_t rows, size_t cols, size_t k, const float *A, s
 {
 
     int lwork_1 = 0;
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnSorgqr_bufferSize( handle, (int)rows, (int)cols, (int)k, A, (int)lda, tau, &lwork_1 )
     );
 
@@ -666,11 +682,11 @@ inline void cusolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, do
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnDorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_d, work_size, devInfo )
     );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::orgqr_perform.orgqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -684,11 +700,11 @@ inline void cusolver_wrap::orgqr_perform( size_t rows, size_t cols, size_t k, fl
     dev_info_t devInfo_dv;
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
-    CUSOLVER_SAFE_CALL(
+    SCFD_CUSOLVER_SAFE_CALL(
         cusolverDnSorgqr( handle, (int)rows, (int)cols, (int)k, A, lda, tau, d_work_f, work_size, devInfo )
     );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::orgqr_perform.orgqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -714,7 +730,7 @@ inline void cusolver_wrap::ormqr_size(
         trans = CUBLAS_OP_T;
     }
 
-    CUSOLVER_SAFE_CALL( cusolverDnDormqr_bufferSize(
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnDormqr_bufferSize(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, &lwork_2
     ) );
 
@@ -741,7 +757,7 @@ inline void cusolver_wrap::ormqr_size(
         trans = CUBLAS_OP_T;
     }
 
-    CUSOLVER_SAFE_CALL( cusolverDnSormqr_bufferSize(
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnSormqr_bufferSize(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, &lwork_2
     ) );
 
@@ -770,12 +786,12 @@ inline void cusolver_wrap::ormqr_perform(
         trans = CUBLAS_OP_T;
     }
 
-    CUSOLVER_SAFE_CALL( cusolverDnDormqr(
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnDormqr(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, d_work_d, work_size, devInfo
     ) );
 
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::ormqr_perform.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -803,12 +819,12 @@ inline void cusolver_wrap::ormqr_perform(
         trans = CUBLAS_OP_T;
     }
 
-    CUSOLVER_SAFE_CALL( cusolverDnSormqr(
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnSormqr(
         handle, side, trans, (int)m, (int)n, (int)k, A, (int)lda, tau, C, (int)ldc, d_work_f, work_size, devInfo
     ) );
 
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::ormqr_perform.ormqr: info_gpu = " + std::to_string( info_gpu ) );
@@ -828,12 +844,12 @@ inline void cusolver_wrap::eig( size_t rows_cols, double *A, double *lambda )
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
 
-    CUSOLVER_SAFE_CALL( cusolverDnDsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnDsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
     set_d_work_double( lwork );
 
-    CUSOLVER_SAFE_CALL( cusolverDnDsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_d, lwork, devInfo ) );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnDsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_d, lwork, devInfo ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::eig: info_gpu = " + std::to_string( info_gpu ) );
@@ -853,12 +869,12 @@ inline void cusolver_wrap::eig( size_t rows_cols, float *A, float *lambda )
     int       *devInfo = devInfo_dv.data();
     int        info_gpu;
 
-    CUSOLVER_SAFE_CALL( cusolverDnSsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnSsyevd_bufferSize( handle, jobz, uplo, m, A, lda, lambda, &lwork ) );
     set_d_work_float( lwork );
 
-    CUSOLVER_SAFE_CALL( cusolverDnSsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_f, lwork, devInfo ) );
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-    CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
+    SCFD_CUSOLVER_SAFE_CALL( cusolverDnSsyevd( handle, jobz, uplo, m, A, lda, lambda, d_work_f, lwork, devInfo ) );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    SCFD_CUDA_SAFE_CALL( cudaMemcpy( &info_gpu, devInfo, sizeof( int ), cudaMemcpyDeviceToHost ) );
     if ( info_gpu != 0 )
     {
         throw std::runtime_error( "cusolver_wrap::eig: info_gpu = " + std::to_string( info_gpu ) );

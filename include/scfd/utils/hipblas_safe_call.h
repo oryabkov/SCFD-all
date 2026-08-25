@@ -72,7 +72,7 @@ static const char *_hipblasGetErrorEnum( hipblasStatus_t error )
     return "<unknown>";
 }
 
-#define HIPBLAS_SAFE_CALL( X )                                                                                         \
+#define SCFD_HIPBLAS_SAFE_CALL( X )                                                                                    \
     do                                                                                                                 \
     {                                                                                                                  \
         hipblasStatus_t status  = ( X );                                                                               \
@@ -80,7 +80,7 @@ static const char *_hipblasGetErrorEnum( hipblasStatus_t error )
         if ( status != HIPBLAS_STATUS_SUCCESS )                                                                        \
         {                                                                                                              \
             std::stringstream ss;                                                                                      \
-            ss << std::string( "HIPBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )              \
+            ss << std::string( "SCFD_HIPBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed: " )         \
                << std::string( _hipblasGetErrorEnum( status ) );                                                       \
             std::string str = ss.str();                                                                                \
             throw std::runtime_error( str );                                                                           \
@@ -88,7 +88,7 @@ static const char *_hipblasGetErrorEnum( hipblasStatus_t error )
         if ( hip_res != hipSuccess )                                                                                   \
             throw std::runtime_error(                                                                                  \
                 std::string(                                                                                           \
-                    "HIPBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed hipDeviceSynchronize: "      \
+                    "SCFD_HIPBLAS_SAFE_CALL " __FILE__ " " __STR( __LINE__ ) " : " #X " failed hipDeviceSynchronize: " \
                 ) +                                                                                                    \
                 std::string( hipGetErrorString( hip_res ) )                                                            \
             );                                                                                                         \

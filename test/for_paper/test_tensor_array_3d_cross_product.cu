@@ -193,7 +193,7 @@ int main( int argc, char const *argv[] )
     scfd::utils::init_cuda_persistent();
     //scfd::utils::init_cuda(-1, -1);
     int device_id;
-    CUDA_SAFE_CALL( cudaGetDevice( &device_id ) );
+    SCFD_CUDA_SAFE_CALL( cudaGetDevice( &device_id ) );
 
     T *u_ptr_host, *v_ptr_host, *cross_ptr_host, *cross_ptr_host_check;
     T *u_ptr_ok_host, *v_ptr_ok_host, *cross_ptr_ok_host, *cross_ptr_ok_host_check;
@@ -220,12 +220,12 @@ int main( int argc, char const *argv[] )
     cross_ptr_ok_host       = reinterpret_cast<T *>( std::malloc( sizeof( T ) * total_size ) );
     cross_ptr_ok_host_check = reinterpret_cast<T *>( std::malloc( sizeof( T ) * total_size ) );
     //
-    CUDA_SAFE_CALL( cudaMalloc( (void **)&u_ptr_dev, sizeof( T ) * total_size ) );
-    CUDA_SAFE_CALL( cudaMalloc( (void **)&v_ptr_dev, sizeof( T ) * total_size ) );
-    CUDA_SAFE_CALL( cudaMalloc( (void **)&cross_ptr_dev, sizeof( T ) * total_size ) );
-    CUDA_SAFE_CALL( cudaMalloc( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size ) );
-    CUDA_SAFE_CALL( cudaMalloc( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size ) );
-    CUDA_SAFE_CALL( cudaMalloc( (void **)&cross_ptr_ok_dev, sizeof( T ) * total_size ) );
+    SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&u_ptr_dev, sizeof( T ) * total_size ) );
+    SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&v_ptr_dev, sizeof( T ) * total_size ) );
+    SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&cross_ptr_dev, sizeof( T ) * total_size ) );
+    SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&u_ptr_ok_dev, sizeof( T ) * total_size ) );
+    SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&v_ptr_ok_dev, sizeof( T ) * total_size ) );
+    SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&cross_ptr_ok_dev, sizeof( T ) * total_size ) );
 
 
     array_device_t u_dev, v_dev, cross_dev;
@@ -276,16 +276,16 @@ int main( int argc, char const *argv[] )
         cross_ptr_ok_host[IG( j, 2 )] = u_ptr_ok_host[IG( j, 0 )] * v_ptr_ok_host[IG( j, 1 )] -
                                         u_ptr_ok_host[IG( j, 1 )] * v_ptr_ok_host[IG( j, 0 )];
     }
-    CUDA_SAFE_CALL(
+    SCFD_CUDA_SAFE_CALL(
         cudaMemcpy( (void *)u_ptr_dev, (void *)u_ptr_host, sizeof( T ) * total_size, cudaMemcpyHostToDevice )
     );
-    CUDA_SAFE_CALL(
+    SCFD_CUDA_SAFE_CALL(
         cudaMemcpy( (void *)v_ptr_dev, (void *)v_ptr_host, sizeof( T ) * total_size, cudaMemcpyHostToDevice )
     );
-    CUDA_SAFE_CALL(
+    SCFD_CUDA_SAFE_CALL(
         cudaMemcpy( (void *)u_ptr_ok_dev, (void *)u_ptr_ok_host, sizeof( T ) * total_size, cudaMemcpyHostToDevice )
     );
-    CUDA_SAFE_CALL(
+    SCFD_CUDA_SAFE_CALL(
         cudaMemcpy( (void *)v_ptr_ok_dev, (void *)v_ptr_ok_host, sizeof( T ) * total_size, cudaMemcpyHostToDevice )
     );
     u_dev_view.release( true );
@@ -326,7 +326,7 @@ int main( int argc, char const *argv[] )
         {
             auto start = std::chrono::high_resolution_clock::now();
             cross_prod_kern<T><<<dimGrid, dimBlock>>>( N, u_ptr_dev, v_ptr_dev, cross_ptr_dev );
-            CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+            SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
             auto                                      end             = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
             gpu_ptr.push_back( elapsed_seconds.count() );
@@ -342,7 +342,7 @@ int main( int argc, char const *argv[] )
         {
             auto start = std::chrono::high_resolution_clock::now();
             cross_prod_kern_ok<T><<<dimGrid, dimBlock>>>( N, u_ptr_ok_dev, v_ptr_ok_dev, cross_ptr_ok_dev );
-            CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+            SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
             auto                                      end             = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed_seconds = end - start;
             gpu_ptr_ok.push_back( elapsed_seconds.count() );
@@ -355,11 +355,11 @@ int main( int argc, char const *argv[] )
         std::cout << "gpu tensor diff = " << check_coincide_tensor( N, cross_ptr_host, cross_dev_view ) << std::endl;
         cross_dev_view.release( false );
 
-        CUDA_SAFE_CALL( cudaMemcpy(
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy(
             (void *)cross_ptr_host_check, (void *)cross_ptr_dev, sizeof( T ) * total_size, cudaMemcpyDeviceToHost
         ) );
         std::cout << "gpu ptr diff    = " << check_coincide_ptr( N, cross_ptr_host, cross_ptr_host_check ) << std::endl;
-        CUDA_SAFE_CALL( cudaMemcpy(
+        SCFD_CUDA_SAFE_CALL( cudaMemcpy(
             (void *)cross_ptr_ok_host_check, (void *)cross_ptr_ok_dev, sizeof( T ) * total_size, cudaMemcpyDeviceToHost
         ) );
         std::cout << "gpu ptr diff    = " << check_coincide_ptr( N, cross_ptr_ok_host, cross_ptr_ok_host_check )
@@ -472,17 +472,17 @@ int main( int argc, char const *argv[] )
     }
 
 
-    CUDA_SAFE_CALL( cudaFree( cross_ptr_ok_dev ) );
-    CUDA_SAFE_CALL( cudaFree( v_ptr_ok_dev ) );
-    CUDA_SAFE_CALL( cudaFree( u_ptr_ok_dev ) );
+    SCFD_CUDA_SAFE_CALL( cudaFree( cross_ptr_ok_dev ) );
+    SCFD_CUDA_SAFE_CALL( cudaFree( v_ptr_ok_dev ) );
+    SCFD_CUDA_SAFE_CALL( cudaFree( u_ptr_ok_dev ) );
     std::free( u_ptr_ok_host );
     std::free( v_ptr_ok_host );
     std::free( cross_ptr_ok_host );
     std::free( cross_ptr_ok_host_check );
 
-    CUDA_SAFE_CALL( cudaFree( cross_ptr_dev ) );
-    CUDA_SAFE_CALL( cudaFree( v_ptr_dev ) );
-    CUDA_SAFE_CALL( cudaFree( u_ptr_dev ) );
+    SCFD_CUDA_SAFE_CALL( cudaFree( cross_ptr_dev ) );
+    SCFD_CUDA_SAFE_CALL( cudaFree( v_ptr_dev ) );
+    SCFD_CUDA_SAFE_CALL( cudaFree( u_ptr_dev ) );
     std::free( u_ptr_host );
     std::free( v_ptr_host );
     std::free( cross_ptr_host );

@@ -81,7 +81,7 @@ int main( int argc, char const *argv[] )
         ARRAY.init( Nx, Ny, Nz );
 #else
         T *PTR = nullptr;
-        CUDA_SAFE_CALL( cudaMalloc( (void **)&PTR, sizeof( T ) * NR ) );
+        SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&PTR, sizeof( T ) * NR ) );
 #endif
 
         const unsigned int blocksize = 1024;
@@ -96,10 +96,10 @@ int main( int argc, char const *argv[] )
         kernel1<T, gpu1_t><<<dimGrid, dimBlock>>>( Nx, Ny, Nz, ARRAY );
 #else
         kernel1_ptr<T, T *><<<dimGrid, dimBlock>>>( Nx, Ny, Nz, PTR );
-        CUDA_SAFE_CALL( cudaFree( PTR ) );
+        SCFD_CUDA_SAFE_CALL( cudaFree( PTR ) );
 #endif
     }
     cudaDeviceReset();
-    //CUDA_SAFE_CALL(cudaFree(PTR));
+    //SCFD_CUDA_SAFE_CALL(cudaFree(PTR));
     return 0;
 }

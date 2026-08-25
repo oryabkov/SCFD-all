@@ -50,7 +50,7 @@ inline int init_cuda( int log_lev, Log &log, int pci_id, int dev_num = -2 )
     int count = 0;
     int i     = 0;
 
-    CUDA_SAFE_CALL( cudaGetDeviceCount( &count ) );
+    SCFD_CUDA_SAFE_CALL( cudaGetDeviceCount( &count ) );
     if ( count == 0 )
     {
         throw std::runtime_error( "init_cuda: There is no compartable device found\n" );
@@ -65,7 +65,7 @@ inline int init_cuda( int log_lev, Log &log, int pci_id, int dev_num = -2 )
             for ( i = 0; i < count; i++ )
             {
                 cudaDeviceProp device_prop;
-                CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, i ) );
+                SCFD_CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, i ) );
                 //printf( "#%i:   %s, pci-bus id:%i %i %i \n", i, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
                 log.info_f(
                     log_lev, "init_cuda: #%i:   %s, pci-bus id:%i %i %i ", i, (char *)&device_prop,
@@ -81,7 +81,7 @@ inline int init_cuda( int log_lev, Log &log, int pci_id, int dev_num = -2 )
         {
             res_dev_num = dev_num;
             cudaDeviceProp device_prop;
-            CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, res_dev_num ) );
+            SCFD_CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, res_dev_num ) );
 
             //printf("Using #%i:   %s@[%i:%i:%i]\n",res_dev_num,(char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
             log.info_f(
@@ -95,7 +95,7 @@ inline int init_cuda( int log_lev, Log &log, int pci_id, int dev_num = -2 )
             bool           found = false;
             for ( int j = 0; j < count; j++ )
             {
-                CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, j ) );
+                SCFD_CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, j ) );
                 if ( device_prop.pciBusID == pci_id )
                 {
                     res_dev_num = j;
@@ -124,7 +124,7 @@ inline int init_cuda( int log_lev, Log &log, int pci_id, int dev_num = -2 )
     else
     {
         cudaDeviceProp device_prop;
-        CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, res_dev_num ) );
+        SCFD_CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, res_dev_num ) );
         /*printf("init_cuda: There is only one compartable CUDA device. It will be used regardless of preference.\n");
         printf( "#%i:   %s, pci-bus id:%i %i %i \n", res_dev_num, (char*)&device_prop,device_prop.pciBusID,device_prop.pciDeviceID,device_prop.pciDomainID);
         printf( "       using it...\n");*/
@@ -138,7 +138,7 @@ inline int init_cuda( int log_lev, Log &log, int pci_id, int dev_num = -2 )
         log.info_f( log_lev, "init_cuda:        using it..." );
     }
 
-    CUDA_SAFE_CALL( cudaSetDevice( res_dev_num ) );
+    SCFD_CUDA_SAFE_CALL( cudaSetDevice( res_dev_num ) );
 
     return res_dev_num;
 }
@@ -209,7 +209,7 @@ inline int init_cuda_persistent( Log &log, std::size_t device_memory_in_MB, std:
     int  res_dev_num   = 0;
 
     int count = 0;
-    CUDA_SAFE_CALL( cudaGetDeviceCount( &count ) );
+    SCFD_CUDA_SAFE_CALL( cudaGetDeviceCount( &count ) );
     if ( count == 0 )
     {
         throw std::runtime_error( "init_cuda_persistent: There is no compartable device found\n" );
@@ -225,8 +225,8 @@ inline int init_cuda_persistent( Log &log, std::size_t device_memory_in_MB, std:
         std::size_t free_mem_l;
         std::size_t total_mem_l;
 
-        CUDA_SAFE_CALL( cudaSetDevice( dev ) );
-        CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem_l, &total_mem_l ) );
+        SCFD_CUDA_SAFE_CALL( cudaSetDevice( dev ) );
+        SCFD_CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem_l, &total_mem_l ) );
         device_mems.push_back( { dev, free_mem_l, total_mem_l } );
 
         if ( max_total_mem < total_mem_l )
@@ -237,7 +237,7 @@ inline int init_cuda_persistent( Log &log, std::size_t device_memory_in_MB, std:
         {
             max_free_mem = free_mem_l;
         }
-        CUDA_SAFE_CALL( cudaDeviceReset() );
+        SCFD_CUDA_SAFE_CALL( cudaDeviceReset() );
     }
     if ( device_memory_in_MB > 0 )
     {
@@ -254,15 +254,15 @@ inline int init_cuda_persistent( Log &log, std::size_t device_memory_in_MB, std:
             std::size_t free_mem, total_mem;
             for ( int dev = 0; dev < count; dev++ )
             {
-                CUDA_SAFE_CALL( cudaSetDevice( dev ) );
-                CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem, &total_mem ) );
+                SCFD_CUDA_SAFE_CALL( cudaSetDevice( dev ) );
+                SCFD_CUDA_SAFE_CALL( cudaMemGetInfo( &free_mem, &total_mem ) );
                 if ( free_mem >= device_memory_in_MB * 1000 * 1000 )
                 {
                     res_dev_num   = dev;
                     device_is_set = true;
                     break;
                 }
-                CUDA_SAFE_CALL( cudaDeviceReset() );
+                SCFD_CUDA_SAFE_CALL( cudaDeviceReset() );
             }
             if ( device_is_set )
             {
@@ -287,7 +287,7 @@ inline int init_cuda_persistent( Log &log, std::size_t device_memory_in_MB, std:
             }
         );
         res_dev_num = std::get<0>( device_mems[0] ); //device with the largest ammount of free mem
-        CUDA_SAFE_CALL( cudaSetDevice( res_dev_num ) );
+        SCFD_CUDA_SAFE_CALL( cudaSetDevice( res_dev_num ) );
         device_is_set = true;
     }
 
@@ -299,7 +299,7 @@ inline int init_cuda_persistent( Log &log, std::size_t device_memory_in_MB, std:
         );
     }
     cudaDeviceProp device_prop;
-    CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, res_dev_num ) );
+    SCFD_CUDA_SAFE_CALL( cudaGetDeviceProperties( &device_prop, res_dev_num ) );
     log.info_f(
         log_lev, "init_cuda_persistent%s: Using #%i:   %s@[%i:%i:%i], %i MB",
         device_memory_in_MB == 0 ? "_best_mem" : " ", res_dev_num, (char *)&device_prop, device_prop.pciBusID,

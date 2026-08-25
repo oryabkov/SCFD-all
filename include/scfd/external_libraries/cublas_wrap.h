@@ -175,13 +175,13 @@ public:
 
     void set_stream( cudaStream_t streamId )
     {
-        CUBLAS_SAFE_CALL( cublasSetStream( handle, streamId ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasSetStream( handle, streamId ) );
     }
 
     cudaStream_t get_stream()
     {
         cudaStream_t streamId;
-        CUBLAS_SAFE_CALL( cublasGetStream( handle, &streamId ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetStream( handle, &streamId ) );
         return streamId;
     }
 
@@ -189,7 +189,7 @@ public:
     cublasPointerMode_t get_pointer_location()
     {
         cublasPointerMode_t mode;
-        CUBLAS_SAFE_CALL( cublasGetPointerMode( handle, &mode ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetPointerMode( handle, &mode ) );
         return mode;
     }
 
@@ -200,12 +200,12 @@ public:
     {
         if ( store_on_device )
         {
-            CUBLAS_SAFE_CALL( cublasSetPointerMode( handle, CUBLAS_POINTER_MODE_DEVICE ) );
+            SCFD_CUBLAS_SAFE_CALL( cublasSetPointerMode( handle, CUBLAS_POINTER_MODE_DEVICE ) );
             scalar_pointer_on_device = true;
         }
         else
         {
-            CUBLAS_SAFE_CALL( cublasSetPointerMode( handle, CUBLAS_POINTER_MODE_HOST ) );
+            SCFD_CUBLAS_SAFE_CALL( cublasSetPointerMode( handle, CUBLAS_POINTER_MODE_HOST ) );
             scalar_pointer_on_device = false;
         }
     }
@@ -213,50 +213,58 @@ public:
     template <typename T>
     void set_vector( size_t vector_size, const T *vec_host, T *vec_device, int incx = 1, int incy = 1 )
     {
-        CUBLAS_SAFE_CALL( cublasSetVector( vector_size, sizeof( T ), vec_host, incx, vec_device, incy ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasSetVector( vector_size, sizeof( T ), vec_host, incx, vec_device, incy ) );
     }
     template <typename T>
     void get_vector( size_t vector_size, const T *vec_device, T *vec_host, int incx = 1, int incy = 1 )
     {
-        CUBLAS_SAFE_CALL( cublasGetVector( vector_size, sizeof( T ), vec_device, incx, vec_host, incy ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetVector( vector_size, sizeof( T ), vec_device, incx, vec_host, incy ) );
     }
     template <typename T>
     void set_matrix( size_t rows, size_t cols, const T *mat_host, int lda, T *mat_device, int ldb )
     {
-        CUBLAS_SAFE_CALL( cublasSetMatrix( rows, cols, sizeof( T ), mat_host, lda, mat_device, ldb ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasSetMatrix( rows, cols, sizeof( T ), mat_host, lda, mat_device, ldb ) );
     }
     template <typename T>
     void get_matrix( size_t rows, size_t cols, const T *mat_device, int lda, T *mat_host, int ldb )
     {
-        CUBLAS_SAFE_CALL( cublasGetMatrix( rows, cols, sizeof( T ), mat_device, lda, mat_host, ldb ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetMatrix( rows, cols, sizeof( T ), mat_device, lda, mat_host, ldb ) );
     }
     template <typename T>
     void set_vector_async(
         size_t vector_size, const T *vec_host, T *vec_device, cudaStream_t stream, int incx = 1, int incy = 1
     )
     {
-        CUBLAS_SAFE_CALL( cublasSetVectorAsync( vector_size, sizeof( T ), vec_host, incx, vec_device, incy, stream ) );
+        SCFD_CUBLAS_SAFE_CALL(
+            cublasSetVectorAsync( vector_size, sizeof( T ), vec_host, incx, vec_device, incy, stream )
+        );
     }
     template <typename T>
     void get_vector_async(
         size_t vector_size, const T *vec_device, T *vec_host, cudaStream_t stream, int incx = 1, int incy = 1
     )
     {
-        CUBLAS_SAFE_CALL( cublasGetVectorAsync( vector_size, sizeof( T ), vec_device, incx, vec_host, incy, stream ) );
+        SCFD_CUBLAS_SAFE_CALL(
+            cublasGetVectorAsync( vector_size, sizeof( T ), vec_device, incx, vec_host, incy, stream )
+        );
     }
     template <typename T>
     void set_matrix_async(
         size_t rows, size_t cols, const T *mat_host, T *mat_device, cudaStream_t stream, int lda = 1, int ldb = 1
     )
     {
-        CUBLAS_SAFE_CALL( cublasSetMatrixAsync( rows, cols, sizeof( T ), mat_host, lda, mat_device, ldb, stream ) );
+        SCFD_CUBLAS_SAFE_CALL(
+            cublasSetMatrixAsync( rows, cols, sizeof( T ), mat_host, lda, mat_device, ldb, stream )
+        );
     }
     template <typename T>
     void get_matrix_async(
         size_t rows, size_t cols, const T *mat_device, T *mat_host, cudaStream_t stream, int lda = 1, int ldb = 1
     )
     {
-        CUBLAS_SAFE_CALL( cublasGetMatrixAsync( rows, cols, sizeof( T ), mat_device, lda, mat_host, ldb, stream ) );
+        SCFD_CUBLAS_SAFE_CALL(
+            cublasGetMatrixAsync( rows, cols, sizeof( T ), mat_device, lda, mat_host, ldb, stream )
+        );
     }
 
     //TODO Can't be used in cuda 8?!? WTF? see: https://docs.nvidia.com/cuda/cublas/index.html#cublasmath_t
@@ -266,7 +274,7 @@ public:
     //     if(useTCO)
     //         mode = CUBLAS_TENSOR_OP_MATH;
 
-    //     CUBLAS_SAFE_CALL(cublasSetMathMode(handle, mode));
+    //     SCFD_CUBLAS_SAFE_CALL(cublasSetMathMode(handle, mode));
 
     // }
 
@@ -425,24 +433,24 @@ private:
     void cublas_create()
     {
 
-        CUBLAS_SAFE_CALL( cublasCreate( &handle ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasCreate( &handle ) );
     }
 
     void cublas_destroy()
     {
 
-        CUBLAS_SAFE_CALL( cublasDestroy( handle ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasDestroy( handle ) );
     }
 
     void cublas_create_info()
     {
 
         int cublas_version, major_ver, minor_ver, patch_level;
-        CUBLAS_SAFE_CALL( cublasCreate( &handle ) );
-        CUBLAS_SAFE_CALL( cublasGetVersion( handle, &cublas_version ) );
-        CUBLAS_SAFE_CALL( cublasGetProperty( MAJOR_VERSION, &major_ver ) );
-        CUBLAS_SAFE_CALL( cublasGetProperty( MINOR_VERSION, &minor_ver ) );
-        CUBLAS_SAFE_CALL( cublasGetProperty( PATCH_LEVEL, &patch_level ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasCreate( &handle ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetVersion( handle, &cublas_version ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetProperty( MAJOR_VERSION, &major_ver ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetProperty( MINOR_VERSION, &minor_ver ) );
+        SCFD_CUBLAS_SAFE_CALL( cublasGetProperty( PATCH_LEVEL, &patch_level ) );
 
         std::cout << "cuBLAS v." << cublas_version << " (major=" << major_ver << ", minor=" << minor_ver
                   << ", patch level=" << patch_level << ") handle created." << std::endl;
@@ -454,12 +462,12 @@ private:
 template <>
 inline void cublas_wrap::sum_abs_elements( size_t vector_size, const float *vector, float *result, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasSasum( handle, vector_size, vector, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSasum( handle, vector_size, vector, incx, result ) );
 }
 template <>
 inline void cublas_wrap::sum_abs_elements( size_t vector_size, const double *vector, double *result, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasDasum( handle, vector_size, vector, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDasum( handle, vector_size, vector, incx, result ) );
 }
 template <>
 inline void cublas_wrap::sum_abs_elements(
@@ -467,7 +475,7 @@ inline void cublas_wrap::sum_abs_elements(
     typename cublas_real_types::cublas_real_type_hlp<thrust::complex<float>>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, (cuComplex *)vector, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, (cuComplex *)vector, incx, result ) );
 }
 template <>
 inline void cublas_wrap::sum_abs_elements(
@@ -476,7 +484,7 @@ inline void cublas_wrap::sum_abs_elements(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, (cuDoubleComplex *)vector, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, (cuDoubleComplex *)vector, incx, result ) );
 }
 template <>
 inline void cublas_wrap::sum_abs_elements(
@@ -484,7 +492,7 @@ inline void cublas_wrap::sum_abs_elements(
     typename cublas_real_types::cublas_real_type_hlp<cuComplex>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, vector, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, vector, incx, result ) );
 }
 template <>
 inline void cublas_wrap::sum_abs_elements(
@@ -493,7 +501,7 @@ inline void cublas_wrap::sum_abs_elements(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, vector, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, vector, incx, result ) );
 }
 //This function multiplies the vector x by the scalar alpha
 //and adds it to the vector y overwriting the latest vector with the result.
@@ -501,25 +509,25 @@ inline void cublas_wrap::sum_abs_elements(
 template <>
 inline void cublas_wrap::axpy( size_t vector_sizes, const float alpha, const float *x, float *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasSaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::axpy( size_t vector_sizes, const double alpha, const double *x, double *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasDaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
 inline void
 cublas_wrap::axpy( size_t vector_sizes, const cuComplex alpha, const cuComplex *x, cuComplex *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasCaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::axpy(
     size_t vector_sizes, const cuDoubleComplex alpha, const cuDoubleComplex *x, cuDoubleComplex *y, int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL( cublasZaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZaxpy( handle, vector_sizes, &alpha, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::axpy(
@@ -527,7 +535,7 @@ inline void cublas_wrap::axpy(
     int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasCaxpy( handle, vector_sizes, (cuComplex *)&alpha, (cuComplex *)x, incx, (cuComplex *)y, incy )
     );
 }
@@ -537,7 +545,7 @@ inline void cublas_wrap::axpy(
     thrust::complex<double> *y, int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL( cublasZaxpy(
+    SCFD_CUBLAS_SAFE_CALL( cublasZaxpy(
         handle, vector_sizes, (cuDoubleComplex *)&alpha, (cuDoubleComplex *)x, incx, (cuDoubleComplex *)y, incy
     ) );
 }
@@ -545,92 +553,94 @@ inline void cublas_wrap::axpy(
 template <>
 inline void cublas_wrap::copy( size_t vector_sizes, const float *x, float *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasScopy( handle, vector_sizes, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScopy( handle, vector_sizes, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::copy( size_t vector_sizes, const double *x, double *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasDcopy( handle, vector_sizes, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDcopy( handle, vector_sizes, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::copy( size_t vector_sizes, const cuComplex *x, cuComplex *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasCcopy( handle, vector_sizes, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCcopy( handle, vector_sizes, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::copy( size_t vector_sizes, const cuDoubleComplex *x, cuDoubleComplex *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasZcopy( handle, vector_sizes, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZcopy( handle, vector_sizes, x, incx, y, incy ) );
 }
 template <>
 inline void
 cublas_wrap::copy( size_t vector_sizes, const thrust::complex<float> *x, thrust::complex<float> *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasCcopy( handle, vector_sizes, (cuComplex *)x, incx, (cuComplex *)y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCcopy( handle, vector_sizes, (cuComplex *)x, incx, (cuComplex *)y, incy ) );
 }
 template <>
 inline void cublas_wrap::copy(
     size_t vector_sizes, const thrust::complex<double> *x, thrust::complex<double> *y, int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL( cublasZcopy( handle, vector_sizes, (cuDoubleComplex *)x, incx, (cuDoubleComplex *)y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL(
+        cublasZcopy( handle, vector_sizes, (cuDoubleComplex *)x, incx, (cuDoubleComplex *)y, incy )
+    );
 }
 //
 template <>
 inline void cublas_wrap::swap( size_t vector_size, float *x, float *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasSswap( handle, vector_size, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSswap( handle, vector_size, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::swap( size_t vector_size, double *x, double *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasDswap( handle, vector_size, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDswap( handle, vector_size, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::swap( size_t vector_size, cuComplex *x, cuComplex *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasCswap( handle, vector_size, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCswap( handle, vector_size, x, incx, y, incy ) );
 }
 template <>
 inline void cublas_wrap::swap( size_t vector_size, cuDoubleComplex *x, cuDoubleComplex *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasZswap( handle, vector_size, x, incx, y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZswap( handle, vector_size, x, incx, y, incy ) );
 }
 template <>
 inline void
 cublas_wrap::swap( size_t vector_size, thrust::complex<float> *x, thrust::complex<float> *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasCswap( handle, vector_size, (cuComplex *)x, incx, (cuComplex *)y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCswap( handle, vector_size, (cuComplex *)x, incx, (cuComplex *)y, incy ) );
 }
 template <>
 inline void
 cublas_wrap::swap( size_t vector_size, thrust::complex<double> *x, thrust::complex<double> *y, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasZswap( handle, vector_size, (cuDoubleComplex *)x, incx, (cuDoubleComplex *)y, incy ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZswap( handle, vector_size, (cuDoubleComplex *)x, incx, (cuDoubleComplex *)y, incy ) );
 }
 //
 template <>
 inline void cublas_wrap::dot( size_t vector_size, const float *x, const float *y, float *result, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasSdot( handle, vector_size, x, incx, y, incy, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSdot( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
 inline void cublas_wrap::dot( size_t vector_size, const double *x, const double *y, double *result, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasDdot( handle, vector_size, x, incx, y, incy, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDdot( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
 inline void
 cublas_wrap::dot( size_t vector_size, const cuComplex *x, const cuComplex *y, cuComplex *result, int incx, int incy )
 {
-    CUBLAS_SAFE_CALL( cublasCdotc( handle, vector_size, x, incx, y, incy, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCdotc( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
 inline void cublas_wrap::dot(
     size_t vector_size, const cuDoubleComplex *x, const cuDoubleComplex *y, cuDoubleComplex *result, int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL( cublasZdotc( handle, vector_size, x, incx, y, incy, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZdotc( handle, vector_size, x, incx, y, incy, result ) );
 }
 template <>
 inline void cublas_wrap::dot(
@@ -638,7 +648,7 @@ inline void cublas_wrap::dot(
     thrust::complex<float> *result, int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasCdotc( handle, vector_size, (cuComplex *)x, incx, (cuComplex *)y, incy, (cuComplex *)result )
     );
 }
@@ -648,7 +658,7 @@ inline void cublas_wrap::dot(
     thrust::complex<double> *result, int incx, int incy
 )
 {
-    CUBLAS_SAFE_CALL( cublasZdotc(
+    SCFD_CUBLAS_SAFE_CALL( cublasZdotc(
         handle, vector_size, (cuDoubleComplex *)x, incx, (cuDoubleComplex *)y, incy, (cuDoubleComplex *)result
     ) );
 }
@@ -656,12 +666,12 @@ inline void cublas_wrap::dot(
 template <>
 inline void cublas_wrap::asum( size_t vector_size, const float *x, float *result, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasSasum( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSasum( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::asum( size_t vector_size, const double *x, double *result, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasDasum( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDasum( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::asum(
@@ -669,7 +679,7 @@ inline void cublas_wrap::asum(
     int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::asum(
@@ -677,7 +687,7 @@ inline void cublas_wrap::asum(
     typename cublas_real_types::cublas_real_type_hlp<cuDoubleComplex>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::asum(
@@ -685,7 +695,7 @@ inline void cublas_wrap::asum(
     typename cublas_real_types::cublas_real_type_hlp<thrust::complex<float>>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, (cuComplex *)x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScasum( handle, vector_size, (cuComplex *)x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::asum(
@@ -693,19 +703,19 @@ inline void cublas_wrap::asum(
     typename cublas_real_types::cublas_real_type_hlp<thrust::complex<double>>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, (cuDoubleComplex *)x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDzasum( handle, vector_size, (cuDoubleComplex *)x, incx, result ) );
 }
 
 //
 template <>
 inline void cublas_wrap::norm2( size_t vector_size, const float *x, float *result, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasSnrm2( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSnrm2( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::norm2( size_t vector_size, const double *x, double *result, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasDnrm2( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDnrm2( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::norm2(
@@ -713,7 +723,7 @@ inline void cublas_wrap::norm2(
     int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasScnrm2( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScnrm2( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::norm2(
@@ -721,7 +731,7 @@ inline void cublas_wrap::norm2(
     typename cublas_real_types::cublas_real_type_hlp<cuDoubleComplex>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasDznrm2( handle, vector_size, x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDznrm2( handle, vector_size, x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::norm2(
@@ -729,7 +739,7 @@ inline void cublas_wrap::norm2(
     typename cublas_real_types::cublas_real_type_hlp<thrust::complex<float>>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasScnrm2( handle, vector_size, (cuComplex *)x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasScnrm2( handle, vector_size, (cuComplex *)x, incx, result ) );
 }
 template <>
 inline void cublas_wrap::norm2(
@@ -737,60 +747,60 @@ inline void cublas_wrap::norm2(
     typename cublas_real_types::cublas_real_type_hlp<thrust::complex<double>>::type *result, int incx
 )
 {
-    CUBLAS_SAFE_CALL( cublasDznrm2( handle, vector_size, (cuDoubleComplex *)x, incx, result ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDznrm2( handle, vector_size, (cuDoubleComplex *)x, incx, result ) );
 }
 //
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const float alpha, float *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasSscal( handle, vector_size, &alpha, x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasSscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const double alpha, double *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasDscal( handle, vector_size, &alpha, x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasDscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const cuComplex alpha, cuComplex *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasCscal( handle, vector_size, &alpha, x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const cuDoubleComplex alpha, cuDoubleComplex *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasZscal( handle, vector_size, &alpha, x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
 inline void
 cublas_wrap::scale( size_t vector_size, const thrust::complex<float> alpha, thrust::complex<float> *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasCscal( handle, vector_size, (cuComplex *)&alpha, (cuComplex *)x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCscal( handle, vector_size, (cuComplex *)&alpha, (cuComplex *)x, incx ) );
 }
 template <>
 inline void
 cublas_wrap::scale( size_t vector_size, const thrust::complex<double> alpha, thrust::complex<double> *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasZscal( handle, vector_size, (cuDoubleComplex *)&alpha, (cuDoubleComplex *)x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZscal( handle, vector_size, (cuDoubleComplex *)&alpha, (cuDoubleComplex *)x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const float alpha, cuComplex *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasCsscal( handle, vector_size, &alpha, x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCsscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const double alpha, cuDoubleComplex *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasZdscal( handle, vector_size, &alpha, x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZdscal( handle, vector_size, &alpha, x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const float alpha, thrust::complex<float> *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasCsscal( handle, vector_size, &alpha, (cuComplex *)x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasCsscal( handle, vector_size, &alpha, (cuComplex *)x, incx ) );
 }
 template <>
 inline void cublas_wrap::scale( size_t vector_size, const double alpha, thrust::complex<double> *x, int incx )
 {
-    CUBLAS_SAFE_CALL( cublasZdscal( handle, vector_size, &alpha, (cuDoubleComplex *)x, incx ) );
+    SCFD_CUBLAS_SAFE_CALL( cublasZdscal( handle, vector_size, &alpha, (cuDoubleComplex *)x, incx ) );
 }
 // aditional functions that are common
 template <>
@@ -907,7 +917,7 @@ cublasStatus_t cublasSgemv(cublasHandle_t handle,
                            float *y, 
                            int incy)
 */
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasSgemv( handle, switch_operation_real( op ), RowA, ColA, &alpha, A, LDimA, x, 1, &beta, y, 1 )
     );
 }
@@ -919,7 +929,7 @@ inline void cublas_wrap::gemv(
 )
 {
 
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasDgemv( handle, switch_operation_real( op ), RowA, ColA, &alpha, A, LDimA, x, 1, &beta, y, 1 )
     );
 }
@@ -931,7 +941,7 @@ inline void cublas_wrap::gemv(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasCgemv(
+    SCFD_CUBLAS_SAFE_CALL( cublasCgemv(
         handle, switch_operation_complex( op ), RowA, ColA, (const cuComplex *)&alpha, (const cuComplex *)A, LDimA,
         (const cuComplex *)x, 1, (const cuComplex *)&beta, (cuComplex *)y, 1
     ) );
@@ -944,7 +954,7 @@ inline void cublas_wrap::gemv(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasZgemv(
+    SCFD_CUBLAS_SAFE_CALL( cublasZgemv(
         handle, switch_operation_complex( op ), RowA, ColA, (const cuDoubleComplex *)&alpha, (const cuDoubleComplex *)A,
         LDimA, (const cuDoubleComplex *)x, 1, (const cuDoubleComplex *)&beta, (cuDoubleComplex *)y, 1
     ) );
@@ -983,7 +993,7 @@ cublasStatus_t cublasDgemm(cublasHandle_t handle,
 
 */
 
-    CUBLAS_SAFE_CALL( cublasSgemm(
+    SCFD_CUBLAS_SAFE_CALL( cublasSgemm(
         handle, switch_operation_real( opA ), switch_operation_real( opB ), RowA, ColBC, ColARowB, &alpha, A, LDimA, B,
         LDimB, &beta, C, LDimC
     ) );
@@ -995,7 +1005,7 @@ inline void cublas_wrap::gemm(
     const double *B, size_t LDimB, double beta, double *C, size_t LDimC
 )
 {
-    CUBLAS_SAFE_CALL( cublasDgemm(
+    SCFD_CUBLAS_SAFE_CALL( cublasDgemm(
         handle, switch_operation_real( opA ), switch_operation_real( opB ), RowA, ColBC, ColARowB, &alpha, A, LDimA, B,
         LDimB, &beta, C, LDimC
     ) );
@@ -1007,7 +1017,7 @@ inline void cublas_wrap::gemm(
     thrust::complex<float> beta, thrust::complex<float> *C, size_t LDimC
 )
 {
-    CUBLAS_SAFE_CALL( cublasCgemm(
+    SCFD_CUBLAS_SAFE_CALL( cublasCgemm(
         handle, switch_operation_complex( opA ), switch_operation_complex( opB ), RowA, ColBC, ColARowB,
         (const cuComplex *)&alpha, (const cuComplex *)A, LDimA, (const cuComplex *)B, LDimB, (const cuComplex *)&beta,
         (cuComplex *)C, LDimC
@@ -1020,7 +1030,7 @@ inline void cublas_wrap::gemm(
     thrust::complex<double> beta, thrust::complex<double> *C, size_t LDimC
 )
 {
-    CUBLAS_SAFE_CALL( cublasZgemm(
+    SCFD_CUBLAS_SAFE_CALL( cublasZgemm(
         handle, switch_operation_complex( opA ), switch_operation_complex( opB ), RowA, ColBC, ColARowB,
         (const cuDoubleComplex *)&alpha, (const cuDoubleComplex *)A, LDimA, (const cuDoubleComplex *)B, LDimB,
         (const cuDoubleComplex *)&beta, (cuDoubleComplex *)C, LDimC
@@ -1051,7 +1061,7 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasDtrsm(
             handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A,
             int( LDimA ), B, int( LDimB )
@@ -1082,7 +1092,7 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasStrsm(
             handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ), &alpha, A,
             int( LDimA ), B, int( LDimB )
@@ -1114,7 +1124,7 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasCtrsm(
             handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
             (const cuComplex *)&alpha, (const cuComplex *)A, int( LDimA ), (cuComplex *)B, int( LDimB )
@@ -1146,7 +1156,7 @@ inline void cublas_wrap::trsm(
         diag = CUBLAS_DIAG_UNIT;
     }
 
-    CUBLAS_SAFE_CALL(
+    SCFD_CUBLAS_SAFE_CALL(
         cublasZtrsm(
             handle, side, uplo, switch_operation_real( opA ), diag, int( RowBColA ), int( ColsB ),
             (const cuDoubleComplex *)&alpha, (const cuDoubleComplex *)A, int( LDimA ), (cuDoubleComplex *)B,
@@ -1164,7 +1174,7 @@ inline void cublas_wrap::geam(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasSgeam(
+    SCFD_CUBLAS_SAFE_CALL( cublasSgeam(
         handle, switch_operation_real( opA ), CUBLAS_OP_N, int( RowAC ), int( ColBC ), (const float *)&alpha,
         (const float *)A, int( LDimA ), (const float *)&beta, (const float *)B, int( LDimB ), C, int( LDimC )
     ) );
@@ -1177,7 +1187,7 @@ inline void cublas_wrap::geam(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasDgeam(
+    SCFD_CUBLAS_SAFE_CALL( cublasDgeam(
         handle, switch_operation_real( opA ), CUBLAS_OP_N, int( RowAC ), int( ColBC ), (const double *)&alpha,
         (const double *)A, int( LDimA ), (const double *)&beta, (const double *)B, int( LDimB ), C, int( LDimC )
     ) );
@@ -1191,7 +1201,7 @@ inline void cublas_wrap::geam(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasCgeam(
+    SCFD_CUBLAS_SAFE_CALL( cublasCgeam(
         handle, switch_operation_real( opA ), CUBLAS_OP_N, int( RowAC ), int( ColBC ), (const cuComplex *)&alpha,
         (const cuComplex *)A, int( LDimA ), (const cuComplex *)&beta, (const cuComplex *)B, int( LDimB ),
         (cuComplex *)C, int( LDimC )
@@ -1206,7 +1216,7 @@ inline void cublas_wrap::geam(
 )
 {
 
-    CUBLAS_SAFE_CALL( cublasZgeam(
+    SCFD_CUBLAS_SAFE_CALL( cublasZgeam(
         handle, switch_operation_real( opA ), CUBLAS_OP_N, int( RowAC ), int( ColBC ), (const cuDoubleComplex *)&alpha,
         (const cuDoubleComplex *)A, int( LDimA ), (const cuDoubleComplex *)&beta, (const cuDoubleComplex *)B,
         int( LDimB ), (cuDoubleComplex *)C, int( LDimC )

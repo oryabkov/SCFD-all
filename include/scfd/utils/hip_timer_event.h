@@ -34,11 +34,11 @@ struct hip_timer_event : public timer_event
 
     hip_timer_event()
     {
-        HIP_SAFE_CALL( hipEventCreate( &e_ ) );
+        SCFD_HIP_SAFE_CALL( hipEventCreate( &e_ ) );
     }
     virtual void record()
     {
-        HIP_SAFE_CALL( hipEventRecord( e_, 0 ) );
+        SCFD_HIP_SAFE_CALL( hipEventRecord( e_, 0 ) );
     }
     virtual double elapsed_time( const timer_event &e0 ) const
     {
@@ -50,8 +50,8 @@ struct hip_timer_event : public timer_event
             );
         }
         float res;
-        HIP_SAFE_CALL( hipEventSynchronize( e_ ) );
-        HIP_SAFE_CALL( hipEventElapsedTime( &res, hip_event->e_, e_ ) );
+        SCFD_HIP_SAFE_CALL( hipEventSynchronize( e_ ) );
+        SCFD_HIP_SAFE_CALL( hipEventElapsedTime( &res, hip_event->e_, e_ ) );
         return (double)res;
     };
 
