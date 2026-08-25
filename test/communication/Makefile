@@ -1,99 +1,187 @@
+PLATFORM ?= SERIAL
 
-ifndef CUDA_ROOT_PATH
-CUDA_ROOT_PATH = /usr/local/cuda
+ifneq ($(strip $(PLATFORM_MPI)),)
+ifneq ($(origin MPI),undefined)
+ifneq ($(MPI),$(PLATFORM_MPI))
+$(error MPI=$(MPI) conflicts with PLATFORM_MPI=$(PLATFORM_MPI))
 endif
-ifndef MPI_ROOT_PATH
-MPI_ROOT_PATH = /usr/local/mpi
+else
+MPI := $(PLATFORM_MPI)
+endif
 endif
 
-SCFD_INCLUDE=../../include
-NVCC = $(CUDA_ROOT_PATH)/bin/nvcc
-MPICC = $(MPI_ROOT_PATH)/bin/mpic++
-MPIRUN = $(MPI_ROOT_PATH)/bin/mpiexec
+MPI ?= OFF
+
+VALID_PLATFORMS := SERIAL OMP CUDA HIP SYCL
+VALID_MPI_VALUES := OFF ON
+
+ifeq ($(filter $(PLATFORM),$(VALID_PLATFORMS)),)
+$(error Unsupported PLATFORM='$(PLATFORM)'; choose one of: $(VALID_PLATFORMS))
+endif
+ifeq ($(filter $(MPI),$(VALID_MPI_VALUES)),)
+$(error Unsupported MPI='$(MPI)'; choose one of: $(VALID_MPI_VALUES))
+endif
+ifneq ($(MPI),ON)
+ifneq ($(PLATFORM),SERIAL)
+$(error MPI=OFF supports only PLATFORM=SERIAL in test/communication)
+endif
+endif
+
+CUDA_ROOT_PATH ?= /usr/local/cuda
+MPI_ROOT_PATH ?= /usr/local/mpi
+SYCL_DPL_ROOT_PATH ?= /opt/intel/oneapi-sycl-nvidia-2025.0.0/dpl/2022.7
+
+SCFD_INCLUDE := ../../include
+CXX ?= g++
+MPICXX ?= $(MPI_ROOT_PATH)/bin/mpic++
+MPIRUN ?= $(MPI_ROOT_PATH)/bin/mpiexec
+NVCC ?= $(CUDA_ROOT_PATH)/bin/nvcc
 HIPCC ?= hipcc
-SYCL_CXX ?= icpx
-SYCL_CPPSTD ?= -std=c++17
+SYCL_CXX ?= $(if $(SYCL_PATH),$(SYCL_PATH)/bin/icpx,icpx)
+
+CPPSTD ?= -std=c++14
+CXXFLAGS ?= $(CPPSTD)
+CUDAFLAGS ?= $(CPPSTD)
+HIPFLAGS ?= $(CPPSTD)
+SYCLFLAGS ?= -std=c++17
 SYCL_TARGET_FLAGS ?=
-LIBPATH = -ldl -L$(CUDA_ROOT_PATH)/lib64 -L${MPI_ROOT_PATH}/lib
-CUDALIBRARIES = -lcudart
-INCLUDE_MPI = -I${MPI_ROOT_PATH}/include
-MPICOMPILER_OPENMP = -fopenmp -lpthread
-MPI_CXXFLAGS = -std=c++14
-MPI_TEST_HOST = localhost:4
-MPI_TEST_PROCS = 4
-MPI_TEST_RUN_FLAGS = --bind-to none
-CUDA_TEST_TARGETS = test_mpi_rect_distributor.bin test_mpi_rect_distributor_tensor.bin
-MPI_TEST_TARGETS = test_sequential_mpi.bin test_mpi_binary_file.bin test_mpi_thread_multiple.bin test_mpi_comm_split.bin test_mpi_comm_collectives.bin test_mpi_comm_p2p.bin test_mpi_comm_calls.bin test_backend_runtime_mpi.bin
-TEST_TARGETS = $(CUDA_TEST_TARGETS) $(MPI_TEST_TARGETS)
-BACKEND_RUNTIME_MPI_DEVICE_TEST = test_backend_runtime_mpi_device.cpp
+SYCL_INCLUDE_FLAGS ?= -I$(SYCL_DPL_ROOT_PATH)/include
+OPENMP_FLAGS ?= -fopenmp -lpthread
+MPI_INCLUDE_FLAGS ?= -I$(MPI_ROOT_PATH)/include
+MPI_LINK_FLAGS ?= -L$(MPI_ROOT_PATH)/lib -lmpi
+HIP_MPI_LINK_FLAGS ?= $(MPI_LINK_FLAGS)
+HIP_LDFLAGS ?=
+CUDA_LINK_FLAGS ?= -ldl -L$(CUDA_ROOT_PATH)/lib64 -lcudart
 
-.PHONY: all clean
+MPI_TEST_PROCS ?= 4
+MPI_TEST_HOST ?= localhost:$(MPI_TEST_PROCS)
+MPI_TEST_RUN_FLAGS ?= --bind-to none
+MPI_RECT_PROCS ?= 3
+MPI_RECT_ARGS ?= 1 1 1 0 0
+MPI_SPLIT_PROCS ?= 3 4
+MPI_THREAD_LEVELS ?= 0 1 2 3
 
-all: $(TEST_TARGETS)
+platform_dir_SERIAL := serial
+platform_dir_OMP := omp
+platform_dir_CUDA := cuda
+platform_dir_HIP := hip
+platform_dir_SYCL := sycl
+CONFIG := $(platform_dir_$(PLATFORM))$(if $(filter ON,$(MPI)),-mpi)
+BUILD_DIR := build/$(CONFIG)
+MPI_COMMON_BUILD_DIR := build/mpi
 
-test_mpi_rect_distributor.bin: test_mpi_rect_distributor.cu
-	$(NVCC) -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 test_mpi_rect_distributor.cu -c -o test_mpi_rect_distributor.o
-	${MPICC} test_mpi_rect_distributor.o $(LIBPATH) $(CUDALIBRARIES) $(MPICOMPILER_OPENMP) -o test_mpi_rect_distributor.bin
-test_mpi_rect_distributor_tensor.bin: test_mpi_rect_distributor_tensor.cu
-	$(NVCC) -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 test_mpi_rect_distributor_tensor.cu -c -o test_mpi_rect_distributor_tensor.o
-	${MPICC} test_mpi_rect_distributor_tensor.o $(LIBPATH) $(CUDALIBRARIES) $(MPICOMPILER_OPENMP) -o test_mpi_rect_distributor_tensor.bin
+platform_define_SERIAL := -DPLATFORM_SERIAL_CPU
+platform_define_OMP := -DPLATFORM_OMP
+platform_define_CUDA := -DPLATFORM_CUDA
+platform_define_HIP := -DPLATFORM_HIP
+platform_define_SYCL := -DPLATFORM_SYCL
+BACKEND_CPPFLAGS := $(platform_define_$(PLATFORM)) -DSCFD_BACKEND_ENABLE_MPI
+COMMON_CPPFLAGS := -I$(SCFD_INCLUDE)
+MPI_CPPFLAGS := $(COMMON_CPPFLAGS) $(MPI_INCLUDE_FLAGS)
 
-test_sequential_mpi.bin: test_sequential_mpi.cpp
-	${MPICC} -I${SCFD_INCLUDE} test_sequential_mpi.cpp -o test_sequential_mpi.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:77 -n 77 ./test_sequential_mpi.bin
+TRIVIAL_BIN := $(BUILD_DIR)/test_trivial_comm.bin
+MPI_COMMON_NAMES := \
+	test_mpi_rect_distributor \
+	test_mpi_rect_distributor_tensor \
+	test_sequential_mpi \
+	test_mpi_binary_file \
+	test_mpi_thread_multiple \
+	test_mpi_comm_split \
+	test_mpi_comm_collectives \
+	test_mpi_comm_p2p \
+	test_mpi_comm_calls
+MPI_COMMON_BINS := $(addprefix $(MPI_COMMON_BUILD_DIR)/,$(addsuffix .bin,$(MPI_COMMON_NAMES)))
+BACKEND_RUNTIME_BIN := $(BUILD_DIR)/test_backend_runtime_mpi.bin
 
-test_mpi_binary_file.bin: test_mpi_binary_file.cpp
-	${MPICC} -I${SCFD_INCLUDE} test_mpi_binary_file.cpp -o test_mpi_binary_file.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:77 -n 77 ./test_mpi_binary_file.bin
+ifeq ($(MPI),ON)
+TEST_BINS := $(MPI_COMMON_BINS) $(BACKEND_RUNTIME_BIN)
+else
+TEST_BINS := $(TRIVIAL_BIN)
+endif
 
+MPI_LAUNCH = $(MPIRUN) $(MPI_TEST_RUN_FLAGS) $(if $(strip $(MPI_TEST_HOST)),--host $(MPI_TEST_HOST))
 
-test_mpi_thread_multiple.bin: test_mpi_thread_multiple.cpp
-	${MPICC} -I${SCFD_INCLUDE} test_mpi_thread_multiple.cpp -o test_mpi_thread_multiple.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 0
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 1
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 2
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_thread_multiple.bin 3
+.PHONY: all run clean help
 
-	
-test_mpi_comm_split.bin: test_mpi_comm_split.cpp
-	${MPICC} -I${SCFD_INCLUDE} test_mpi_comm_split.cpp -o test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 2 ./test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 3 ./test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 4 ./test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 5 ./test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 6 ./test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 7 ./test_mpi_comm_split.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host localhost:8 -n 8 ./test_mpi_comm_split.bin
+all: $(TEST_BINS)
 
-test_mpi_comm_collectives.bin: test_mpi_comm_collectives.cpp
-	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_collectives.cpp -o test_mpi_comm_collectives.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_collectives.bin
+$(BUILD_DIR) $(MPI_COMMON_BUILD_DIR):
+	mkdir -p $@
 
-test_mpi_comm_p2p.bin: test_mpi_comm_p2p.cpp
-	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_p2p.cpp -o test_mpi_comm_p2p.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_p2p.bin
+$(TRIVIAL_BIN): test_trivial_comm.cpp | $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
 
-test_mpi_comm_calls.bin: test_mpi_comm_calls.cpp
-	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_mpi_comm_calls.cpp -o test_mpi_comm_calls.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_mpi_comm_calls.bin
+$(MPI_COMMON_BUILD_DIR)/%.bin: %.cpp | $(MPI_COMMON_BUILD_DIR)
+	$(MPICXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
 
-test_backend_runtime_mpi.bin: test_backend_runtime_mpi.cpp
-	${MPICC} $(MPI_CXXFLAGS) -I${SCFD_INCLUDE} $(INCLUDE_MPI) test_backend_runtime_mpi.cpp -o test_backend_runtime_mpi.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_backend_runtime_mpi.bin
+ifeq ($(PLATFORM),CUDA)
+BACKEND_RUNTIME_OBJ := $(BUILD_DIR)/test_backend_runtime_mpi.o
 
-test_backend_runtime_mpi_cuda.bin: $(BACKEND_RUNTIME_MPI_DEVICE_TEST)
-	$(NVCC) -DPLATFORM_CUDA -DSCFD_BACKEND_ENABLE_MPI -x cu -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 $(BACKEND_RUNTIME_MPI_DEVICE_TEST) -c -o test_backend_runtime_mpi_cuda.o
-	${MPICC} test_backend_runtime_mpi_cuda.o $(LIBPATH) $(CUDALIBRARIES) $(MPICOMPILER_OPENMP) -o test_backend_runtime_mpi_cuda.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_backend_runtime_mpi_cuda.bin
+$(BACKEND_RUNTIME_OBJ): test_backend_runtime_mpi.cpp ../backend/test_backend_runtime_common.h | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(CUDAFLAGS) $(BACKEND_CPPFLAGS) $(MPI_CPPFLAGS) -x cu -c $< -o $@
 
-test_backend_runtime_mpi_hip.bin: $(BACKEND_RUNTIME_MPI_DEVICE_TEST)
-	$(HIPCC) $(MPI_CXXFLAGS) -DPLATFORM_HIP -DSCFD_BACKEND_ENABLE_MPI -I${SCFD_INCLUDE} $(INCLUDE_MPI) $(BACKEND_RUNTIME_MPI_DEVICE_TEST) -L${MPI_ROOT_PATH}/lib -lmpi -o test_backend_runtime_mpi_hip.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_backend_runtime_mpi_hip.bin
+$(BACKEND_RUNTIME_BIN): $(BACKEND_RUNTIME_OBJ)
+	$(MPICXX) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(CUDA_LINK_FLAGS) $(LDLIBS) -o $@
+else ifeq ($(PLATFORM),HIP)
+$(BACKEND_RUNTIME_BIN): test_backend_runtime_mpi.cpp ../backend/test_backend_runtime_common.h | $(BUILD_DIR)
+	$(HIPCC) $(CPPFLAGS) $(HIPFLAGS) $(BACKEND_CPPFLAGS) $(MPI_CPPFLAGS) $< $(HIP_MPI_LINK_FLAGS) $(HIP_LDFLAGS) $(LDLIBS) -o $@
+else ifeq ($(PLATFORM),SYCL)
+$(BACKEND_RUNTIME_BIN): test_backend_runtime_mpi.cpp ../backend/test_backend_runtime_common.h | $(BUILD_DIR)
+	$(SYCL_CXX) $(CPPFLAGS) $(SYCLFLAGS) $(SYCL_TARGET_FLAGS) -fsycl $(BACKEND_CPPFLAGS) $(MPI_CPPFLAGS) $(SYCL_INCLUDE_FLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+else ifeq ($(PLATFORM),OMP)
+$(BACKEND_RUNTIME_BIN): test_backend_runtime_mpi.cpp ../backend/test_backend_runtime_common.h | $(BUILD_DIR)
+	$(MPICXX) $(CPPFLAGS) $(CXXFLAGS) $(BACKEND_CPPFLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(OPENMP_FLAGS) $(LDLIBS) -o $@
+else
+$(BACKEND_RUNTIME_BIN): test_backend_runtime_mpi.cpp ../backend/test_backend_runtime_common.h | $(BUILD_DIR)
+	$(MPICXX) $(CPPFLAGS) $(CXXFLAGS) $(BACKEND_CPPFLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+endif
 
-test_backend_runtime_mpi_sycl.bin: $(BACKEND_RUNTIME_MPI_DEVICE_TEST)
-	$(SYCL_CXX) $(SYCL_CPPSTD) $(SYCL_TARGET_FLAGS) -DPLATFORM_SYCL -DSCFD_BACKEND_ENABLE_MPI -fsycl -I${SCFD_INCLUDE} $(INCLUDE_MPI) $(BACKEND_RUNTIME_MPI_DEVICE_TEST) -L${MPI_ROOT_PATH}/lib -lmpi -o test_backend_runtime_mpi_sycl.bin
-	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_backend_runtime_mpi_sycl.bin
+ifeq ($(MPI),ON)
+run: all
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_sequential_mpi.bin
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_binary_file.bin
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_thread_multiple.bin
+	@set -e; for thread_level in $(MPI_THREAD_LEVELS); do \
+		$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_thread_multiple.bin $$thread_level; \
+	done
+	@set -e; for split_procs in $(MPI_SPLIT_PROCS); do \
+		$(MPI_LAUNCH) -n $$split_procs $(MPI_COMMON_BUILD_DIR)/test_mpi_comm_split.bin; \
+	done
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_comm_collectives.bin
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_comm_p2p.bin
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_comm_calls.bin
+	$(MPI_LAUNCH) -n $(MPI_TEST_PROCS) $(BACKEND_RUNTIME_BIN)
+	$(MPI_LAUNCH) -n $(MPI_RECT_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_rect_distributor.bin $(MPI_RECT_ARGS)
+	$(MPI_LAUNCH) -n $(MPI_RECT_PROCS) $(MPI_COMMON_BUILD_DIR)/test_mpi_rect_distributor_tensor.bin $(MPI_RECT_ARGS)
+else
+run: all
+	$(TRIVIAL_BIN)
+endif
 
 clean:
-	rm -f *.bin *.o test_file_write.txt
+	$(RM) -r build *.bin *.o test_file_write.txt
+
+help:
+	@printf '%s\n' \
+		'Build communication tests:' \
+		'  make [PLATFORM=SERIAL|OMP|CUDA|HIP|SYCL] [MPI=OFF|ON]' \
+		'' \
+		'Defaults: PLATFORM=SERIAL MPI=OFF' \
+		'PLATFORM_MPI=ON/OFF is accepted as an alias for MPI.' \
+		'MPI=OFF is intentionally limited to the serial trivial communicator test.' \
+		'' \
+		'Targets:' \
+		'  all    Build without running; shared MPI tests go in build/mpi/.' \
+		'         The backend runtime goes in build/<platform>-mpi/.' \
+		'  run    Build and run the selected test configuration.' \
+		'  clean  Remove generated test binaries, objects, and output data.' \
+		'  help   Show this message.' \
+		'  Run make clean after changing compiler or low-level flag variables.' \
+		'' \
+		'MPI run settings:' \
+		'  MPI_TEST_PROCS, MPI_TEST_HOST, MPI_TEST_RUN_FLAGS, MPI_RECT_PROCS,' \
+		'  MPI_RECT_ARGS, MPI_SPLIT_PROCS, MPI_THREAD_LEVELS, MPIRUN.' \
+		'  Distributor tests currently require MPI_RECT_PROCS=3.' \
+		'' \
+		'SYCL settings:' \
+		'  SYCL_CXX, SYCL_DPL_ROOT_PATH, SYCL_TARGET_FLAGS.'

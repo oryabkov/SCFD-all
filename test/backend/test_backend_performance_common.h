@@ -299,12 +299,28 @@ struct performance_exclusive_scan_type<scfd::backend::serial_cpu>
     using type = scfd::serial_cpu_exclusive_scan<std::size_t>;
 };
 
+#if defined( PLATFORM_SERIAL_CPU ) && defined( SCFD_BACKEND_ENABLE_MPI )
+template <>
+struct performance_exclusive_scan_type<scfd::backend::serial_cpu_mpi>
+{
+    using type = scfd::serial_cpu_exclusive_scan<std::size_t>;
+};
+#endif
+
 #ifdef PLATFORM_OMP
 template <>
 struct performance_exclusive_scan_type<scfd::backend::omp>
 {
     using type = scfd::omp_exclusive_scan<std::size_t>;
 };
+
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+template <>
+struct performance_exclusive_scan_type<scfd::backend::omp_mpi>
+{
+    using type = scfd::omp_exclusive_scan<std::size_t>;
+};
+#    endif
 #endif
 
 #ifdef PLATFORM_CUDA
@@ -313,6 +329,14 @@ struct performance_exclusive_scan_type<scfd::backend::cuda>
 {
     using type = scfd::thrust_exclusive_scan<std::size_t>;
 };
+
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+template <>
+struct performance_exclusive_scan_type<scfd::backend::cuda_mpi>
+{
+    using type = scfd::thrust_exclusive_scan<std::size_t>;
+};
+#    endif
 #endif
 
 #ifdef PLATFORM_HIP
@@ -321,6 +345,14 @@ struct performance_exclusive_scan_type<scfd::backend::hip>
 {
     using type = scfd::thrust_exclusive_scan<std::size_t>;
 };
+
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+template <>
+struct performance_exclusive_scan_type<scfd::backend::hip_mpi>
+{
+    using type = scfd::thrust_exclusive_scan<std::size_t>;
+};
+#    endif
 #endif
 
 #ifdef PLATFORM_SYCL
@@ -328,6 +360,31 @@ template <>
 struct performance_exclusive_scan_type<scfd::backend::sycl>
 {
     using type = scfd::sycl_exclusive_scan<std::size_t>;
+};
+
+#    ifdef SCFD_BACKEND_ENABLE_MPI
+template <>
+struct performance_exclusive_scan_type<scfd::backend::sycl_mpi>
+{
+    using type = scfd::sycl_exclusive_scan<std::size_t>;
+};
+#    endif
+#endif
+
+template <class Backend>
+struct is_openmp_backend : std::false_type
+{
+};
+
+template <>
+struct is_openmp_backend<scfd::backend::omp> : std::true_type
+{
+};
+
+#if defined( PLATFORM_OMP ) && defined( SCFD_BACKEND_ENABLE_MPI )
+template <>
+struct is_openmp_backend<scfd::backend::omp_mpi> : std::true_type
+{
 };
 #endif
 
@@ -1120,7 +1177,7 @@ int run_backend_performance_tests( const char *backend_name, bool require_accele
             benchmark_backend<Backend>( backend_name, size, algorithm_size, repeats );
         print_result( backend_name, backend_result );
 
-        if ( std::is_same<Backend, scfd::backend::omp>::value )
+        if ( is_openmp_backend<Backend>::value )
         {
             print_openmp_comparison( backend_name, backend_result, backend_result );
             std::cout << backend_name << ": openmp reference, acceleration check skipped" << std::endl;

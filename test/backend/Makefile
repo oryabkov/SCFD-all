@@ -1,156 +1,217 @@
-ifndef CUDA_ROOT_PATH
-CUDA_ROOT_PATH = /usr/local/cuda
-endif
+CUDA_ROOT_PATH ?= /usr/local/cuda
+MPI_ROOT_PATH ?= /usr/local/mpi
+SYCL_DPL_ROOT_PATH ?= /opt/intel/oneapi-sycl-nvidia/dpl/2022.7
 
-SCFD_INCLUDE=../../include
-CC = g++
-NVCC = $(CUDA_ROOT_PATH)/bin/nvcc
+SCFD_INCLUDE := ../../include
+
+CXX ?= g++
+NVCC ?= $(CUDA_ROOT_PATH)/bin/nvcc
+HIPCC ?= hipcc
+SYCL_CXX ?= $(if $(SYCL_PATH),$(SYCL_PATH)/bin/icpx,icpx)
+MPICXX ?= $(MPI_ROOT_PATH)/bin/mpic++
+MPIRUN ?= $(MPI_ROOT_PATH)/bin/mpiexec
+
 CPPSTD ?= -std=c++14
-CUDA_CPPSTD ?= $(CPPSTD)
 SYCL_CPPSTD ?= -std=c++17
 CXXFLAGS ?= $(CPPSTD)
-CUDAFLAGS ?= $(CUDA_CPPSTD)
+CUDAFLAGS ?= $(CPPSTD)
+HIPFLAGS ?= $(CPPSTD)
 SYCLFLAGS ?= $(SYCL_CPPSTD)
+CUDA_LDFLAGS ?=
 SYCL_TARGET_FLAGS ?=
+SYCL_DPL_FLAGS ?= -I$(SYCL_DPL_ROOT_PATH)/include
+
 PERF_CXXFLAGS ?= $(CXXFLAGS) -O3
 PERF_CUDAFLAGS ?= $(CUDAFLAGS) -O3
+PERF_HIPFLAGS ?= $(HIPFLAGS) -O3
 PERF_SYCLFLAGS ?= $(SYCLFLAGS) -O3
-HIPCC ?= hipcc
-SYCL_CXX ?= icpx
-LIBCUDAPATH = -ldl -L$(CUDA_ROOT_PATH)/lib64
-LIBHIPPATH =
-LIBSYCLPATH =
-OPENMP = -fopenmp -lpthread 
-PERF_CUDA_OPENMP ?= -Xcompiler -fopenmp -lgomp -lpthread
-PERF_HIP_OPENMP ?= $(PERF_CUDA_OPENMP)
-PERF_SYCL_OPENMP ?= $(OPENMP)
+
+OPENMP_FLAGS ?= -fopenmp -lpthread
+CUDA_OPENMP_FLAGS ?= -Xcompiler -fopenmp -lgomp -lpthread
+CUDA_OPENMP_COMPILE_FLAGS ?= -Xcompiler -fopenmp
+HIP_OPENMP_FLAGS ?= -fopenmp -lpthread
+SYCL_OPENMP_FLAGS ?= $(OPENMP_FLAGS)
+
+MPI_CPPFLAGS ?= -I$(MPI_ROOT_PATH)/include
+MPI_LDFLAGS ?= -L$(MPI_ROOT_PATH)/lib
+MPI_LIBS ?= -lmpi
+CUDA_MPI_LIBS ?= -L$(CUDA_ROOT_PATH)/lib64 -lcudart -ldl
+MPIEXEC_FLAGS ?= --bind-to none
+MPI_PROCS ?= 1
+
 PERF_SIZE ?= 6388608
 PERF_ALGO_SIZE ?= $(PERF_SIZE)
 PERF_REPEATS ?= 3
 PERF_MIN_SPEEDUP ?= 1.05
-CPU_BINS = test_backend_serial_cpu.bin test_backend_omp_cpu.bin test_backend_algorithms_serial_cpu.bin test_backend_algorithms_omp_cpu.bin test_backend_runtime_serial_cpu.bin test_backend_runtime_omp_cpu.bin test_backend_performance_serial_cpu.bin test_backend_performance_omp_cpu.bin
-CUDA_BINS = test_backend_types_cuda.bin test_backend_algorithms_cuda.bin test_backend_runtime_cuda.bin test_backend_performance_cuda.bin test_backend_exclusive_scan_omp_vs_cuda.bin
-HIP_BINS = test_backend_types_hip.bin test_backend_algorithms_hip.bin test_backend_runtime_hip.bin test_backend_performance_hip.bin
-SYCL_BINS = test_backend_types_sycl.bin test_backend_algorithms_sycl.bin test_backend_runtime_sycl.bin test_backend_performance_sycl.bin
 
-.PHONY: all cpu cuda hip sycl perf_cpu perf_cuda perf_hip perf_sycl run_cpu run_cuda run_hip run_sycl run_perf_cpu run_perf_cuda run_perf_hip run_perf_sycl clean
+PLATFORM ?= SERIAL
 
-all: cpu cuda hip
+ifneq ($(strip $(PLATFORM_MPI)),)
+ifeq ($(origin MPI),undefined)
+MPI := $(PLATFORM_MPI)
+else ifneq ($(strip $(MPI)),$(strip $(PLATFORM_MPI)))
+$(error MPI=$(MPI) conflicts with PLATFORM_MPI=$(PLATFORM_MPI))
+endif
+endif
+MPI ?= OFF
 
-cpu: $(CPU_BINS)
+VALID_PLATFORMS := SERIAL OMP CUDA HIP SYCL
+VALID_MPI_VALUES := OFF ON
 
-cuda: $(CUDA_BINS)
+ifeq ($(filter $(PLATFORM),$(VALID_PLATFORMS)),)
+$(error Invalid PLATFORM='$(PLATFORM)'; choose one of: $(VALID_PLATFORMS))
+endif
+ifeq ($(filter $(MPI),$(VALID_MPI_VALUES)),)
+$(error Invalid MPI='$(MPI)'; choose one of: $(VALID_MPI_VALUES))
+endif
 
-hip: $(HIP_BINS)
+PLATFORM_TAG_SERIAL := serial
+PLATFORM_TAG_OMP := omp
+PLATFORM_TAG_CUDA := cuda
+PLATFORM_TAG_HIP := hip
+PLATFORM_TAG_SYCL := sycl
 
-sycl: $(SYCL_BINS)
+PLATFORM_DEFINE_SERIAL := -DPLATFORM_SERIAL_CPU
+PLATFORM_DEFINE_OMP := -DPLATFORM_OMP
+PLATFORM_DEFINE_CUDA := -DPLATFORM_CUDA
+PLATFORM_DEFINE_HIP := -DPLATFORM_HIP
+PLATFORM_DEFINE_SYCL := -DPLATFORM_SYCL
 
-perf_cpu: test_backend_performance_serial_cpu.bin test_backend_performance_omp_cpu.bin
+CONFIG := $(PLATFORM_TAG_$(PLATFORM))
+PLATFORM_DEFINE := $(PLATFORM_DEFINE_$(PLATFORM))
 
-perf_cuda: test_backend_performance_cuda.bin
+ifeq ($(MPI),ON)
+CONFIG := $(CONFIG)-mpi
+MPI_DEFINE := -DSCFD_BACKEND_ENABLE_MPI
+MPI_COMPILE_FLAGS := $(MPI_CPPFLAGS)
+MPI_LINK_FLAGS := $(MPI_LDFLAGS) $(MPI_LIBS)
+RUNNER := $(MPIRUN) $(MPIEXEC_FLAGS) -n $(MPI_PROCS)
+endif
 
-perf_hip: test_backend_performance_hip.bin
+BUILD_DIR := build/$(CONFIG)
+COMMON_CPPFLAGS := -I$(SCFD_INCLUDE) $(PLATFORM_DEFINE) $(MPI_DEFINE) $(MPI_COMPILE_FLAGS)
 
-perf_sycl: test_backend_performance_sycl.bin
+TYPES_BIN := $(BUILD_DIR)/test_backend_types.bin
+ALGORITHMS_BIN := $(BUILD_DIR)/test_backend_algorithms.bin
+RUNTIME_BIN := $(BUILD_DIR)/test_backend_runtime.bin
+PERFORMANCE_BIN := $(BUILD_DIR)/test_backend_performance.bin
+GENERIC_CORE_BINS := $(TYPES_BIN) $(ALGORITHMS_BIN) $(RUNTIME_BIN)
+CORE_BINS := $(GENERIC_CORE_BINS)
 
+ifneq ($(filter $(PLATFORM),SERIAL OMP),)
+HOST_BIN := $(BUILD_DIR)/test_backend_host.bin
+GENERIC_CORE_BINS += $(HOST_BIN)
+CORE_BINS += $(HOST_BIN)
+endif
 
-test_backend_serial_cpu.bin: test_backend_serial_cpu.cpp
-	$(CC) $(CXXFLAGS) test_backend_serial_cpu.cpp -I$(SCFD_INCLUDE) -o test_backend_serial_cpu.bin
-test_backend_types_cuda.bin: test_backend_types_cuda.cu
-	$(NVCC) $(CUDAFLAGS) test_backend_types_cuda.cu -I$(SCFD_INCLUDE) -o test_backend_types_cuda.bin
-test_backend_omp_cpu.bin: test_backend_omp_cpu.cpp
-	$(CC) $(CXXFLAGS) test_backend_omp_cpu.cpp -I$(SCFD_INCLUDE) $(OPENMP) -o test_backend_omp_cpu.bin
+ifeq ($(PLATFORM),CUDA)
+CUDA_SCAN_BIN := $(BUILD_DIR)/test_backend_exclusive_scan_omp_vs_cuda.bin
+CORE_BINS += $(CUDA_SCAN_BIN)
+endif
 
-test_backend_algorithms_serial_cpu.bin: test_backend_algorithms_serial_cpu.cpp test_backend_algorithms_common.h
-	$(CC) $(CXXFLAGS) test_backend_algorithms_serial_cpu.cpp -I$(SCFD_INCLUDE) -o test_backend_algorithms_serial_cpu.bin
+$(TYPES_BIN): test_backend_types.cpp test_backend_config.h
+$(ALGORITHMS_BIN): test_backend_algorithms.cpp test_backend_algorithms_common.h test_backend_config.h
+$(RUNTIME_BIN): test_backend_runtime.cpp test_backend_runtime_common.h test_backend_config.h
+$(PERFORMANCE_BIN): test_backend_performance.cpp test_backend_performance_common.h test_backend_config.h
+ifneq ($(HOST_BIN),)
+$(HOST_BIN): test_backend_host.cpp test_backend_config.h
+endif
 
-test_backend_algorithms_omp_cpu.bin: test_backend_algorithms_omp_cpu.cpp test_backend_algorithms_common.h
-	$(CC) $(CXXFLAGS) test_backend_algorithms_omp_cpu.cpp -I$(SCFD_INCLUDE) $(OPENMP) -o test_backend_algorithms_omp_cpu.bin
+.PHONY: all run perf run-perf clean help
 
-test_backend_algorithms_cuda.bin: test_backend_algorithms_cuda.cu test_backend_algorithms_common.h
-	$(NVCC) $(CUDAFLAGS) test_backend_algorithms_cuda.cu -I$(SCFD_INCLUDE) -o test_backend_algorithms_cuda.bin
+all: $(CORE_BINS)
 
-test_backend_exclusive_scan_omp_vs_cuda.bin: test_backend_exclusive_scan_omp_vs_cuda.cu
-	$(NVCC) $(CUDAFLAGS) test_backend_exclusive_scan_omp_vs_cuda.cu -I$(SCFD_INCLUDE) $(PERF_CUDA_OPENMP) -o test_backend_exclusive_scan_omp_vs_cuda.bin
+perf: $(PERFORMANCE_BIN)
 
-test_backend_runtime_serial_cpu.bin: test_backend_runtime_serial_cpu.cpp test_backend_runtime_common.h
-	$(CC) $(CXXFLAGS) test_backend_runtime_serial_cpu.cpp -I$(SCFD_INCLUDE) -o test_backend_runtime_serial_cpu.bin
+run: all
+	$(RUNNER) $(TYPES_BIN)
+	$(RUNNER) $(ALGORITHMS_BIN)
+	$(RUNNER) $(RUNTIME_BIN)
+ifneq ($(HOST_BIN),)
+	$(RUNNER) $(HOST_BIN)
+endif
+ifneq ($(CUDA_SCAN_BIN),)
+	$(RUNNER) $(CUDA_SCAN_BIN)
+endif
 
-test_backend_runtime_omp_cpu.bin: test_backend_runtime_omp_cpu.cpp test_backend_runtime_common.h
-	$(CC) $(CXXFLAGS) test_backend_runtime_omp_cpu.cpp -I$(SCFD_INCLUDE) $(OPENMP) -o test_backend_runtime_omp_cpu.bin
+run-perf: perf
+	SCFD_BACKEND_PERF_SIZE=$(PERF_SIZE) \
+	SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) \
+	SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) \
+	SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) \
+	$(RUNNER) $(PERFORMANCE_BIN)
 
-test_backend_runtime_cuda.bin: test_backend_runtime_cuda.cu test_backend_runtime_common.h
-	$(NVCC) $(CUDAFLAGS) test_backend_runtime_cuda.cu -I$(SCFD_INCLUDE) -o test_backend_runtime_cuda.bin
+$(BUILD_DIR):
+	mkdir -p $@
 
-test_backend_types_hip.bin: test_backend_types_hip.cpp
-	$(HIPCC) $(CXXFLAGS) test_backend_types_hip.cpp -I$(SCFD_INCLUDE) -o test_backend_types_hip.bin
+ifeq ($(PLATFORM),SERIAL)
+ifeq ($(MPI),ON)
+BACKEND_CXX := $(MPICXX)
+else
+BACKEND_CXX := $(CXX)
+endif
+BACKEND_FLAGS := $(CXXFLAGS)
+PERFORMANCE_FLAGS := $(PERF_CXXFLAGS) $(OPENMP_FLAGS)
+else ifeq ($(PLATFORM),OMP)
+ifeq ($(MPI),ON)
+BACKEND_CXX := $(MPICXX)
+else
+BACKEND_CXX := $(CXX)
+endif
+BACKEND_FLAGS := $(CXXFLAGS) $(OPENMP_FLAGS)
+PERFORMANCE_FLAGS := $(PERF_CXXFLAGS) $(OPENMP_FLAGS)
+else ifeq ($(PLATFORM),HIP)
+BACKEND_CXX := $(HIPCC)
+BACKEND_FLAGS := $(HIPFLAGS)
+PERFORMANCE_FLAGS := $(PERF_HIPFLAGS) $(HIP_OPENMP_FLAGS)
+else ifeq ($(PLATFORM),SYCL)
+BACKEND_CXX := $(SYCL_CXX)
+BACKEND_FLAGS := $(SYCLFLAGS) $(SYCL_TARGET_FLAGS) $(SYCL_DPL_FLAGS) -fsycl
+PERFORMANCE_FLAGS := $(PERF_SYCLFLAGS) $(SYCL_TARGET_FLAGS) $(SYCL_DPL_FLAGS) -fsycl $(SYCL_OPENMP_FLAGS)
+endif
 
-test_backend_algorithms_hip.bin: test_backend_algorithms_hip.cpp test_backend_algorithms_common.h
-	$(HIPCC) $(CXXFLAGS) test_backend_algorithms_hip.cpp -I$(SCFD_INCLUDE) -o test_backend_algorithms_hip.bin
+ifneq ($(PLATFORM),CUDA)
+$(GENERIC_CORE_BINS): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
+	$(BACKEND_CXX) $(CPPFLAGS) $(BACKEND_FLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
 
-test_backend_runtime_hip.bin: test_backend_runtime_hip.cpp test_backend_runtime_common.h
-	$(HIPCC) $(CXXFLAGS) test_backend_runtime_hip.cpp -I$(SCFD_INCLUDE) -o test_backend_runtime_hip.bin
+$(PERFORMANCE_BIN): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
+	$(BACKEND_CXX) $(CPPFLAGS) $(PERFORMANCE_FLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+else ifeq ($(MPI),OFF)
+$(GENERIC_CORE_BINS): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(CUDAFLAGS) $(COMMON_CPPFLAGS) -x cu $< $(CUDA_LDFLAGS) $(LDLIBS) -o $@
 
-test_backend_algorithms_sycl.bin: test_backend_algorithms_sycl.cpp test_backend_algorithms_common.h
-	$(SYCL_CXX) $(SYCLFLAGS) $(SYCL_TARGET_FLAGS) -fsycl test_backend_algorithms_sycl.cpp -I$(SCFD_INCLUDE) -o test_backend_algorithms_sycl.bin
+$(PERFORMANCE_BIN): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_FLAGS) $(COMMON_CPPFLAGS) -x cu $< $(CUDA_LDFLAGS) $(LDLIBS) -o $@
 
-test_backend_types_sycl.bin: test_backend_types_sycl.cpp
-	$(SYCL_CXX) $(SYCLFLAGS) $(SYCL_TARGET_FLAGS) -fsycl test_backend_types_sycl.cpp -I$(SCFD_INCLUDE) -o test_backend_types_sycl.bin
+$(CUDA_SCAN_BIN): test_backend_exclusive_scan_omp_vs_cuda.cu | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_FLAGS) $(COMMON_CPPFLAGS) $< $(CUDA_LDFLAGS) $(LDLIBS) -o $@
+else
+$(GENERIC_CORE_BINS): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(CUDAFLAGS) $(COMMON_CPPFLAGS) -x cu -c $< -o $(@:.bin=.o)
+	$(MPICXX) $(@:.bin=.o) $(MPI_LINK_FLAGS) $(LDFLAGS) $(CUDA_MPI_LIBS) $(LDLIBS) -o $@
 
-test_backend_runtime_sycl.bin: test_backend_runtime_sycl.cpp test_backend_runtime_common.h
-	$(SYCL_CXX) $(SYCLFLAGS) $(SYCL_TARGET_FLAGS) -fsycl test_backend_runtime_sycl.cpp -I$(SCFD_INCLUDE) -o test_backend_runtime_sycl.bin
+$(PERFORMANCE_BIN): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_COMPILE_FLAGS) $(COMMON_CPPFLAGS) -x cu -c $< -o $(@:.bin=.o)
+	$(MPICXX) $(@:.bin=.o) $(MPI_LINK_FLAGS) $(LDFLAGS) $(OPENMP_FLAGS) $(CUDA_MPI_LIBS) $(LDLIBS) -o $@
 
-test_backend_performance_serial_cpu.bin: test_backend_performance_serial_cpu.cpp test_backend_performance_common.h
-	$(CC) $(PERF_CXXFLAGS) test_backend_performance_serial_cpu.cpp -I$(SCFD_INCLUDE) $(OPENMP) -o test_backend_performance_serial_cpu.bin
-
-test_backend_performance_omp_cpu.bin: test_backend_performance_omp_cpu.cpp test_backend_performance_common.h
-	$(CC) $(PERF_CXXFLAGS) test_backend_performance_omp_cpu.cpp -I$(SCFD_INCLUDE) $(OPENMP) -o test_backend_performance_omp_cpu.bin
-
-test_backend_performance_cuda.bin: test_backend_performance_cuda.cu test_backend_performance_common.h
-	$(NVCC) $(PERF_CUDAFLAGS) test_backend_performance_cuda.cu -I$(SCFD_INCLUDE) $(PERF_CUDA_OPENMP) -o test_backend_performance_cuda.bin
-
-test_backend_performance_hip.bin: test_backend_performance_hip.cpp test_backend_performance_common.h
-	$(HIPCC) $(PERF_CXXFLAGS) test_backend_performance_hip.cpp -I$(SCFD_INCLUDE) $(PERF_HIP_OPENMP) -o test_backend_performance_hip.bin
-
-test_backend_performance_sycl.bin: test_backend_performance_sycl.cpp test_backend_performance_common.h
-	$(SYCL_CXX) $(PERF_SYCLFLAGS) $(SYCL_TARGET_FLAGS) -fsycl test_backend_performance_sycl.cpp -I$(SCFD_INCLUDE) $(PERF_SYCL_OPENMP) -o test_backend_performance_sycl.bin
-
-run_cpu: cpu
-	./test_backend_serial_cpu.bin
-	./test_backend_omp_cpu.bin
-	./test_backend_algorithms_serial_cpu.bin
-	./test_backend_algorithms_omp_cpu.bin
-	./test_backend_runtime_serial_cpu.bin
-	./test_backend_runtime_omp_cpu.bin
-
-run_cuda: cuda
-	./test_backend_types_cuda.bin
-	./test_backend_algorithms_cuda.bin
-	./test_backend_runtime_cuda.bin
-	./test_backend_exclusive_scan_omp_vs_cuda.bin
-
-run_hip: hip
-	./test_backend_types_hip.bin
-	./test_backend_algorithms_hip.bin
-	./test_backend_runtime_hip.bin
-
-run_sycl: sycl
-	./test_backend_types_sycl.bin
-	./test_backend_algorithms_sycl.bin
-	./test_backend_runtime_sycl.bin
-
-run_perf_cpu: perf_cpu
-	SCFD_BACKEND_PERF_SIZE=$(PERF_SIZE) SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) ./test_backend_performance_serial_cpu.bin
-	SCFD_BACKEND_PERF_SIZE=$(PERF_SIZE) SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) ./test_backend_performance_omp_cpu.bin
-
-run_perf_cuda: perf_cuda
-	SCFD_BACKEND_PERF_SIZE=$(PERF_SIZE) SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) ./test_backend_performance_cuda.bin
-
-run_perf_hip: perf_hip
-	SCFD_BACKEND_PERF_SIZE=$(PERF_SIZE) SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) ./test_backend_performance_hip.bin
-
-run_perf_sycl: perf_sycl
-	SCFD_BACKEND_PERF_SIZE=$(PERF_SIZE) SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) ./test_backend_performance_sycl.bin
+$(CUDA_SCAN_BIN): test_backend_exclusive_scan_omp_vs_cuda.cu | $(BUILD_DIR)
+	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_COMPILE_FLAGS) $(COMMON_CPPFLAGS) -c $< -o $(@:.bin=.o)
+	$(MPICXX) $(@:.bin=.o) $(MPI_LINK_FLAGS) $(LDFLAGS) $(OPENMP_FLAGS) $(CUDA_MPI_LIBS) $(LDLIBS) -o $@
+endif
 
 clean:
-	rm -f *.bin
+	$(RM) -r build *.bin *.o
+
+help:
+	@echo "SCFD backend tests"
+	@echo "  make [all] PLATFORM={SERIAL,OMP,CUDA,HIP,SYCL} MPI={OFF,ON}"
+	@echo "  make run      Build and run functional tests"
+	@echo "  make perf     Build the performance test"
+	@echo "  make run-perf Build and run the performance test"
+	@echo "  make clean    Remove configuration build directories"
+	@echo ""
+	@echo "Defaults: PLATFORM=SERIAL MPI=OFF"
+	@echo "PLATFORM_MPI is accepted as an alias for MPI. MPI runs default to one rank; override MPI_PROCS as needed."
+	@echo "Run 'make clean' after changing compiler or low-level flag variables."
+	@echo "CUDA setting: CUDA_LDFLAGS (direct nvcc links do not consume host LDFLAGS)."
+	@echo "SYCL settings: SYCL_CXX, SYCL_DPL_ROOT_PATH, SYCL_TARGET_FLAGS."

@@ -108,4 +108,24 @@ int main( int argc, char *args[] )
     std::cout << str2 << std::endl;
 
     std::cout << "expected     [9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, ] (periodic wrap in x)" << std::endl;
+
+    bool is_failed = false;
+    for ( ordinal ix = my_loc_rect.i1[0]; ix < my_loc_rect.i2[0]; ++ix )
+    {
+        const value_t expected =
+            ix < 0 ? static_cast<value_t>( size - 1 ) : ( ix >= size ? 0 : static_cast<value_t>( ix ) );
+        if ( data_view2( ix, 5, 5 ) != expected )
+        {
+            std::cerr << "FAILED at x=" << ix << ": got " << data_view2( ix, 5, 5 ) << ", expected " << expected
+                      << std::endl;
+            is_failed = true;
+        }
+    }
+    data_view2.release( false );
+
+    if ( is_failed )
+        return 1;
+
+    std::cout << "PASSED" << std::endl;
+    return 0;
 }
