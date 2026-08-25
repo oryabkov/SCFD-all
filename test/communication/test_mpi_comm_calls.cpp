@@ -1,5 +1,6 @@
 // Copyright (C) 2026 SCFD contributors
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <vector>
@@ -221,13 +222,13 @@ int test_all_gather_int( const CommInfo &comm_info, Fail fail )
 template <class T, class CommInfo, class Fail>
 int test_typed_all_gatherv( const CommInfo &comm_info, const char *type_name, int error_code, Fail fail )
 {
-    int       result      = test_success;
-    const int local_count = comm_info.myid + 2;
+    int               result      = test_success;
+    const std::size_t local_count = static_cast<std::size_t>( comm_info.myid + 2 );
 
     std::vector<T> send( local_count );
-    for ( int i = 0; i < local_count; ++i )
+    for ( std::size_t i = 0; i < local_count; ++i )
     {
-        send[i] = make_scalar_value<T>( comm_info.myid, i );
+        send[i] = make_scalar_value<T>( comm_info.myid, static_cast<int>( i ) );
     }
 
     std::vector<int> recvcounts( comm_info.num_procs );

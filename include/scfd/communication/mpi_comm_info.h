@@ -611,9 +611,7 @@ struct mpi_comm_info
     }
 
     template <
-        class T, class SendCount, class Count,
-        typename std::enable_if<!std::is_same<SendCount, int>::value || !std::is_same<Count, int>::value, int>::type =
-            0>
+        class T, class SendCount, class Count, typename std::enable_if<!std::is_same<Count, int>::value, int>::type = 0>
     void
     all_gatherv( const T *sendbuf, SendCount sendcount, T *recvbuf, const Count *recvcounts, const Count *displs ) const
     {
