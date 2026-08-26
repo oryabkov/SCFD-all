@@ -14,17 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_CUDA_COPY_H__
-#define __SCFD_CUDA_COPY_H__
+#ifndef __SCFD_COPY_CUDA_H__
+#define __SCFD_COPY_CUDA_H__
 
 #include <cuda_runtime.h>
 #include <scfd/utils/cuda_safe_call.h>
 
 namespace scfd
 {
+namespace copy
+{
 
 template <class Ord = int>
-struct cuda_copy
+struct cuda
 {
     template <class T>
     void operator()( Ord size, const T *input, T *output ) const
@@ -40,6 +42,7 @@ struct cuda_copy
     }
 };
 
+}
 }
 
 #endif

@@ -22,9 +22,11 @@
 
 namespace scfd
 {
+namespace sequence
+{
 
 template <class Ord = int>
-struct thrust_sequence
+struct thrust
 {
     template <class T>
     void operator()( Ord size, T *output, T init_val = T( 0 ), T step = T( 1 ) ) const
@@ -39,6 +41,7 @@ struct thrust_sequence
     }
 };
 
+}
 }
 
 #endif

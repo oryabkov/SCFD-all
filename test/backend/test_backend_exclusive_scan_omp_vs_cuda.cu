@@ -9,7 +9,7 @@
 #include <thrust/system_error.h>
 #include <vector>
 
-#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
+#include <scfd/exclusive_scan/omp_impl.h>
 #include <scfd/exclusive_scan/thrust.h>
 
 #ifdef _OPENMP
@@ -100,7 +100,7 @@ std::vector<T> run_omp_scan( const std::vector<T> &input, T init, bool in_place,
 #else
     (void)threads;
 #endif
-    scfd::omp_exclusive_scan<std::size_t> scan;
+    scfd::exclusive_scan::omp<std::size_t> scan;
 
     if ( in_place )
     {
@@ -119,7 +119,7 @@ std::vector<T> run_omp_scan( const std::vector<T> &input, T init, bool in_place,
 template <class T>
 std::vector<T> run_cuda_scan( const std::vector<T> &input, T init, bool in_place )
 {
-    scfd::thrust_exclusive_scan<std::size_t> scan;
+    scfd::exclusive_scan::thrust<std::size_t> scan;
 
     thrust::device_vector<T> d_input( input.begin(), input.end() );
     if ( in_place )

@@ -23,20 +23,20 @@
 #include <sycl/sycl.hpp>
 
 #include <scfd/backend/common.h>
-#include <scfd/copy/sycl_copy_impl.h>
-#include <scfd/count_by_key/sycl_count_by_key_impl.h>
-#include <scfd/exclusive_scan/sycl_exclusive_scan_impl.h>
+#include <scfd/copy/sycl_impl.h>
+#include <scfd/count_by_key/sycl_impl.h>
+#include <scfd/exclusive_scan/sycl_impl.h>
 #include <scfd/for_each/sycl_impl.h>
 #include <scfd/for_each/sycl_nd_impl.h>
-#include <scfd/inclusive_scan/sycl_inclusive_scan_impl.h>
+#include <scfd/inclusive_scan/sycl_impl.h>
 #include <scfd/memory/sycl.h>
-#include <scfd/reduce/sycl_reduce_impl.h>
-#include <scfd/reduce_by_key/sycl_reduce_by_key_impl.h>
-#include <scfd/sequence/sycl_sequence_impl.h>
-#include <scfd/set_intersection/sycl_set_intersection_impl.h>
-#include <scfd/sort/sycl_sort_impl.h>
-#include <scfd/sort_by_key/sycl_sort_by_key_impl.h>
-#include <scfd/unique/sycl_unique_impl.h>
+#include <scfd/reduce/sycl_impl.h>
+#include <scfd/reduce_by_key/sycl_impl.h>
+#include <scfd/sequence/sycl_impl.h>
+#include <scfd/set_intersection/sycl_impl.h>
+#include <scfd/sort/sycl_impl.h>
+#include <scfd/sort_by_key/sycl_impl.h>
+#include <scfd/unique/sycl_impl.h>
 #include <scfd/utils/init_sycl.h>
 #include <scfd/utils/system_timer_event.h>
 
@@ -61,17 +61,17 @@ struct sycl_common
     using for_each_type = scfd::for_each::sycl_<Ordinal>;
     template <int Dim, class Ordinal = int>
     using for_each_nd_type      = scfd::for_each::sycl_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::sycl_reduce<>;
-    using sort_type             = scfd::sycl_sort<>;
-    using unique_type           = scfd::sycl_unique<>;
-    using exclusive_scan_type   = scfd::sycl_exclusive_scan<>;
-    using copy_type             = scfd::sycl_copy<>;
-    using inclusive_scan_type   = scfd::sycl_inclusive_scan<>;
-    using sort_by_key_type      = scfd::sycl_sort_by_key<>;
-    using reduce_by_key_type    = scfd::sycl_reduce_by_key<>;
-    using set_intersection_type = scfd::sycl_set_intersection<>;
-    using sequence_type         = scfd::sycl_sequence<>;
-    using count_by_key_type     = scfd::sycl_count_by_key<>;
+    using reduce_type           = scfd::reduce::sycl<>;
+    using sort_type             = scfd::sort::sycl<>;
+    using unique_type           = scfd::unique::sycl<>;
+    using exclusive_scan_type   = scfd::exclusive_scan::sycl<>;
+    using copy_type             = scfd::copy::sycl<>;
+    using inclusive_scan_type   = scfd::inclusive_scan::sycl<>;
+    using sort_by_key_type      = scfd::sort_by_key::sycl<>;
+    using reduce_by_key_type    = scfd::reduce_by_key::sycl<>;
+    using set_intersection_type = scfd::set_intersection::sycl<>;
+    using sequence_type         = scfd::sequence::sycl<>;
+    using count_by_key_type     = scfd::count_by_key::sycl<>;
 
     static const char *name()
     {

@@ -23,9 +23,11 @@
 
 namespace scfd
 {
+namespace sort_by_key
+{
 
 template <class Ord = int>
-struct thrust_sort_by_key
+struct thrust
 {
     template <class Key, class Value, class Compare>
     void operator()( Ord size, Key *keys, Value *values, Compare compare ) const
@@ -48,6 +50,7 @@ struct thrust_sort_by_key
     }
 };
 
+}
 }
 
 #endif

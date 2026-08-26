@@ -105,8 +105,9 @@ Headers that don't directly contains CUDA language parts (kernels decalrations a
 
 ## Header files  
 A header should have header guards and include all other headers it needs.  
-Use "#ifdef" guard. All guards in SCFD have 'SCFD_' prefix, contain filename turned into ALL_CAPITALS and (if needed) some part of directory structure (in case file names in dirrefent directories 
-could collide).
+Use `#ifndef` and `#define` guards. Guard names contain `SCFD`, the file name converted to ALL_CAPITALS, and
+the relevant directory components. Algorithm headers use the exact path-based structure described in
+"SCFD algorithm file and namespace layout" below.
 
 ## Forward declarations  
 Avoid using forward declarations where possible.  
@@ -731,6 +732,54 @@ exa::chrono_timer fps_timer;
 
 ## File and directory names  
 Use lowercase_underscore for source file names and lowercase_underscore for directory names.  
+
+## SCFD algorithm file and namespace layout
+
+An algorithm directory already identifies the operation, so file names inside it must not repeat the operation
+name. Use the backend or implementation name as the file name:
+
+* Public backend header: `<backend>.h`, for example `unique/omp.h`.
+* Backend implementation header: `<backend>_impl.h`, for example `unique/omp_impl.h`.
+* Shared algorithm configuration header: `config.h`, for example `sort/config.h`.
+* Use `.cuh` instead of `.h` only when the header directly contains CUDA language constructs.
+
+Canonical backend and implementation names include `serial`, `omp`, `cuda`, `hip`, `sycl`, and `thrust`.
+For example, use `inclusive_scan/omp.h`, not `inclusive_scan/omp_inclusive_scan.h`; use `reduce/serial.h`,
+not `reduce/serial_cpu.h`; and use `sort/config.h`, not `sort/sort_config.h`.
+
+The qualified name of an algorithm backend must follow its directory and file structure:
+
+```
+include/scfd/<operation>/<backend>.h -> scfd::<operation>::<backend>
+```
+
+For example, `include/scfd/unique/omp.h` declares `scfd::unique::omp`, and
+`include/scfd/inclusive_scan/sycl.h` declares `scfd::inclusive_scan::sycl`. Do not flatten these names into forms
+such as `scfd::omp_unique` or `scfd::sycl_inclusive_scan`.
+
+Implementation headers define the corresponding backend type in the same operation namespace. Internal helpers
+belong to `scfd::<operation>::detail` and must not be placed directly in `scfd` or exposed as part of the backend
+type's public name.
+
+```
+namespace scfd
+{
+namespace unique
+{
+
+template <class Ord = int>
+struct omp
+{
+    // ...
+};
+
+} // namespace unique
+} // namespace scfd
+```
+
+Algorithm header guards must include both the operation directory and file name using the established
+`__SCFD_<OPERATION>_<FILE_NAME>_H__` structure. For example, `unique/omp.h` uses `__SCFD_UNIQUE_OMP_H__`, while
+`unique/omp_impl.h` uses `__SCFD_UNIQUE_OMP_IMPL_H__`. A `.cuh` header uses `_CUH__` as its final component.
 
 ## Useful class names
 

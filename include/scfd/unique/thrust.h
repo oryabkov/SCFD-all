@@ -17,15 +17,17 @@
 #ifndef __SCFD_UNIQUE_THRUST_H__
 #define __SCFD_UNIQUE_THRUST_H__
 
-#include "unique_config.h"
+#include "config.h"
 #include <thrust/device_ptr.h>
 #include <thrust/unique.h>
 
 namespace scfd
 {
+namespace unique
+{
 
 template <class Ord = int>
-struct thrust_unique
+struct thrust
 {
     template <class T>
     Ord operator()( Ord size, T *data ) const
@@ -39,6 +41,7 @@ struct thrust_unique
     }
 };
 
+}
 }
 
 #endif

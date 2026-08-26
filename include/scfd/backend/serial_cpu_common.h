@@ -18,20 +18,20 @@
 #define __SCFD_BACKEND_SERIAL_CPU_COMMON_H__
 
 #include <scfd/backend/common.h>
-#include <scfd/copy/serial_cpu.h>
-#include <scfd/count_by_key/serial_cpu.h>
-#include <scfd/exclusive_scan/serial_cpu.h>
+#include <scfd/copy/serial.h>
+#include <scfd/count_by_key/serial.h>
+#include <scfd/exclusive_scan/serial.h>
 #include <scfd/for_each/serial_cpu.h>
 #include <scfd/for_each/serial_cpu_nd.h>
-#include <scfd/inclusive_scan/serial_cpu.h>
+#include <scfd/inclusive_scan/serial.h>
 #include <scfd/memory/host.h>
-#include <scfd/reduce/serial_cpu.h>
-#include <scfd/reduce_by_key/serial_cpu.h>
-#include <scfd/sequence/serial_cpu.h>
-#include <scfd/set_intersection/serial_cpu.h>
-#include <scfd/sort/serial_cpu.h>
-#include <scfd/sort_by_key/serial_cpu.h>
-#include <scfd/unique/serial_cpu.h>
+#include <scfd/reduce/serial.h>
+#include <scfd/reduce_by_key/serial.h>
+#include <scfd/sequence/serial.h>
+#include <scfd/set_intersection/serial.h>
+#include <scfd/sort/serial.h>
+#include <scfd/sort_by_key/serial.h>
+#include <scfd/unique/serial.h>
 #include <scfd/utils/system_timer_event.h>
 
 namespace scfd
@@ -49,17 +49,17 @@ struct serial_cpu_common
     using for_each_type = scfd::for_each::serial_cpu<Ordinal>;
     template <int Dim, class Ordinal = int>
     using for_each_nd_type      = scfd::for_each::serial_cpu_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::serial_cpu_reduce<>;
-    using sort_type             = scfd::serial_cpu_sort<>;
-    using unique_type           = scfd::serial_cpu_unique<>;
-    using exclusive_scan_type   = scfd::serial_cpu_exclusive_scan<>;
-    using copy_type             = scfd::serial_cpu_copy<>;
-    using inclusive_scan_type   = scfd::serial_cpu_inclusive_scan<>;
-    using sort_by_key_type      = scfd::serial_cpu_sort_by_key<>;
-    using reduce_by_key_type    = scfd::serial_cpu_reduce_by_key<>;
-    using set_intersection_type = scfd::serial_cpu_set_intersection<>;
-    using sequence_type         = scfd::serial_cpu_sequence<>;
-    using count_by_key_type     = scfd::serial_cpu_count_by_key<>;
+    using reduce_type           = scfd::reduce::serial<>;
+    using sort_type             = scfd::sort::serial<>;
+    using unique_type           = scfd::unique::serial<>;
+    using exclusive_scan_type   = scfd::exclusive_scan::serial<>;
+    using copy_type             = scfd::copy::serial<>;
+    using inclusive_scan_type   = scfd::inclusive_scan::serial<>;
+    using sort_by_key_type      = scfd::sort_by_key::serial<>;
+    using reduce_by_key_type    = scfd::reduce_by_key::serial<>;
+    using set_intersection_type = scfd::set_intersection::serial<>;
+    using sequence_type         = scfd::sequence::serial<>;
+    using count_by_key_type     = scfd::count_by_key::serial<>;
 
     static const char *name()
     {

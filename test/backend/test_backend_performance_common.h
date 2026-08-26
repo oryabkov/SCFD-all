@@ -296,14 +296,14 @@ struct performance_exclusive_scan_type
 template <>
 struct performance_exclusive_scan_type<scfd::backend::serial_cpu>
 {
-    using type = scfd::serial_cpu_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::serial<std::size_t>;
 };
 
 #if defined( PLATFORM_SERIAL_CPU ) && defined( SCFD_BACKEND_ENABLE_MPI )
 template <>
 struct performance_exclusive_scan_type<scfd::backend::serial_cpu_mpi>
 {
-    using type = scfd::serial_cpu_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::serial<std::size_t>;
 };
 #endif
 
@@ -311,14 +311,14 @@ struct performance_exclusive_scan_type<scfd::backend::serial_cpu_mpi>
 template <>
 struct performance_exclusive_scan_type<scfd::backend::omp>
 {
-    using type = scfd::omp_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::omp<std::size_t>;
 };
 
 #    ifdef SCFD_BACKEND_ENABLE_MPI
 template <>
 struct performance_exclusive_scan_type<scfd::backend::omp_mpi>
 {
-    using type = scfd::omp_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::omp<std::size_t>;
 };
 #    endif
 #endif
@@ -327,14 +327,14 @@ struct performance_exclusive_scan_type<scfd::backend::omp_mpi>
 template <>
 struct performance_exclusive_scan_type<scfd::backend::cuda>
 {
-    using type = scfd::thrust_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::thrust<std::size_t>;
 };
 
 #    ifdef SCFD_BACKEND_ENABLE_MPI
 template <>
 struct performance_exclusive_scan_type<scfd::backend::cuda_mpi>
 {
-    using type = scfd::thrust_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::thrust<std::size_t>;
 };
 #    endif
 #endif
@@ -343,14 +343,14 @@ struct performance_exclusive_scan_type<scfd::backend::cuda_mpi>
 template <>
 struct performance_exclusive_scan_type<scfd::backend::hip>
 {
-    using type = scfd::thrust_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::thrust<std::size_t>;
 };
 
 #    ifdef SCFD_BACKEND_ENABLE_MPI
 template <>
 struct performance_exclusive_scan_type<scfd::backend::hip_mpi>
 {
-    using type = scfd::thrust_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::thrust<std::size_t>;
 };
 #    endif
 #endif
@@ -359,14 +359,14 @@ struct performance_exclusive_scan_type<scfd::backend::hip_mpi>
 template <>
 struct performance_exclusive_scan_type<scfd::backend::sycl>
 {
-    using type = scfd::sycl_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::sycl<std::size_t>;
 };
 
 #    ifdef SCFD_BACKEND_ENABLE_MPI
 template <>
 struct performance_exclusive_scan_type<scfd::backend::sycl_mpi>
 {
-    using type = scfd::sycl_exclusive_scan<std::size_t>;
+    using type = scfd::exclusive_scan::sycl<std::size_t>;
 };
 #    endif
 #endif

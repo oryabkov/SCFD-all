@@ -22,9 +22,11 @@
 
 namespace scfd
 {
+namespace set_intersection
+{
 
 template <class Ord = int>
-struct thrust_set_intersection
+struct thrust
 {
     template <class T>
     Ord operator()( Ord size1, const T *set1, Ord size2, const T *set2, T *result ) const
@@ -43,6 +45,7 @@ struct thrust_set_intersection
     }
 };
 
+}
 }
 
 #endif

@@ -24,9 +24,11 @@
 
 namespace scfd
 {
+namespace count_by_key
+{
 
 template <class Ord = int>
-struct thrust_count_by_key
+struct thrust
 {
     template <class Key, class Count, class KeyEqual>
     Ord operator()( Ord size, const Key *keys_in, Key *keys_out, Count *counts_out, KeyEqual key_equal ) const
@@ -54,6 +56,7 @@ struct thrust_count_by_key
     }
 };
 
+}
 }
 
 #endif

@@ -17,16 +17,18 @@
 #ifndef __SCFD_REDUCE_THRUST_H__
 #define __SCFD_REDUCE_THRUST_H__
 
-#include "reduce_config.h"
+#include "config.h"
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 #include <scfd/functional/basic_ops.h>
 
 namespace scfd
 {
+namespace reduce
+{
 
 template <class Ord = int>
-struct thrust_reduce
+struct thrust
 {
     template <class T>
     T operator()( Ord size, const T *input, T init_val ) const
@@ -46,6 +48,7 @@ struct thrust_reduce
     }
 };
 
+}
 }
 
 #endif

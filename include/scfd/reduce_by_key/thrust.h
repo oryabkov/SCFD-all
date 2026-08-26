@@ -23,9 +23,11 @@
 
 namespace scfd
 {
+namespace reduce_by_key
+{
 
 template <class Ord = int>
-struct thrust_reduce_by_key
+struct thrust
 {
     template <class Key, class Value, class KeyEqual, class BinaryOp>
     Ord operator()(
@@ -58,6 +60,7 @@ struct thrust_reduce_by_key
     }
 };
 
+}
 }
 
 #endif

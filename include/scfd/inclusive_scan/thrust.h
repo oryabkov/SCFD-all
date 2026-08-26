@@ -22,9 +22,11 @@
 
 namespace scfd
 {
+namespace inclusive_scan
+{
 
 template <class Ord = int>
-struct thrust_inclusive_scan
+struct thrust
 {
     template <class T>
     void operator()( Ord size, const T *input, T *output ) const
@@ -41,6 +43,7 @@ struct thrust_inclusive_scan
     }
 };
 
+}
 }
 
 #endif

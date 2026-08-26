@@ -17,15 +17,17 @@
 #ifndef __SCFD_EXCLUSIVE_SCAN_THRUST_H__
 #define __SCFD_EXCLUSIVE_SCAN_THRUST_H__
 
-#include "exclusive_scan_config.h"
+#include "config.h"
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
 namespace scfd
 {
+namespace exclusive_scan
+{
 
 template <class Ord = int>
-struct thrust_exclusive_scan
+struct thrust
 {
     template <class T>
     void operator()( Ord size, const T *input, T *output, T init_val ) const
@@ -41,6 +43,7 @@ struct thrust_exclusive_scan
     }
 };
 
+}
 }
 
 #endif

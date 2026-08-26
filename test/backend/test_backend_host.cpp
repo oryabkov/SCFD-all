@@ -6,8 +6,8 @@
 #include "test_backend_config.h"
 #include <scfd/arrays/tensorN_array_nd.h>
 #include <scfd/backend/backend.h>
-#include <scfd/exclusive_scan/omp_exclusive_scan_impl.h>
-#include <scfd/inclusive_scan/omp_inclusive_scan_impl.h>
+#include <scfd/exclusive_scan/omp_impl.h>
+#include <scfd/inclusive_scan/omp_impl.h>
 #include <scfd/static_vec/vec.h>
 
 namespace
@@ -93,7 +93,7 @@ bool test_default_initialized_scans()
         input[i] = value_t::from_value( source[i] );
     }
 
-    scfd::omp_inclusive_scan<std::size_t> inclusive_scan;
+    scfd::inclusive_scan::omp<std::size_t> inclusive_scan;
     inclusive_scan( input.size(), input.data(), output.data() );
     const int inclusive_reference[] = { 1, 3, 6, 10 };
     for ( std::size_t i = 0; i < output.size(); ++i )
@@ -104,7 +104,7 @@ bool test_default_initialized_scans()
         }
     }
 
-    scfd::omp_exclusive_scan<std::size_t> exclusive_scan;
+    scfd::exclusive_scan::omp<std::size_t> exclusive_scan;
     exclusive_scan( input.size(), input.data(), output.data(), value_t::from_value( 5 ) );
     const int exclusive_reference[] = { 5, 6, 8, 11 };
     for ( std::size_t i = 0; i < output.size(); ++i )

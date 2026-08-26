@@ -17,15 +17,17 @@
 #ifndef __SCFD_SORT_THRUST_H__
 #define __SCFD_SORT_THRUST_H__
 
-#include "sort_config.h"
+#include "config.h"
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 
 namespace scfd
 {
+namespace sort
+{
 
 template <class Ord = int>
-struct thrust_sort
+struct thrust
 {
     template <class T>
     void operator()( Ord size, T *data ) const
@@ -38,6 +40,7 @@ struct thrust_sort
     }
 };
 
+}
 }
 
 #endif

@@ -14,17 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_HIP_COPY_H__
-#define __SCFD_HIP_COPY_H__
+#ifndef __SCFD_COPY_HIP_H__
+#define __SCFD_COPY_HIP_H__
 
 #include <hip/hip_runtime.h>
 #include <scfd/utils/hip_safe_call.h>
 
 namespace scfd
 {
+namespace copy
+{
 
 template <class Ord = int>
-struct hip_copy
+struct hip
 {
     template <class T>
     void operator()( Ord size, const T *input, T *output ) const
@@ -38,6 +40,7 @@ struct hip_copy
     }
 };
 
+}
 }
 
 #endif
