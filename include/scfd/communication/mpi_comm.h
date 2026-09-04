@@ -29,7 +29,7 @@ namespace communication
 
 struct mpi_comm
 {
-    using mpi_comm_info_type = mpi_comm_info;
+    using comm_info_type = mpi_comm_info;
 
     mpi_comm( MPI_Comm comm ) : comm_( comm )
     {

@@ -561,10 +561,10 @@ class mpi_comm;
 
 struct mpi_comm_info
 {
-    using mpi_comm_type = mpi_comm;
-    using request_type  = detail::mpi_request;
-    using status_type   = detail::mpi_status;
-    using data_type     = detail::mpi_data_type;
+    using comm_type    = mpi_comm;
+    using request_type = detail::mpi_request;
+    using status_type  = detail::mpi_status;
+    using data_type    = detail::mpi_data_type;
 
     MPI_Comm comm;
     int      num_procs;
