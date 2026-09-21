@@ -1,30 +1,32 @@
+#if !defined( PLATFORM_SERIAL_CPU ) || defined( PLATFORM_MPI )
+#    error "test_platform_trivial_comm.cpp requires PLATFORM_SERIAL_CPU without PLATFORM_MPI"
+#endif
+
 #include <iostream>
 #include <string>
-#include <scfd/memory/host.h>
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
+#include <scfd/platform/platform.h>
 #include <scfd/arrays/array_nd.h>
-#include <scfd/for_each/serial_cpu_nd.h>
 #include <scfd/communication/rect_partitioner.h>
 #include <scfd/communication/rect_distributor.h>
-#include <scfd/communication/trivial_comm.h>
-#include <scfd/communication/trivial_platform.h>
 
 
-/// Direct host/serial reference for the trivial communicator, independent of backend/platform configuration.
+/// Selected SERIAL platform integration test for the trivial communicator.
 /// Goal: make trivial_comm/trivial_platform/trivial_message_queue work so that this
 /// runs WITHOUT mpiexec and reproduces a periodic (x) halo exchange done as a self-send.
 using namespace scfd;
 
-using ordinal        = int;
-using big_ordinal    = long int;
+using platform_t     = platform::current<>;
+using ordinal        = platform_t::ordinal_type;
+using big_ordinal    = platform_t::big_ordinal_type;
 using value_t        = unsigned int;
 static const int dim = 3;
 
-using mem_t       = memory::host;
-using comm_t      = communication::trivial_platform<mem_t>; // ~ mpi_wrap
-using comm_info_t = communication::trivial_comm<mem_t>;     // ~ mpi_comm_info
-using part_t      = communication::rect_partitioner<dim, ordinal, big_ordinal, comm_info_t>;
-using for_each_t  = for_each::serial_cpu_nd<dim, ordinal>;
+using mem_t         = platform_t::memory_type;
+using environment_t = platform_t::communication_environment_type;
+using comm_info_t   = platform_t::communicator_type;
+using part_t        = communication::rect_partitioner<dim, ordinal, big_ordinal, comm_info_t>;
+using for_each_t    = platform_t::for_each_nd_type<dim>;
 
 using idx_t            = static_vec::vec<ordinal, dim>;
 using periodic_flags_t = static_vec::vec<bool, dim>;
@@ -37,10 +39,19 @@ using dist_t = communication::rect_distributor<value_t, dim, mem_t, for_each_t, 
 int main( int argc, char *args[] )
 {
     ordinal stencil           = 1;
-    ordinal max_stencil_order = 1;
+    int     max_stencil_order = 1;
 
-    comm_t      comm( argc, args );
-    comm_info_t comm_world = comm.comm_world();
+    environment_t environment( argc, args );
+    comm_info_t   comm_world = environment.comm_world();
+    platform_t::init( comm_world );
+
+    const comm_info_t copied_comm = comm_world;
+    if ( comm_world.num_procs != 1 || comm_world.myid != 0 || comm_world.queue == nullptr ||
+         copied_comm.queue != comm_world.queue || environment.comm_world().queue != comm_world.queue )
+    {
+        std::cerr << "FAILED: invalid trivial communicator or shared queue" << std::endl;
+        return 1;
+    }
 
     big_ordinal size = 10;
     big_idx_t   dom_sz( size, size, size );

@@ -21,6 +21,12 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
+#include <type_traits>
+
+#ifdef SYCL_LANGUAGE_VERSION
+#    include <sycl/sycl.hpp>
+#endif
+
 #include <scfd/static_vec/vec.h>
 #include <scfd/static_vec/rect.h>
 #include <scfd/arrays/array_nd.h>
@@ -53,7 +59,7 @@ template <int Dim, class Ord, class Array>
 struct copy_array_nd_func
 {
     SCFD_FOR_EACH_FUNC_PARAMS( copy_array_nd_func, Array, input, Array, output )
-    __DEVICE_TAG__ void operator()( const static_vec::vec<Ord, Dim> &idx )
+    __DEVICE_TAG__ void operator()( const static_vec::vec<Ord, Dim> &idx ) const
     {
         output( idx ) = input( idx );
     }
@@ -76,7 +82,7 @@ template <int Dim, class Ord, class Array>
 struct copy_array1_nd_func
 {
     SCFD_FOR_EACH_FUNC_PARAMS( copy_array1_nd_func, Ord, tensor_dim, Array, input, Array, output )
-    __DEVICE_TAG__ void operator()( const static_vec::vec<Ord, Dim> &idx )
+    __DEVICE_TAG__ void operator()( const static_vec::vec<Ord, Dim> &idx ) const
     {
         for ( Ord j = 0; j < tensor_dim; ++j )
             output( idx, j ) = input( idx, j );
@@ -523,5 +529,32 @@ private:
 
 } // namespace communication
 } // namespace scfd
+
+#ifdef SYCL_LANGUAGE_VERSION
+// These kernels copy SCFD array handles: only data pointers and layout metadata
+// are used on the device. Array copies are non-owning (tensor_base::assign), and
+// destruction on the device does not release storage. Restrict the opt-in to
+// SCFD arrays whose layout metadata is itself device-copyable.
+template <
+    int Dim, class Ord, class T, scfd::arrays::ordinal_type ND, class Memory,
+    template <scfd::arrays::ordinal_type...> class Arranger, scfd::arrays::ordinal_type... TensorDims>
+struct sycl::is_device_copyable<scfd::communication::detail::kernel::copy_array_nd_func<
+    Dim, Ord, scfd::arrays::tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>>>
+    : sycl::is_device_copyable<
+          typename scfd::arrays::tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>::arranger_type>
+{
+};
+
+template <
+    int Dim, class Ord, class T, scfd::arrays::ordinal_type ND, class Memory,
+    template <scfd::arrays::ordinal_type...> class Arranger, scfd::arrays::ordinal_type... TensorDims>
+struct sycl::is_device_copyable<scfd::communication::detail::kernel::copy_array1_nd_func<
+    Dim, Ord, scfd::arrays::tensor_array_nd<T, ND, Memory, Arranger, TensorDims...>>>
+    : std::integral_constant<
+          bool, sycl::is_device_copyable_v<Ord> && sycl::is_device_copyable_v<typename scfd::arrays::tensor_array_nd<
+                                                       T, ND, Memory, Arranger, TensorDims...>::arranger_type>>
+{
+};
+#endif
 
 #endif

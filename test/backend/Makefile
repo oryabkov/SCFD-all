@@ -1,5 +1,4 @@
 CUDA_ROOT_PATH ?= /usr/local/cuda
-MPI_ROOT_PATH ?= /usr/local/mpi
 SYCL_DPL_ROOT_PATH ?= /opt/intel/oneapi-sycl-nvidia/dpl/2022.7
 
 SCFD_INCLUDE := ../../include
@@ -8,8 +7,6 @@ CXX ?= g++
 NVCC ?= $(CUDA_ROOT_PATH)/bin/nvcc
 HIPCC ?= hipcc
 SYCL_CXX ?= $(if $(SYCL_PATH),$(SYCL_PATH)/bin/icpx,icpx)
-MPICXX ?= $(MPI_ROOT_PATH)/bin/mpic++
-MPIRUN ?= $(MPI_ROOT_PATH)/bin/mpiexec
 
 CPPSTD ?= -std=c++14
 SYCL_CPPSTD ?= -std=c++17
@@ -28,16 +25,8 @@ PERF_SYCLFLAGS ?= $(SYCLFLAGS) -O3
 
 OPENMP_FLAGS ?= -fopenmp -lpthread
 CUDA_OPENMP_FLAGS ?= -Xcompiler -fopenmp -lgomp -lpthread
-CUDA_OPENMP_COMPILE_FLAGS ?= -Xcompiler -fopenmp
 HIP_OPENMP_FLAGS ?= -fopenmp -lpthread
 SYCL_OPENMP_FLAGS ?= $(OPENMP_FLAGS)
-
-MPI_CPPFLAGS ?= -I$(MPI_ROOT_PATH)/include
-MPI_LDFLAGS ?= -L$(MPI_ROOT_PATH)/lib
-MPI_LIBS ?= -lmpi
-CUDA_MPI_LIBS ?= -L$(CUDA_ROOT_PATH)/lib64 -lcudart -ldl
-MPIEXEC_FLAGS ?= --bind-to none
-MPI_PROCS ?= 1
 
 PERF_SIZE ?= 6388608
 PERF_ALGO_SIZE ?= $(PERF_SIZE)
@@ -64,6 +53,9 @@ endif
 ifeq ($(filter $(MPI),$(VALID_MPI_VALUES)),)
 $(error Invalid MPI='$(MPI)'; choose one of: $(VALID_MPI_VALUES))
 endif
+ifeq ($(MPI),ON)
+$(error Backend tests are local-only; use make -C ../communication PLATFORM=$(PLATFORM) MPI=ON for MPI platform tests)
+endif
 
 PLATFORM_TAG_SERIAL := serial
 PLATFORM_TAG_OMP := omp
@@ -80,16 +72,8 @@ PLATFORM_DEFINE_SYCL := -DPLATFORM_SYCL
 CONFIG := $(PLATFORM_TAG_$(PLATFORM))
 PLATFORM_DEFINE := $(PLATFORM_DEFINE_$(PLATFORM))
 
-ifeq ($(MPI),ON)
-CONFIG := $(CONFIG)-mpi
-MPI_DEFINE := -DSCFD_BACKEND_ENABLE_MPI
-MPI_COMPILE_FLAGS := $(MPI_CPPFLAGS)
-MPI_LINK_FLAGS := $(MPI_LDFLAGS) $(MPI_LIBS)
-RUNNER := $(MPIRUN) $(MPIEXEC_FLAGS) -n $(MPI_PROCS)
-endif
-
 BUILD_DIR := build/$(CONFIG)
-COMMON_CPPFLAGS := -I$(SCFD_INCLUDE) $(PLATFORM_DEFINE) $(MPI_DEFINE) $(MPI_COMPILE_FLAGS)
+COMMON_CPPFLAGS := -I$(SCFD_INCLUDE) $(PLATFORM_DEFINE)
 
 ALGORITHMS_BIN := $(BUILD_DIR)/test_backend_algorithms.bin
 RUNTIME_BIN := $(BUILD_DIR)/test_backend_runtime.bin
@@ -122,13 +106,13 @@ all: $(CORE_BINS)
 perf: $(PERFORMANCE_BIN)
 
 run: all
-	$(RUNNER) $(ALGORITHMS_BIN)
-	$(RUNNER) $(RUNTIME_BIN)
+	$(ALGORITHMS_BIN)
+	$(RUNTIME_BIN)
 ifneq ($(HOST_BIN),)
-	$(RUNNER) $(HOST_BIN)
+	$(HOST_BIN)
 endif
 ifneq ($(CUDA_SCAN_BIN),)
-	$(RUNNER) $(CUDA_SCAN_BIN)
+	$(CUDA_SCAN_BIN)
 endif
 
 run-perf: perf
@@ -136,25 +120,17 @@ run-perf: perf
 	SCFD_BACKEND_PERF_ALGO_SIZE=$(PERF_ALGO_SIZE) \
 	SCFD_BACKEND_PERF_REPEATS=$(PERF_REPEATS) \
 	SCFD_BACKEND_PERF_MIN_SPEEDUP=$(PERF_MIN_SPEEDUP) \
-	$(RUNNER) $(PERFORMANCE_BIN)
+	$(PERFORMANCE_BIN)
 
 $(BUILD_DIR):
 	mkdir -p $@
 
 ifeq ($(PLATFORM),SERIAL)
-ifeq ($(MPI),ON)
-BACKEND_CXX := $(MPICXX)
-else
 BACKEND_CXX := $(CXX)
-endif
 BACKEND_FLAGS := $(CXXFLAGS)
 PERFORMANCE_FLAGS := $(PERF_CXXFLAGS) $(OPENMP_FLAGS)
 else ifeq ($(PLATFORM),OMP)
-ifeq ($(MPI),ON)
-BACKEND_CXX := $(MPICXX)
-else
 BACKEND_CXX := $(CXX)
-endif
 BACKEND_FLAGS := $(CXXFLAGS) $(OPENMP_FLAGS)
 PERFORMANCE_FLAGS := $(PERF_CXXFLAGS) $(OPENMP_FLAGS)
 else ifeq ($(PLATFORM),HIP)
@@ -169,11 +145,11 @@ endif
 
 ifneq ($(PLATFORM),CUDA)
 $(GENERIC_CORE_BINS): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
-	$(BACKEND_CXX) $(CPPFLAGS) $(BACKEND_FLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(BACKEND_CXX) $(CPPFLAGS) $(BACKEND_FLAGS) $(COMMON_CPPFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
 
 $(PERFORMANCE_BIN): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
-	$(BACKEND_CXX) $(CPPFLAGS) $(PERFORMANCE_FLAGS) $(COMMON_CPPFLAGS) $< $(MPI_LINK_FLAGS) $(LDFLAGS) $(LDLIBS) -o $@
-else ifeq ($(MPI),OFF)
+	$(BACKEND_CXX) $(CPPFLAGS) $(PERFORMANCE_FLAGS) $(COMMON_CPPFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+else
 $(GENERIC_CORE_BINS): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
 	$(NVCC) $(CPPFLAGS) $(CUDAFLAGS) $(COMMON_CPPFLAGS) -x cu $< $(CUDA_LDFLAGS) $(LDLIBS) -o $@
 
@@ -182,18 +158,6 @@ $(PERFORMANCE_BIN): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
 
 $(CUDA_SCAN_BIN): test_backend_exclusive_scan_omp_vs_cuda.cu | $(BUILD_DIR)
 	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_FLAGS) $(COMMON_CPPFLAGS) $< $(CUDA_LDFLAGS) $(LDLIBS) -o $@
-else
-$(GENERIC_CORE_BINS): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
-	$(NVCC) $(CPPFLAGS) $(CUDAFLAGS) $(COMMON_CPPFLAGS) -x cu -c $< -o $(@:.bin=.o)
-	$(MPICXX) $(@:.bin=.o) $(MPI_LINK_FLAGS) $(LDFLAGS) $(CUDA_MPI_LIBS) $(LDLIBS) -o $@
-
-$(PERFORMANCE_BIN): $(BUILD_DIR)/%.bin: %.cpp | $(BUILD_DIR)
-	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_COMPILE_FLAGS) $(COMMON_CPPFLAGS) -x cu -c $< -o $(@:.bin=.o)
-	$(MPICXX) $(@:.bin=.o) $(MPI_LINK_FLAGS) $(LDFLAGS) $(OPENMP_FLAGS) $(CUDA_MPI_LIBS) $(LDLIBS) -o $@
-
-$(CUDA_SCAN_BIN): test_backend_exclusive_scan_omp_vs_cuda.cu | $(BUILD_DIR)
-	$(NVCC) $(CPPFLAGS) $(PERF_CUDAFLAGS) $(CUDA_OPENMP_COMPILE_FLAGS) $(COMMON_CPPFLAGS) -c $< -o $(@:.bin=.o)
-	$(MPICXX) $(@:.bin=.o) $(MPI_LINK_FLAGS) $(LDFLAGS) $(OPENMP_FLAGS) $(CUDA_MPI_LIBS) $(LDLIBS) -o $@
 endif
 
 clean:
@@ -201,14 +165,15 @@ clean:
 
 help:
 	@echo "SCFD backend tests"
-	@echo "  make [all] PLATFORM={SERIAL,OMP,CUDA,HIP,SYCL} MPI={OFF,ON}"
+	@echo "  make [all] PLATFORM={SERIAL,OMP,CUDA,HIP,SYCL}"
 	@echo "  make run      Build and run functional tests"
 	@echo "  make perf     Build the performance test"
 	@echo "  make run-perf Build and run the performance test"
 	@echo "  make clean    Remove configuration build directories"
 	@echo ""
-	@echo "Defaults: PLATFORM=SERIAL MPI=OFF"
-	@echo "PLATFORM_MPI is accepted as an alias for MPI. MPI runs default to one rank; override MPI_PROCS as needed."
+	@echo "Default: PLATFORM=SERIAL. Backend tests do not depend on MPI."
+	@echo "MPI=OFF and PLATFORM_MPI=OFF remain accepted; ON is rejected."
+	@echo "Run MPI platform tests from test/communication with PLATFORM=<backend> MPI=ON."
 	@echo "Run 'make clean' after changing compiler or low-level flag variables."
 	@echo "CUDA setting: CUDA_LDFLAGS (direct nvcc links do not consume host LDFLAGS)."
 	@echo "SYCL settings: SYCL_CXX, SYCL_DPL_ROOT_PATH, SYCL_TARGET_FLAGS."

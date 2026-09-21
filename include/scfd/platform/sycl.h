@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_BACKEND_SYCL_MPI_H__
-#define __SCFD_BACKEND_SYCL_MPI_H__
+#ifndef __SCFD_PLATFORM_SYCL_H__
+#define __SCFD_PLATFORM_SYCL_H__
 
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include <mpi.h>
@@ -27,23 +26,29 @@
 #include <scfd/backend/sycl.h>
 #include <scfd/communication/mpi_comm.h>
 #include <scfd/communication/mpi_comm_info.h>
+#include <scfd/communication/mpi_wrap.h>
 #include <scfd/utils/log_std.h>
 
 namespace scfd
 {
-namespace backend
+namespace platform
 {
 
-struct sycl_mpi : public sycl
+template <
+    class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL,
+    class Communicator = scfd::communication::mpi_comm_info>
+struct sycl_mpi : public backend::sycl<Ordinal>
 {
-    using sycl::init_device;
-    using communicator_type = scfd::communication::mpi_comm_info;
-    using runtime_type      = sycl_mpi;
+    using backend_type                   = backend::sycl<Ordinal>;
+    using ordinal_type                   = Ordinal;
+    using big_ordinal_type               = BigOrdinal;
+    using communicator_type              = Communicator;
+    using communication_environment_type = scfd::communication::mpi_wrap;
+    using runtime_type                   = sycl_mpi<Ordinal, BigOrdinal, Communicator>;
+    using backend_type::init_device;
 
-    template <
-        class Log, class Comm,
-        typename std::enable_if<!std::is_integral<typename std::decay<Comm>::type>::value, int>::type = 0>
-    static int init_device( Log &log, const Comm &comm, int shift_index = 0, bool wrap_procs_devices = false )
+    template <class Log>
+    static int init( Log &log, const communicator_type &comm, int shift_index = 0, bool wrap_procs_devices = false )
     {
         auto node_comm = comm.split_type( MPI_COMM_TYPE_SHARED );
         int  node_size = node_comm.num_procs();
@@ -53,13 +58,12 @@ struct sycl_mpi : public sycl
         std::vector<::sycl::device> devices = ::sycl::device::get_devices( ::sycl::info::device_type::gpu );
         const int                   number_of_devices_on_node = static_cast<int>( devices.size() );
         if ( number_of_devices_on_node <= 0 )
-            throw std::runtime_error( "sycl_mpi::init_device: no visible SYCL GPU devices" );
+            throw std::runtime_error( "sycl_mpi::init: no visible SYCL GPU devices" );
         if ( number_of_devices_on_node < node_size && !wrap_procs_devices )
         {
             throw std::runtime_error(
-                "sycl_mpi::init_device: number of nproc = " + std::to_string( node_size ) +
-                ", number of SYCL GPU devices = " + std::to_string( number_of_devices_on_node ) +
-                "\n numproc per node > numDevices per node"
+                "sycl_mpi::init: number of nproc = " + std::to_string( node_size ) + ", number of SYCL GPU devices = " +
+                std::to_string( number_of_devices_on_node ) + "\n numproc per node > numDevices per node"
             );
         }
 
@@ -67,13 +71,13 @@ struct sycl_mpi : public sycl
         if ( number_of_devices_on_node < node_size && wrap_procs_devices && my_id == 0 )
         {
             log.info_f(
-                "WARNING: sycl_mpi::init_device is wrapping %i MPI processes over %i visible device(s). "
+                "WARNING: sycl_mpi::init is wrapping %i MPI processes over %i visible device(s). "
                 "Several MPI processes will share one device.",
                 node_size, number_of_devices_on_node
             );
         }
         log.info_f(
-            "sycl_mpi::init_device: global_size = %i, global_id = %i, node_size = %i, devices_on_node = %i, "
+            "sycl_mpi::init: global_size = %i, global_id = %i, node_size = %i, devices_on_node = %i, "
             "node_device_id = %i, node_my_id = %i",
             comm.num_procs, comm.myid, node_size, number_of_devices_on_node, device_id, my_id
         );
@@ -81,11 +85,10 @@ struct sycl_mpi : public sycl
         return device_id;
     }
 
-    template <class Comm>
-    static int init_device( const Comm &comm, int shift_index = 0, bool wrap_procs_devices = false )
+    static int init( const communicator_type &comm, int shift_index = 0, bool wrap_procs_devices = false )
     {
         scfd::utils::log_std log;
-        return init_device( log, comm, shift_index, wrap_procs_devices );
+        return init( log, comm, shift_index, wrap_procs_devices );
     }
 };
 

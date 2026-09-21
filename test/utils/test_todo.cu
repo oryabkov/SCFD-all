@@ -37,9 +37,9 @@ struct func
 int main( int argc, char const *argv[] )
 {
     using log_t      = scfd::utils::log_std;
-    using backend_t  = scfd::backend::cuda;
+    using backend_t  = scfd::backend::cuda<>;
     using memory_t   = backend_t::memory_type;
-    using for_each_t = backend_t::for_each_type<int>;
+    using for_each_t = backend_t::for_each_type;
     using array_t    = scfd::arrays::tensor0_array_nd<int, 1, memory_t>;
 
     log_t      log;

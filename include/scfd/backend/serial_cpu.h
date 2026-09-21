@@ -25,9 +25,10 @@ namespace scfd
 namespace backend
 {
 
-struct serial_cpu : public serial_cpu_common
+template <class Ordinal = PLATFORM_ORDINAL>
+struct serial_cpu : public serial_cpu_common<Ordinal>
 {
-    using runtime_type = serial_cpu;
+    using runtime_type = serial_cpu<Ordinal>;
 
     template <class Log>
     static int init_device( Log &, int = 0 )

@@ -22,7 +22,7 @@
 int main( int argc, char *argv[] )
 {
     using mpi_comm_t      = scfd::communication::mpi_comm;
-    using mpi_comm_info_t = typename mpi_comm_t::mpi_comm_info_type;
+    using mpi_comm_info_t = typename mpi_comm_t::comm_info_type;
     using log_t           = scfd::utils::log_mpi;
     using mpi_wrap_t      = scfd::communication::mpi_wrap;
 

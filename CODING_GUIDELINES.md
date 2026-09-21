@@ -781,6 +781,87 @@ Algorithm header guards must include both the operation directory and file name 
 `__SCFD_<OPERATION>_<FILE_NAME>_H__` structure. For example, `unique/omp.h` uses `__SCFD_UNIQUE_OMP_H__`, while
 `unique/omp_impl.h` uses `__SCFD_UNIQUE_OMP_IMPL_H__`. A `.cuh` header uses `_CUH__` as its final component.
 
+## Backend ordinal configuration
+
+Backend templates use `Ordinal = PLATFORM_ORDINAL` and expose the selected type as `ordinal_type`.
+All algorithm aliases within a backend use that ordinal: `for_each_type` is a plain type alias, while
+`for_each_nd_type<Dim>` takes only the dimension. For example, `scfd::backend::current<std::ptrdiff_t>`
+selects a wide ordinal for all of that backend's algorithms; `scfd::backend::current<>` uses the configured default.
+
+Only headers within `scfd/backend` and `scfd/platform` may include `scfd/platform/config.h`.
+It defaults `PLATFORM_ORDINAL` to `int` and `PLATFORM_BIG_ORDINAL` to `std::ptrdiff_t`.
+Arrays keep their own configuration: an explicit `SCFD_ARRAYS_ORDINAL_TYPE` takes precedence, followed by
+`PLATFORM_ORDINAL` if defined, and otherwise `int`. Individual algorithm headers retain their independent defaults.
+
+Define configuration macros before any SCFD includes and consistently across translation units.
+Make types named by those macros available first, for example by including `<cstddef>` for `std::ptrdiff_t`.
+An explicit backend template argument changes that backend's algorithm indices, not array configuration,
+algorithm value types, MPI ranks, or device IDs.
+
+## Platform and communication configuration
+
+`scfd/backend/backend.h` selects local execution only. Define exactly one of `PLATFORM_SERIAL_CPU`,
+`PLATFORM_OMP`, `PLATFORM_CUDA`, `PLATFORM_HIP`, or `PLATFORM_SYCL`. Enabling MPI does not change
+`scfd::backend::current<Ordinal>` or introduce MPI dependencies into backend headers.
+
+`scfd/platform/platform.h` combines that backend with communication. Define `PLATFORM_MPI` to select
+an MPI platform; leave it undefined for a local platform. This is a presence flag, not a numeric boolean:
+defining it to `0` still enables MPI. Only the selected execution implementation is included.
+
+`scfd::platform::current<Ordinal, BigOrdinal, Communicator>` defaults its local and global ordinal types
+to `PLATFORM_ORDINAL` and `PLATFORM_BIG_ORDINAL`. It exposes `backend_type`, `ordinal_type`,
+`big_ordinal_type`, `communicator_type`, `communication_environment_type`, and its inherited backend operations.
+Changing `BigOrdinal` affects global geometry types selected by consumers, not local algorithm indices,
+MPI ranks, device IDs, or communication count limits. Communication algorithms must receive these types
+explicitly; they must not include platform configuration themselves.
+
+MPI platforms default to `communication::mpi_comm_info` and use `communication::mpi_wrap` for the
+communication environment. Local platforms default to `communication::trivial_comm<memory::host>` and
+use `communication::trivial_platform<memory::host>` to own its message queue. This is a single-rank,
+host-buffer transport, not a full MPI replacement or a device-buffer transport. In particular, matching
+sends must precede receives, and send buffers must remain valid until their receives consume them.
+The serial non-MPI communication tests exercise this configuration.
+
+Keep communication ownership separate from platform configuration:
+
+```cpp
+using platform_t = scfd::platform::current<>;
+
+platform_t::communication_environment_type environment( argc, argv );
+auto comm = environment.comm_world();
+platform_t::init( comm );
+```
+
+The environment must outlive its borrowed communicator handles and all communication objects using them.
+`init` does not initialize/finalize MPI or create/free a communicator. MPI initialization accepts
+`init(log, comm, shift_index, wrap_procs_devices)` or `init(comm, shift_index, wrap_procs_devices)`;
+local initialization interprets the integer argument as a device ID and ignores the wrapping flag.
+The integer defaults to `0` and wrapping defaults to `false`. Custom communicator template arguments
+must satisfy the chosen adapter's interface; CUDA/HIP MPI helpers require `mpi_comm_info`-compatible input.
+The environment aliases still describe the default environment, so construct custom handles explicitly
+from it when necessary.
+
+Use platform `init` before device allocation and communication. Do not subsequently call the inherited
+local `init_device(0)` unless intentionally changing the device selected for that communicator.
+Define array configuration switches, including `SCFD_ARRAYS_ENABLE_INDEX_SHIFT`, before platform/backend
+includes, because a selected backend may include array headers transitively.
+
+`test/backend` tests local execution only. Use `test/communication` with `PLATFORM=SERIAL|OMP|CUDA|HIP|SYCL`
+and `MPI=ON|OFF` (or the equivalent Make variable `PLATFORM_MPI=ON|OFF`) for platform integration tests.
+The communication Makefile translates `MPI=ON` to `-DPLATFORM_MPI` for platform tests; `MPI=OFF` leaves it undefined.
+Keep direct communication setup tests separate from platform-selection tests. `test_mpi_rect_distributor.cpp`,
+`test_mpi_rect_distributor_tensor.cpp`, and `test_trivial_comm.cpp` explicitly select their communicator,
+host memory, serial execution, and ordinal types without including backend or platform headers.
+Their platform-selected counterparts are `test_platform_rect_distributor.cpp`,
+`test_platform_rect_distributor_tensor.cpp`, and `test_platform_trivial_comm.cpp`; they exercise the same
+communication scenarios through `platform::current<>` and its initialization interface.
+
+Independent MPI test binaries remain shared in `build/mpi/`, and the direct trivial communicator test is
+built with the ordinary host compiler in `build/trivial/`. Platform tests are configuration-specific in
+`build/<platform>[-mpi]/`. `make run` runs both groups; `run-common` and `run-platform` select one group.
+Non-MPI runs retain the direct trivial communicator baseline for every selected backend; SERIAL also runs
+the platform-selected trivial communicator's periodic halo exchange.
+
 ## Useful class names
 
 For "Writer" class with <name> use as:

@@ -17,98 +17,65 @@
 #ifndef __SCFD_BACKEND_H__
 #define __SCFD_BACKEND_H__
 
+#if ( defined( PLATFORM_SERIAL_CPU ) + defined( PLATFORM_OMP ) + defined( PLATFORM_CUDA ) + defined( PLATFORM_HIP ) +  \
+      defined( PLATFORM_SYCL ) ) != 1
+#    error "Select exactly one execution platform for backend"
+#endif
+
 #if defined( PLATFORM_SERIAL_CPU )
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-#        include "serial_cpu_mpi.h"
-#    else
-#        include "serial_cpu.h"
-#    endif
+#    include "serial_cpu.h"
 namespace scfd
 {
 namespace backend
 {
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-using current = serial_cpu_mpi;
-#    else
-using current = serial_cpu;
-#    endif
+template <class Ordinal = PLATFORM_ORDINAL>
+using current = serial_cpu<Ordinal>;
 }
 }
 
 #elif defined( PLATFORM_OMP )
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-#        include "omp_mpi.h"
-#    else
-#        include "omp.h"
-#    endif
+#    include "omp.h"
 namespace scfd
 {
 namespace backend
 {
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-using current = omp_mpi;
-#    else
-using current = omp;
-#    endif
+template <class Ordinal = PLATFORM_ORDINAL>
+using current = omp<Ordinal>;
 }
 }
 
 #elif defined( PLATFORM_CUDA )
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-#        include "cuda_mpi.h"
-#    else
-#        include "cuda.h"
-#    endif
+#    include "cuda.h"
 namespace scfd
 {
 namespace backend
 {
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-using current = cuda_mpi;
-#    else
-using current = cuda;
-#    endif
+template <class Ordinal = PLATFORM_ORDINAL>
+using current = cuda<Ordinal>;
 }
 }
 
 #elif defined( PLATFORM_HIP )
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-#        include "hip_mpi.h"
-#    else
-#        include "hip.h"
-#    endif
+#    include "hip.h"
 namespace scfd
 {
 namespace backend
 {
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-using current = hip_mpi;
-#    else
-using current = hip;
-#    endif
+template <class Ordinal = PLATFORM_ORDINAL>
+using current = hip<Ordinal>;
 }
 }
 
 #elif defined( PLATFORM_SYCL )
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-#        include "sycl_mpi.h"
-#    else
-#        include "sycl.h"
-#    endif
+#    include "sycl.h"
 namespace scfd
 {
 namespace backend
 {
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-using current = sycl_mpi;
-#    else
-using current = sycl;
-#    endif
+template <class Ordinal = PLATFORM_ORDINAL>
+using current = sycl<Ordinal>;
 }
 }
-
-#else
-#    error "No platform has been chosen for backend"
 
 #endif
 
@@ -116,27 +83,40 @@ namespace scfd
 {
 namespace backend
 {
-// usefull aliases
+// Useful aliases.
 using device_memory_info = detail::device_memory_info;
 using host_memory_info   = detail::host_memory_info;
-using memory             = current::memory_type;
-template <class Ordinal = int>
-using for_each = current::for_each_type<Ordinal>;
-template <int Dim, class Ordinal = int>
-using for_each_nd      = current::for_each_nd_type<Dim, Ordinal>;
-using reduce           = current::reduce_type;
-using sort             = current::sort_type;
-using unique           = current::unique_type;
-using exclusive_scan   = current::exclusive_scan_type;
-using copy             = current::copy_type;
-using inclusive_scan   = current::inclusive_scan_type;
-using sort_by_key      = current::sort_by_key_type;
-using reduce_by_key    = current::reduce_by_key_type;
-using set_intersection = current::set_intersection_type;
-using sequence         = current::sequence_type;
-using count_by_key     = current::count_by_key_type;
-using runtime          = current;
-using timer_event      = current::timer_event_type;
+using memory             = current<>::memory_type;
+using timer_event        = current<>::timer_event_type;
+
+template <class Ordinal = PLATFORM_ORDINAL>
+using for_each = typename current<Ordinal>::for_each_type;
+template <int Dim, class Ordinal = PLATFORM_ORDINAL>
+using for_each_nd = typename current<Ordinal>::template for_each_nd_type<Dim>;
+template <class Ordinal = PLATFORM_ORDINAL>
+using reduce = typename current<Ordinal>::reduce_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using sort = typename current<Ordinal>::sort_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using unique = typename current<Ordinal>::unique_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using exclusive_scan = typename current<Ordinal>::exclusive_scan_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using copy = typename current<Ordinal>::copy_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using inclusive_scan = typename current<Ordinal>::inclusive_scan_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using sort_by_key = typename current<Ordinal>::sort_by_key_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using reduce_by_key = typename current<Ordinal>::reduce_by_key_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using set_intersection = typename current<Ordinal>::set_intersection_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using sequence = typename current<Ordinal>::sequence_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using count_by_key = typename current<Ordinal>::count_by_key_type;
+template <class Ordinal = PLATFORM_ORDINAL>
+using runtime = current<Ordinal>;
 }
 }
 

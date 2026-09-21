@@ -24,6 +24,7 @@
 #include <scfd/for_each/openmp_impl.h>
 #include <scfd/for_each/openmp_nd_impl.h>
 #include <scfd/inclusive_scan/omp_impl.h>
+#include <scfd/platform/config.h>
 #include <scfd/reduce/omp_impl.h>
 #include <scfd/reduce_by_key/omp_impl.h>
 #include <scfd/sequence/omp_impl.h>
@@ -37,23 +38,24 @@ namespace scfd
 namespace backend
 {
 
-struct omp_common : public serial_cpu_common
+template <class Ordinal = PLATFORM_ORDINAL>
+struct omp_common : public serial_cpu_common<Ordinal>
 {
-    template <class Ordinal = int>
+    using ordinal_type  = Ordinal;
     using for_each_type = scfd::for_each::openmp<Ordinal>;
-    template <int Dim, class Ordinal = int>
+    template <int Dim>
     using for_each_nd_type      = scfd::for_each::openmp_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::reduce::omp<>;
-    using sort_type             = scfd::sort::omp<>;
-    using unique_type           = scfd::unique::omp<>;
-    using exclusive_scan_type   = scfd::exclusive_scan::omp<>;
-    using copy_type             = scfd::copy::omp<>;
-    using inclusive_scan_type   = scfd::inclusive_scan::omp<>;
-    using sort_by_key_type      = scfd::sort_by_key::omp<>;
-    using reduce_by_key_type    = scfd::reduce_by_key::omp<>;
-    using set_intersection_type = scfd::set_intersection::omp<>;
-    using sequence_type         = scfd::sequence::omp<>;
-    using count_by_key_type     = scfd::count_by_key::omp<>;
+    using reduce_type           = scfd::reduce::omp<Ordinal>;
+    using sort_type             = scfd::sort::omp<Ordinal>;
+    using unique_type           = scfd::unique::omp<Ordinal>;
+    using exclusive_scan_type   = scfd::exclusive_scan::omp<Ordinal>;
+    using copy_type             = scfd::copy::omp<Ordinal>;
+    using inclusive_scan_type   = scfd::inclusive_scan::omp<Ordinal>;
+    using sort_by_key_type      = scfd::sort_by_key::omp<Ordinal>;
+    using reduce_by_key_type    = scfd::reduce_by_key::omp<Ordinal>;
+    using set_intersection_type = scfd::set_intersection::omp<Ordinal>;
+    using sequence_type         = scfd::sequence::omp<Ordinal>;
+    using count_by_key_type     = scfd::count_by_key::omp<Ordinal>;
 
     static const char *name()
     {

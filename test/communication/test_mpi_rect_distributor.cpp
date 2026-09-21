@@ -24,7 +24,7 @@
 #include <scfd/communication/rect_partitioner.h>
 #include <scfd/communication/mpi_rect_distributor.h>
 
-/// Just for test!!
+/// Direct host/serial MPI distributor test, independent of backend/platform configuration.
 using namespace scfd;
 
 using log_t            = utils::log_mpi;
@@ -160,7 +160,8 @@ int main( int argc, char *args[] )
                 if ( data_view2( ix, iy, iz ) != expected_val )
                 {
                     log.error_f(
-                        "value mistmatch at index %d,%d,%d : expected %u got %u", ix, iy, iz, expected_val,
+                        "value mismatch at index %lld,%lld,%lld : expected %u got %u", static_cast<long long>( ix ),
+                        static_cast<long long>( iy ), static_cast<long long>( iz ), expected_val,
                         data_view2( ix, iy, iz )
                     );
                     error_flag = 1;

@@ -28,9 +28,10 @@ namespace scfd
 {
 namespace backend
 {
-struct sycl : public sycl_common
+template <class Ordinal = PLATFORM_ORDINAL>
+struct sycl : public sycl_common<Ordinal>
 {
-    using runtime_type = sycl;
+    using runtime_type = sycl<Ordinal>;
 
     template <class Log>
     static int init_device( Log &, int device_id = 0 )

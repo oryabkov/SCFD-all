@@ -5,7 +5,7 @@
 
 int main()
 {
-    return scfd_backend_tests::run_backend_performance_tests<scfd_backend_tests::expected_backend>(
+    return scfd_backend_tests::run_backend_performance_tests<scfd_backend_tests::expected_backend<>>(
         scfd_backend_tests::expected_backend_configuration_name(),
         scfd_backend_tests::expected_backend_requires_acceleration
     );

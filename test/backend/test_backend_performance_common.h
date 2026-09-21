@@ -271,15 +271,18 @@ void ensure_size_is_supported( std::size_t size )
     }
 }
 
-inline int checked_backend_size( std::size_t size, const char *operation_name )
+template <class Backend>
+typename Backend::ordinal_type checked_backend_size( std::size_t size, const char *operation_name )
 {
-    if ( size > static_cast<std::size_t>( std::numeric_limits<int>::max() ) )
+    using ordinal_t = typename Backend::ordinal_type;
+    if ( std::numeric_limits<ordinal_t>::digits < std::numeric_limits<std::size_t>::digits &&
+         size > static_cast<std::size_t>( std::numeric_limits<ordinal_t>::max() ) )
     {
         throw std::runtime_error(
-            std::string( operation_name ) + " performance size exceeds the default backend operation ordinal range"
+            std::string( operation_name ) + " performance size exceeds the backend ordinal range"
         );
     }
-    return static_cast<int>( size );
+    return static_cast<ordinal_t>( size );
 }
 
 inline std::size_t bounded_algorithm_size( std::size_t size )
@@ -288,127 +291,37 @@ inline std::size_t bounded_algorithm_size( std::size_t size )
 }
 
 template <class Backend>
-struct performance_exclusive_scan_type
-{
-    using type = typename Backend::exclusive_scan_type;
-};
-
-template <>
-struct performance_exclusive_scan_type<scfd::backend::serial_cpu>
-{
-    using type = scfd::exclusive_scan::serial<std::size_t>;
-};
-
-#if defined( PLATFORM_SERIAL_CPU ) && defined( SCFD_BACKEND_ENABLE_MPI )
-template <>
-struct performance_exclusive_scan_type<scfd::backend::serial_cpu_mpi>
-{
-    using type = scfd::exclusive_scan::serial<std::size_t>;
-};
-#endif
-
-#ifdef PLATFORM_OMP
-template <>
-struct performance_exclusive_scan_type<scfd::backend::omp>
-{
-    using type = scfd::exclusive_scan::omp<std::size_t>;
-};
-
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-template <>
-struct performance_exclusive_scan_type<scfd::backend::omp_mpi>
-{
-    using type = scfd::exclusive_scan::omp<std::size_t>;
-};
-#    endif
-#endif
-
-#ifdef PLATFORM_CUDA
-template <>
-struct performance_exclusive_scan_type<scfd::backend::cuda>
-{
-    using type = scfd::exclusive_scan::thrust<std::size_t>;
-};
-
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-template <>
-struct performance_exclusive_scan_type<scfd::backend::cuda_mpi>
-{
-    using type = scfd::exclusive_scan::thrust<std::size_t>;
-};
-#    endif
-#endif
-
-#ifdef PLATFORM_HIP
-template <>
-struct performance_exclusive_scan_type<scfd::backend::hip>
-{
-    using type = scfd::exclusive_scan::thrust<std::size_t>;
-};
-
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-template <>
-struct performance_exclusive_scan_type<scfd::backend::hip_mpi>
-{
-    using type = scfd::exclusive_scan::thrust<std::size_t>;
-};
-#    endif
-#endif
-
-#ifdef PLATFORM_SYCL
-template <>
-struct performance_exclusive_scan_type<scfd::backend::sycl>
-{
-    using type = scfd::exclusive_scan::sycl<std::size_t>;
-};
-
-#    ifdef SCFD_BACKEND_ENABLE_MPI
-template <>
-struct performance_exclusive_scan_type<scfd::backend::sycl_mpi>
-{
-    using type = scfd::exclusive_scan::sycl<std::size_t>;
-};
-#    endif
-#endif
-
-template <class Backend>
 struct is_openmp_backend : std::false_type
 {
 };
 
-template <>
-struct is_openmp_backend<scfd::backend::omp> : std::true_type
+template <class Ordinal>
+struct is_openmp_backend<scfd::backend::omp<Ordinal>> : std::true_type
 {
 };
-
-#if defined( PLATFORM_OMP ) && defined( SCFD_BACKEND_ENABLE_MPI )
-template <>
-struct is_openmp_backend<scfd::backend::omp_mpi> : std::true_type
-{
-};
-#endif
 
 template <class Backend>
 double benchmark_for_each( const char *backend_name, std::size_t size, int repeats )
 {
     using memory_t   = typename Backend::memory_type;
     using array_t    = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t = typename Backend::for_each_type;
 
     ensure_size_is_supported<array_t>( size );
+    const auto op_size = checked_backend_size<Backend>( size, "for_each" );
 
     array_t values;
     values.init( size );
 
     for_each_t for_each;
-    for_each( fill_linear<array_t>( values ), size );
+    for_each( fill_linear<array_t>( values ), op_size );
     for_each.wait();
 
     double best_ms = std::numeric_limits<double>::max();
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
         const double elapsed = measure_ms<Backend>(
-            [&]() { for_each( fill_linear<array_t>( values ), size ); }, [&]() { for_each.wait(); }
+            [&]() { for_each( fill_linear<array_t>( values ), op_size ); }, [&]() { for_each.wait(); }
         );
         best_ms = std::min( best_ms, elapsed );
     }
@@ -437,10 +350,11 @@ double benchmark_exclusive_scan( const char *backend_name, std::size_t size, int
 {
     using memory_t         = typename Backend::memory_type;
     using array_t          = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t       = typename Backend::template for_each_type<std::size_t>;
-    using exclusive_scan_t = typename performance_exclusive_scan_type<Backend>::type;
+    using for_each_t       = typename Backend::for_each_type;
+    using exclusive_scan_t = typename Backend::exclusive_scan_type;
 
     ensure_size_is_supported<array_t>( size );
+    const auto op_size = checked_backend_size<Backend>( size, "exclusive_scan" );
 
     array_t input;
     array_t output;
@@ -448,18 +362,18 @@ double benchmark_exclusive_scan( const char *backend_name, std::size_t size, int
     output.init( size );
 
     for_each_t for_each;
-    for_each( fill_constant<array_t>( input, 1 ), size );
+    for_each( fill_constant<array_t>( input, 1 ), op_size );
     for_each.wait();
 
     exclusive_scan_t exclusive_scan;
-    exclusive_scan( size, input.raw_ptr(), output.raw_ptr(), std::size_t( 5 ) );
+    exclusive_scan( op_size, input.raw_ptr(), output.raw_ptr(), std::size_t( 5 ) );
     exclusive_scan.wait();
 
     double best_ms = std::numeric_limits<double>::max();
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
         const double elapsed = measure_ms<Backend>(
-            [&]() { exclusive_scan( size, input.raw_ptr(), output.raw_ptr(), std::size_t( 5 ) ); },
+            [&]() { exclusive_scan( op_size, input.raw_ptr(), output.raw_ptr(), std::size_t( 5 ) ); },
             [&]() { exclusive_scan.wait(); }
         );
         best_ms = std::min( best_ms, elapsed );
@@ -489,11 +403,11 @@ double benchmark_copy( const char *backend_name, std::size_t size, int repeats )
 {
     using memory_t   = typename Backend::memory_type;
     using array_t    = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t = typename Backend::for_each_type;
     using copy_t     = typename Backend::copy_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "copy" );
+    const auto op_size = checked_backend_size<Backend>( size, "copy" );
 
     array_t input;
     array_t output;
@@ -501,7 +415,7 @@ double benchmark_copy( const char *backend_name, std::size_t size, int repeats )
     output.init( size );
 
     for_each_t for_each;
-    for_each( fill_linear<array_t>( input ), size );
+    for_each( fill_linear<array_t>( input ), op_size );
     for_each.wait();
 
     copy_t backend_copy;
@@ -541,11 +455,11 @@ double benchmark_inclusive_scan( const char *backend_name, std::size_t size, int
 {
     using memory_t         = typename Backend::memory_type;
     using array_t          = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t       = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t       = typename Backend::for_each_type;
     using inclusive_scan_t = typename Backend::inclusive_scan_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "inclusive_scan" );
+    const auto op_size = checked_backend_size<Backend>( size, "inclusive_scan" );
 
     array_t input;
     array_t output;
@@ -553,7 +467,7 @@ double benchmark_inclusive_scan( const char *backend_name, std::size_t size, int
     output.init( size );
 
     for_each_t for_each;
-    for_each( fill_constant<array_t>( input, 1 ), size );
+    for_each( fill_constant<array_t>( input, 1 ), op_size );
     for_each.wait();
 
     inclusive_scan_t inclusive_scan;
@@ -593,17 +507,17 @@ double benchmark_reduce( const char *backend_name, std::size_t size, int repeats
 {
     using memory_t   = typename Backend::memory_type;
     using array_t    = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t = typename Backend::for_each_type;
     using reduce_t   = typename Backend::reduce_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "reduce" );
+    const auto op_size = checked_backend_size<Backend>( size, "reduce" );
 
     array_t input;
     input.init( size );
 
     for_each_t for_each;
-    for_each( fill_constant<array_t>( input, 1 ), size );
+    for_each( fill_constant<array_t>( input, 1 ), op_size );
     for_each.wait();
 
     reduce_t    reduce;
@@ -636,7 +550,7 @@ double benchmark_reduce_max( const char *backend_name, std::size_t size, int rep
     using reduce_t   = typename Backend::reduce_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "reduce max" );
+    const auto op_size = checked_backend_size<Backend>( size, "reduce max" );
 
     array_t input;
     input.init( size );
@@ -679,7 +593,7 @@ double benchmark_sequence( const char *backend_name, std::size_t size, int repea
     using sequence_t = typename Backend::sequence_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "sequence" );
+    const auto op_size = checked_backend_size<Backend>( size, "sequence" );
 
     array_t output;
     output.init( size );
@@ -722,18 +636,18 @@ double benchmark_sort( const char *backend_name, std::size_t size, int repeats )
 {
     using memory_t   = typename Backend::memory_type;
     using array_t    = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t = typename Backend::for_each_type;
     using sort_t     = typename Backend::sort_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "sort" );
+    const auto op_size = checked_backend_size<Backend>( size, "sort" );
 
     array_t values;
     values.init( size );
 
     for_each_t for_each;
     sort_t     sort;
-    for_each( fill_reverse<array_t>( values, size ), size );
+    for_each( fill_reverse<array_t>( values, size ), op_size );
     for_each.wait();
     sort( op_size, values.raw_ptr() );
     sort.wait();
@@ -741,7 +655,7 @@ double benchmark_sort( const char *backend_name, std::size_t size, int repeats )
     double best_ms = std::numeric_limits<double>::max();
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
-        for_each( fill_reverse<array_t>( values, size ), size );
+        for_each( fill_reverse<array_t>( values, size ), op_size );
         for_each.wait();
         const double elapsed =
             measure_ms<Backend>( [&]() { sort( op_size, values.raw_ptr() ); }, [&]() { sort.wait(); } );
@@ -772,22 +686,22 @@ double benchmark_unique( const char *backend_name, std::size_t size, int repeats
 {
     using memory_t   = typename Backend::memory_type;
     using array_t    = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t = typename Backend::for_each_type;
     using unique_t   = typename Backend::unique_type;
 
     const std::size_t group_size = 4;
     ensure_size_is_supported<array_t>( size );
-    const int op_size       = checked_backend_size( size, "unique" );
-    const int expected_size = checked_backend_size( ( size + group_size - 1 ) / group_size, "unique result" );
+    const auto op_size       = checked_backend_size<Backend>( size, "unique" );
+    const auto expected_size = checked_backend_size<Backend>( ( size + group_size - 1 ) / group_size, "unique result" );
 
     array_t values;
     values.init( size );
 
-    for_each_t for_each;
-    unique_t   unique;
-    int        unique_size = 0;
+    for_each_t                     for_each;
+    unique_t                       unique;
+    typename Backend::ordinal_type unique_size = 0;
 
-    for_each( fill_grouped<array_t>( values, group_size ), size );
+    for_each( fill_grouped<array_t>( values, group_size ), op_size );
     for_each.wait();
     unique_size = unique( op_size, values.raw_ptr() );
     unique.wait();
@@ -795,7 +709,7 @@ double benchmark_unique( const char *backend_name, std::size_t size, int repeats
     double best_ms = std::numeric_limits<double>::max();
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
-        for_each( fill_grouped<array_t>( values, group_size ), size );
+        for_each( fill_grouped<array_t>( values, group_size ), op_size );
         for_each.wait();
         const double elapsed = measure_ms<Backend>(
             [&]() { unique_size = unique( op_size, values.raw_ptr() ); }, [&]() { unique.wait(); }
@@ -808,11 +722,11 @@ double benchmark_unique( const char *backend_name, std::size_t size, int repeats
         throw std::runtime_error( std::string( backend_name ) + " unique size verification failed" );
     }
 
-    typename array_t::view_type values_view( values, true );
-    const int                   probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
+    typename array_t::view_type          values_view( values, true );
+    const typename Backend::ordinal_type probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
     for ( int probe_i = 0; probe_i < 3; ++probe_i )
     {
-        const int         i        = probe_indexes[probe_i];
+        const auto        i        = probe_indexes[probe_i];
         const std::size_t expected = static_cast<std::size_t>( i );
         if ( values_view( i ) != expected )
         {
@@ -832,11 +746,11 @@ double benchmark_sort_by_key( const char *backend_name, std::size_t size, int re
 {
     using memory_t      = typename Backend::memory_type;
     using array_t       = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t    = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t    = typename Backend::for_each_type;
     using sort_by_key_t = typename Backend::sort_by_key_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "sort_by_key" );
+    const auto op_size = checked_backend_size<Backend>( size, "sort_by_key" );
 
     array_t keys;
     array_t values;
@@ -845,7 +759,7 @@ double benchmark_sort_by_key( const char *backend_name, std::size_t size, int re
 
     for_each_t    for_each;
     sort_by_key_t sort_by_key;
-    for_each( fill_reverse_key_value<array_t>( keys, values, size ), size );
+    for_each( fill_reverse_key_value<array_t>( keys, values, size ), op_size );
     for_each.wait();
     sort_by_key( op_size, keys.raw_ptr(), values.raw_ptr() );
     sort_by_key.wait();
@@ -853,7 +767,7 @@ double benchmark_sort_by_key( const char *backend_name, std::size_t size, int re
     double best_ms = std::numeric_limits<double>::max();
     for ( int repeat = 0; repeat < repeats; ++repeat )
     {
-        for_each( fill_reverse_key_value<array_t>( keys, values, size ), size );
+        for_each( fill_reverse_key_value<array_t>( keys, values, size ), op_size );
         for_each.wait();
         const double elapsed = measure_ms<Backend>(
             [&]() { sort_by_key( op_size, keys.raw_ptr(), values.raw_ptr() ); }, [&]() { sort_by_key.wait(); }
@@ -889,13 +803,14 @@ double benchmark_reduce_by_key( const char *backend_name, std::size_t size, int 
 {
     using memory_t        = typename Backend::memory_type;
     using array_t         = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t      = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t      = typename Backend::for_each_type;
     using reduce_by_key_t = typename Backend::reduce_by_key_type;
 
     const std::size_t group_size = 8;
     ensure_size_is_supported<array_t>( size );
-    const int op_size       = checked_backend_size( size, "reduce_by_key" );
-    const int expected_size = checked_backend_size( ( size + group_size - 1 ) / group_size, "reduce_by_key result" );
+    const auto op_size = checked_backend_size<Backend>( size, "reduce_by_key" );
+    const auto expected_size =
+        checked_backend_size<Backend>( ( size + group_size - 1 ) / group_size, "reduce_by_key result" );
 
     array_t keys_in;
     array_t values_in;
@@ -908,10 +823,10 @@ double benchmark_reduce_by_key( const char *backend_name, std::size_t size, int 
 
     for_each_t      for_each;
     reduce_by_key_t reduce_by_key;
-    for_each( fill_reduce_by_key_input<array_t>( keys_in, values_in, group_size ), size );
+    for_each( fill_reduce_by_key_input<array_t>( keys_in, values_in, group_size ), op_size );
     for_each.wait();
 
-    int output_size =
+    auto output_size =
         reduce_by_key( op_size, keys_in.raw_ptr(), values_in.raw_ptr(), keys_out.raw_ptr(), values_out.raw_ptr() );
     reduce_by_key.wait();
 
@@ -934,12 +849,12 @@ double benchmark_reduce_by_key( const char *backend_name, std::size_t size, int 
         throw std::runtime_error( std::string( backend_name ) + " reduce_by_key size verification failed" );
     }
 
-    typename array_t::view_type keys_view( keys_out, true );
-    typename array_t::view_type values_view( values_out, true );
-    const int                   probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
+    typename array_t::view_type          keys_view( keys_out, true );
+    typename array_t::view_type          values_view( values_out, true );
+    const typename Backend::ordinal_type probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
     for ( int probe_i = 0; probe_i < 3; ++probe_i )
     {
-        const int         i              = probe_indexes[probe_i];
+        const auto        i              = probe_indexes[probe_i];
         const std::size_t expected_key   = static_cast<std::size_t>( i );
         const std::size_t first_index    = expected_key * group_size;
         const std::size_t expected_value = std::min( group_size, size - first_index );
@@ -963,13 +878,14 @@ double benchmark_count_by_key( const char *backend_name, std::size_t size, int r
 {
     using memory_t       = typename Backend::memory_type;
     using array_t        = scfd::arrays::tensor0_array_nd<std::size_t, 1, memory_t>;
-    using for_each_t     = typename Backend::template for_each_type<std::size_t>;
+    using for_each_t     = typename Backend::for_each_type;
     using count_by_key_t = typename Backend::count_by_key_type;
 
     const std::size_t group_size = 8;
     ensure_size_is_supported<array_t>( size );
-    const int op_size       = checked_backend_size( size, "count_by_key" );
-    const int expected_size = checked_backend_size( ( size + group_size - 1 ) / group_size, "count_by_key result" );
+    const auto op_size = checked_backend_size<Backend>( size, "count_by_key" );
+    const auto expected_size =
+        checked_backend_size<Backend>( ( size + group_size - 1 ) / group_size, "count_by_key result" );
 
     array_t keys_in;
     array_t keys_out;
@@ -980,10 +896,10 @@ double benchmark_count_by_key( const char *backend_name, std::size_t size, int r
 
     for_each_t     for_each;
     count_by_key_t count_by_key;
-    for_each( fill_grouped<array_t>( keys_in, group_size ), size );
+    for_each( fill_grouped<array_t>( keys_in, group_size ), op_size );
     for_each.wait();
 
-    int output_size = count_by_key( op_size, keys_in.raw_ptr(), keys_out.raw_ptr(), counts_out.raw_ptr() );
+    auto output_size = count_by_key( op_size, keys_in.raw_ptr(), keys_out.raw_ptr(), counts_out.raw_ptr() );
     count_by_key.wait();
 
     double best_ms = std::numeric_limits<double>::max();
@@ -1003,12 +919,12 @@ double benchmark_count_by_key( const char *backend_name, std::size_t size, int r
         throw std::runtime_error( std::string( backend_name ) + " count_by_key size verification failed" );
     }
 
-    typename array_t::view_type keys_view( keys_out, true );
-    typename array_t::view_type counts_view( counts_out, true );
-    const int                   probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
+    typename array_t::view_type          keys_view( keys_out, true );
+    typename array_t::view_type          counts_view( counts_out, true );
+    const typename Backend::ordinal_type probe_indexes[] = { 0, expected_size / 2, expected_size - 1 };
     for ( int probe_i = 0; probe_i < 3; ++probe_i )
     {
-        const int         i              = probe_indexes[probe_i];
+        const auto        i              = probe_indexes[probe_i];
         const std::size_t expected_key   = static_cast<std::size_t>( i );
         const std::size_t first_index    = expected_key * group_size;
         const std::size_t expected_count = std::min( group_size, size - first_index );
@@ -1036,7 +952,7 @@ double benchmark_set_intersection( const char *backend_name, std::size_t size, i
     using set_intersection_t = typename Backend::set_intersection_type;
 
     ensure_size_is_supported<array_t>( size );
-    const int op_size = checked_backend_size( size, "set_intersection" );
+    const auto op_size = checked_backend_size<Backend>( size, "set_intersection" );
 
     array_t set1;
     array_t set2;
@@ -1051,7 +967,7 @@ double benchmark_set_intersection( const char *backend_name, std::size_t size, i
     sequence.wait();
 
     set_intersection_t set_intersection;
-    int output_size = set_intersection( op_size, set1.raw_ptr(), op_size, set2.raw_ptr(), result.raw_ptr() );
+    auto output_size = set_intersection( op_size, set1.raw_ptr(), op_size, set2.raw_ptr(), result.raw_ptr() );
     set_intersection.wait();
 
     double best_ms = std::numeric_limits<double>::max();
@@ -1185,8 +1101,9 @@ int run_backend_performance_tests( const char *backend_name, bool require_accele
             return 0;
         }
 
-        const performance_result openmp_result =
-            benchmark_backend<scfd::backend::omp>( "openmp baseline", size, algorithm_size, repeats );
+        const performance_result openmp_result = benchmark_backend<scfd::backend::omp<typename Backend::ordinal_type>>(
+            "openmp baseline", size, algorithm_size, repeats
+        );
         print_result( "openmp baseline", openmp_result );
         print_openmp_comparison( backend_name, openmp_result, backend_result );
 

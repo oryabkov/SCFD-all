@@ -14,36 +14,39 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef PLATFORM_MPI
+#    error "test_platform_rect_distributor.cpp requires PLATFORM_MPI"
+#endif
+
 #include <iostream>
-#include <scfd/utils/log_mpi.h>
-#include <scfd/memory/host.h>
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
-#include <scfd/arrays/tensorN_array_nd.h>
-#include <scfd/for_each/serial_cpu_nd.h>
-#include <scfd/communication/mpi_wrap.h>
+#include <scfd/platform/platform.h>
+#include <scfd/arrays/array_nd.h>
 #include <scfd/communication/rect_partitioner.h>
 #include <scfd/communication/mpi_rect_distributor.h>
+#include <scfd/utils/log_mpi.h>
 
-/// Direct host/serial MPI distributor test, independent of backend/platform configuration.
+/// Selected-platform MPI distributor integration test.
 using namespace scfd;
 
-using log_t                 = utils::log_mpi;
-using ordinal               = int;
-using big_ordinal           = long int;
-using value_t               = unsigned int;
-static const int dim        = 3;
-static const int tensor_dim = 4;
-using comm_t                = communication::mpi_wrap;
-using part_t                = communication::rect_partitioner<dim, ordinal, big_ordinal, decltype( comm_t::data )>;
-using idx_t                 = static_vec::vec<ordinal, dim>;
-using periodic_flags_t      = static_vec::vec<bool, dim>;
-using rect_t                = static_vec::rect<ordinal, dim>;
-using big_idx_t             = static_vec::vec<big_ordinal, dim>;
-using big_rect_t            = static_vec::rect<big_ordinal, dim>;
-using for_each_t            = for_each::serial_cpu_nd<dim, ordinal>;
-using mem_t                 = memory::host;
-using array_t               = arrays::tensor1_array_nd<value_t, dim, mem_t, tensor_dim>;
-using dist_t = communication::mpi_rect_distributor<value_t, dim, mem_t, for_each_t, ordinal, big_ordinal>;
+using platform_t       = platform::current<>;
+using log_t            = utils::log_mpi;
+using ordinal          = platform_t::ordinal_type;
+using big_ordinal      = platform_t::big_ordinal_type;
+using value_t          = unsigned int;
+static const int dim   = 3;
+using environment_t    = platform_t::communication_environment_type;
+using comm_t           = platform_t::communicator_type;
+using part_t           = communication::rect_partitioner<dim, ordinal, big_ordinal, comm_t>;
+using idx_t            = static_vec::vec<ordinal, dim>;
+using periodic_flags_t = static_vec::vec<bool, dim>;
+using rect_t           = static_vec::rect<ordinal, dim>;
+using big_idx_t        = static_vec::vec<big_ordinal, dim>;
+using big_rect_t       = static_vec::rect<big_ordinal, dim>;
+using for_each_t       = platform_t::for_each_nd_type<dim>;
+using mem_t            = platform_t::memory_type;
+using array_t          = arrays::array_nd<value_t, dim, mem_t>;
+using dist_t = communication::mpi_rect_distributor<value_t, dim, mem_t, for_each_t, ordinal, big_ordinal, comm_t>;
 
 big_idx_t periodic_rem( periodic_flags_t periodic_flags, big_idx_t dom_sz, big_idx_t idx )
 {
@@ -60,15 +63,12 @@ big_idx_t periodic_rem( periodic_flags_t periodic_flags, big_idx_t dom_sz, big_i
     return res;
 }
 
-value_t ref_value( periodic_flags_t periodic_flags, big_idx_t dom_sz, big_idx_t idx, big_ordinal tensor_idx )
+value_t ref_value( periodic_flags_t periodic_flags, big_idx_t dom_sz, big_idx_t idx )
 {
     idx = periodic_rem( periodic_flags, dom_sz, idx );
     if ( big_rect_t( dom_sz ).is_own( idx ) )
     {
-        return static_cast<value_t>(
-            tensor_idx * dom_sz[0] * dom_sz[1] * dom_sz[2] + idx[0] * dom_sz[1] * dom_sz[2] + idx[1] * dom_sz[2] +
-            idx[2]
-        );
+        return static_cast<value_t>( idx[0] * dom_sz[1] * dom_sz[2] + idx[1] * dom_sz[2] + idx[2] );
     }
     return static_cast<value_t>( -1 ); //TODO use type traits max_value
 }
@@ -98,26 +98,28 @@ int main( int argc, char *args[] )
     int     periodic_flag_y   = std::stoi( args[4] );
     int     periodic_flag_z   = std::stoi( args[5] );
 
-    comm_t comm( argc, args );
-    log_t  log;
+    environment_t environment( argc, args );
+    comm_t        comm_world = environment.comm_world();
+    log_t         log;
+    platform_t::init( log, comm_world, 0, true );
 
-    if ( comm.data.num_procs != 3 )
+    if ( comm_world.num_procs != 3 )
     {
         std::cout << "only np==3 test case is now implemented" << std::endl;
         return -2;
     }
 
     big_idx_t dom_sz( 100, 100, 100 );
-    part_t    part( comm.data, dom_sz );
+    part_t    part( comm_world, dom_sz );
     part.proc_rects = {
         { { 0, 0, 0 }, { 100, 50, 100 } }, { { 0, 50, 0 }, { 100, 100, 50 } }, { { 0, 50, 50 }, { 100, 100, 100 } }
     };
     periodic_flags_t periodic_flags( periodic_flag_x, periodic_flag_y, periodic_flag_z );
     dist_t           dist;
     log.info_all( "init distributor" );
-    dist.init_for_tensors( tensor_dim, part, periodic_flags, stencil, max_stencil_order );
+    dist.init( part, periodic_flags, stencil, max_stencil_order );
 
-    big_rect_t my_own_glob_rect = part.proc_rects[comm.data.myid];
+    big_rect_t my_own_glob_rect = part.proc_rects[comm_world.myid];
     rect_t     my_own_loc_rect  = rect_t( idx_t::make_zero(), my_own_glob_rect.calc_size() );
     rect_t     my_loc_rect      = my_own_loc_rect;
     my_loc_rect.i1 -= idx_t( stencil, stencil, stencil );
@@ -135,17 +137,15 @@ int main( int argc, char *args[] )
         for ( ordinal iy = my_loc_rect.i1[1]; iy < my_loc_rect.i2[1]; ++iy )
             for ( ordinal iz = my_loc_rect.i1[2]; iz < my_loc_rect.i2[2]; ++iz )
             {
-                for ( big_ordinal tensor_idx = 0; tensor_idx < tensor_dim; ++tensor_idx )
-                    data_view1( ix, iy, iz, tensor_idx ) = static_cast<value_t>( -1 );
+                data_view1( ix, iy, iz ) = static_cast<value_t>( -1 );
             }
     //fill own data using global linear index with mostly handwritten functions
     for ( ordinal ix = my_own_loc_rect.i1[0]; ix < my_own_loc_rect.i2[0]; ++ix )
         for ( ordinal iy = my_own_loc_rect.i1[1]; iy < my_own_loc_rect.i2[1]; ++iy )
             for ( ordinal iz = my_own_loc_rect.i1[2]; iz < my_own_loc_rect.i2[2]; ++iz )
             {
-                big_idx_t idx = big_idx_t( ix, iy, iz ) + my_own_glob_rect.i1;
-                for ( big_ordinal tensor_idx = 0; tensor_idx < tensor_dim; ++tensor_idx )
-                    data_view1( ix, iy, iz, tensor_idx ) = ref_value( periodic_flags, dom_sz, idx, tensor_idx );
+                big_idx_t idx            = big_idx_t( ix, iy, iz ) + my_own_glob_rect.i1;
+                data_view1( ix, iy, iz ) = ref_value( periodic_flags, dom_sz, idx );
             }
     data_view1.release( true );
 
@@ -162,18 +162,15 @@ int main( int argc, char *args[] )
                 big_idx_t idx = big_idx_t( ix, iy, iz ) + my_own_glob_rect.i1;
                 if ( stencil_order( my_own_glob_rect, idx ) > max_stencil_order )
                     continue;
-                for ( big_ordinal tensor_idx = 0; tensor_idx < tensor_dim; ++tensor_idx )
+                auto expected_val = ref_value( periodic_flags, dom_sz, idx );
+                if ( data_view2( ix, iy, iz ) != expected_val )
                 {
-                    auto expected_val = ref_value( periodic_flags, dom_sz, idx, tensor_idx );
-                    if ( data_view2( ix, iy, iz, tensor_idx ) != expected_val )
-                    {
-                        log.error_f(
-                            "value mismatch at index %lld,%lld,%lld tensor_idx = %lld: expected %u got %u",
-                            static_cast<long long>( ix ), static_cast<long long>( iy ), static_cast<long long>( iz ),
-                            static_cast<long long>( tensor_idx ), expected_val, data_view2( ix, iy, iz, tensor_idx )
-                        );
-                        error_flag = 1;
-                    }
+                    log.error_f(
+                        "value mismatch at index %lld,%lld,%lld : expected %u got %u", static_cast<long long>( ix ),
+                        static_cast<long long>( iy ), static_cast<long long>( iz ), expected_val,
+                        data_view2( ix, iy, iz )
+                    );
+                    error_flag = 1;
                 }
             }
     data_view2.release( false );

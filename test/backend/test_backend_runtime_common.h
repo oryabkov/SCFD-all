@@ -12,7 +12,7 @@
 namespace scfd_backend_tests
 {
 
-template <class Array>
+template <class Array, class Ordinal>
 struct fill_value_pairs_by_index
 {
     fill_value_pairs_by_index( const Array &data_ ) : data( data_ )
@@ -21,17 +21,18 @@ struct fill_value_pairs_by_index
 
     Array data;
 
-    __DEVICE_TAG__ void operator()( const int &idx ) const
+    __DEVICE_TAG__ void operator()( const Ordinal &idx ) const
     {
-        data( idx ) = scfd::backend::make_value_pair( idx, idx * idx + 1 );
+        const int value = static_cast<int>( idx );
+        data( idx )     = scfd::backend::make_value_pair( value, value * value + 1 );
     }
 };
 
 }
 
 #ifdef PLATFORM_SYCL
-template <class Array>
-struct sycl::is_device_copyable<scfd_backend_tests::fill_value_pairs_by_index<Array>> : std::true_type
+template <class Array, class Ordinal>
+struct sycl::is_device_copyable<scfd_backend_tests::fill_value_pairs_by_index<Array, Ordinal>> : std::true_type
 {
 };
 #endif
@@ -135,11 +136,12 @@ inline int check_host_memory_info( const char *backend_name, const scfd::backend
 }
 
 template <class Backend>
-int run_backend_runtime_tests( const char *backend_name )
+int run_backend_runtime_tests( const char *backend_name, bool test_local_initialization = true )
 {
     using runtime_t       = typename Backend::runtime_type;
+    using ordinal_t       = typename Backend::ordinal_type;
     using memory_t        = typename Backend::memory_type;
-    using for_each_t      = typename Backend::template for_each_type<int>;
+    using for_each_t      = typename Backend::for_each_type;
     using pair_t          = scfd::backend::value_pair<int, int>;
     using array_t         = scfd::arrays::tensor0_array_nd<pair_t, 1, memory_t>;
     using device_info_t   = typename Backend::device_memory_info_type;
@@ -147,7 +149,7 @@ int run_backend_runtime_tests( const char *backend_name )
     using device_alias_t  = scfd::backend::device_memory_info;
     using host_alias_t    = scfd::backend::host_memory_info;
     using timer_alias_t   = scfd::backend::timer_event;
-    using current_alias_t = scfd::backend::current;
+    using current_alias_t = scfd::backend::current<ordinal_t>;
 
     try
     {
@@ -156,7 +158,7 @@ int run_backend_runtime_tests( const char *backend_name )
             std::cout << backend_name << ": FAILED current backend type check" << std::endl;
             return 10;
         }
-        if ( !std::is_same<runtime_t, scfd::backend::runtime>::value )
+        if ( !std::is_same<runtime_t, scfd::backend::runtime<ordinal_t>>::value )
         {
             std::cout << backend_name << ": FAILED runtime type check" << std::endl;
             return 11;
@@ -201,20 +203,24 @@ int run_backend_runtime_tests( const char *backend_name )
             return 21;
         }
 
-        scfd::utils::log_std log;
-        const int            init_device_with_log = runtime_t::init_device( log, 0 );
-        const int            init_device_result   = runtime_t::init_device( 0 );
-        int                  init_check =
-            check_init_device_result<runtime_t>( backend_name, "init_device(log, 0)", init_device_with_log );
-        if ( init_check != 0 )
-            return 30 + init_check;
-        init_check = check_init_device_result<runtime_t>( backend_name, "init_device(0)", init_device_result );
-        if ( init_check != 0 )
-            return 32 + init_check;
-        if ( runtime_t::is_device_backend() && init_device_result != init_device_with_log )
+        // Platform tests have already selected a rank-specific device; preserve that binding.
+        if ( test_local_initialization )
         {
-            std::cout << backend_name << ": FAILED init_device overload consistency" << std::endl;
-            return 35;
+            scfd::utils::log_std log;
+            const int            init_device_with_log = runtime_t::init_device( log, 0 );
+            const int            init_device_result   = runtime_t::init_device( 0 );
+            int                  init_check =
+                check_init_device_result<runtime_t>( backend_name, "init_device(log, 0)", init_device_with_log );
+            if ( init_check != 0 )
+                return 30 + init_check;
+            init_check = check_init_device_result<runtime_t>( backend_name, "init_device(0)", init_device_result );
+            if ( init_check != 0 )
+                return 32 + init_check;
+            if ( runtime_t::is_device_backend() && init_device_result != init_device_with_log )
+            {
+                std::cout << backend_name << ": FAILED init_device overload consistency" << std::endl;
+                return 35;
+            }
         }
 
         runtime_t::synchronize();
@@ -267,7 +273,7 @@ int run_backend_runtime_tests( const char *backend_name )
         array_t value_pairs;
         value_pairs.init( 4 );
         for_each_t for_each;
-        for_each( fill_value_pairs_by_index<array_t>( value_pairs ), 4 );
+        for_each( fill_value_pairs_by_index<array_t, ordinal_t>( value_pairs ), ordinal_t( 4 ) );
         for_each.wait();
         runtime_t::synchronize();
 

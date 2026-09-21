@@ -30,6 +30,7 @@
 #include <scfd/for_each/sycl_nd_impl.h>
 #include <scfd/inclusive_scan/sycl_impl.h>
 #include <scfd/memory/sycl.h>
+#include <scfd/platform/config.h>
 #include <scfd/reduce/sycl_impl.h>
 #include <scfd/reduce_by_key/sycl_impl.h>
 #include <scfd/sequence/sycl_impl.h>
@@ -51,27 +52,28 @@ namespace scfd
 namespace backend
 {
 
+template <class Ordinal = PLATFORM_ORDINAL>
 struct sycl_common
 {
+    using ordinal_type            = Ordinal;
     using memory_type             = scfd::memory::sycl_device;
     using device_memory_info_type = scfd::backend::detail::device_memory_info;
     using host_memory_info_type   = scfd::backend::detail::host_memory_info;
     using timer_event_type        = scfd::utils::system_timer_event;
-    template <class Ordinal = int>
-    using for_each_type = scfd::for_each::sycl_<Ordinal>;
-    template <int Dim, class Ordinal = int>
+    using for_each_type           = scfd::for_each::sycl_<Ordinal>;
+    template <int Dim>
     using for_each_nd_type      = scfd::for_each::sycl_nd<Dim, Ordinal>;
-    using reduce_type           = scfd::reduce::sycl<>;
-    using sort_type             = scfd::sort::sycl<>;
-    using unique_type           = scfd::unique::sycl<>;
-    using exclusive_scan_type   = scfd::exclusive_scan::sycl<>;
-    using copy_type             = scfd::copy::sycl<>;
-    using inclusive_scan_type   = scfd::inclusive_scan::sycl<>;
-    using sort_by_key_type      = scfd::sort_by_key::sycl<>;
-    using reduce_by_key_type    = scfd::reduce_by_key::sycl<>;
-    using set_intersection_type = scfd::set_intersection::sycl<>;
-    using sequence_type         = scfd::sequence::sycl<>;
-    using count_by_key_type     = scfd::count_by_key::sycl<>;
+    using reduce_type           = scfd::reduce::sycl<Ordinal>;
+    using sort_type             = scfd::sort::sycl<Ordinal>;
+    using unique_type           = scfd::unique::sycl<Ordinal>;
+    using exclusive_scan_type   = scfd::exclusive_scan::sycl<Ordinal>;
+    using copy_type             = scfd::copy::sycl<Ordinal>;
+    using inclusive_scan_type   = scfd::inclusive_scan::sycl<Ordinal>;
+    using sort_by_key_type      = scfd::sort_by_key::sycl<Ordinal>;
+    using reduce_by_key_type    = scfd::reduce_by_key::sycl<Ordinal>;
+    using set_intersection_type = scfd::set_intersection::sycl<Ordinal>;
+    using sequence_type         = scfd::sequence::sycl<Ordinal>;
+    using count_by_key_type     = scfd::count_by_key::sycl<Ordinal>;
 
     static const char *name()
     {

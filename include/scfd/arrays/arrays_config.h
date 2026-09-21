@@ -20,7 +20,11 @@
 //#define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
 
 #ifndef SCFD_ARRAYS_ORDINAL_TYPE
-#    define SCFD_ARRAYS_ORDINAL_TYPE int
+#    ifdef PLATFORM_ORDINAL
+#        define SCFD_ARRAYS_ORDINAL_TYPE PLATFORM_ORDINAL
+#    else
+#        define SCFD_ARRAYS_ORDINAL_TYPE int
+#    endif
 #endif
 
 namespace scfd

@@ -25,9 +25,10 @@ namespace scfd
 namespace backend
 {
 
-struct omp : public omp_common
+template <class Ordinal = PLATFORM_ORDINAL>
+struct omp : public omp_common<Ordinal>
 {
-    using runtime_type = omp;
+    using runtime_type = omp<Ordinal>;
 
     template <class Log>
     static int init_device( Log &, int = 0 )

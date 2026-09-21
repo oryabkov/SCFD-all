@@ -40,6 +40,7 @@ private:
     int comm_rank_, comm_size_;
 
 public:
+    //TODO: add mpi_comm with default value in the constructor and redistribute this in init_cuda_device
     log_mpi_basic() : log_lev( 1 )
     {
         if ( MPI_Comm_rank( MPI_COMM_WORLD, &comm_rank_ ) != MPI_SUCCESS )

@@ -28,7 +28,7 @@ struct fill_imaginary_coordinate
     }
 };
 
-template <class Vec>
+template <class Vec, class Ordinal>
 struct fill_index
 {
     fill_index( Vec &values_ ) : values( values_ )
@@ -37,7 +37,7 @@ struct fill_index
 
     Vec values;
 
-    void operator()( const std::size_t &idx ) const
+    void operator()( const Ordinal &idx ) const
     {
         values( idx ) = idx;
     }
@@ -118,18 +118,18 @@ bool test_default_initialized_scans()
     return true;
 }
 
-}
-
-int main()
+template <class Backend>
+int test_backend_host( const char *ordinal_name )
 {
     using value_t       = std::complex<double>;
-    using backend_t     = scfd_backend_tests::expected_backend;
+    using backend_t     = Backend;
+    using ordinal_t     = typename backend_t::ordinal_type;
     using memory_t      = typename backend_t::memory_type;
-    using for_each_t    = typename backend_t::template for_each_type<int>;
+    using for_each_t    = typename backend_t::for_each_type;
     using for_each_nd_t = typename backend_t::template for_each_nd_type<3>;
     using reduce_t      = typename backend_t::reduce_type;
 
-    if ( !std::is_same<backend_t, scfd::backend::current>::value )
+    if ( !std::is_same<backend_t, scfd::backend::current<ordinal_t>>::value )
     {
         std::cout << "FAILED BACKEND TYPE CHECK" << std::endl;
         return 10;
@@ -137,20 +137,20 @@ int main()
 
     using array_t  = scfd::arrays::tensor0_array_nd<value_t, 1, memory_t>;
     using array3_t = scfd::arrays::tensor0_array_nd<value_t, 3, memory_t>;
-    using idx3_t   = scfd::static_vec::vec<int, 3>;
-    using rect_t   = scfd::static_vec::rect<int, 3>;
+    using idx3_t   = scfd::static_vec::vec<ordinal_t, 3>;
+    using rect_t   = scfd::static_vec::rect<ordinal_t, 3>;
 
     for_each_t    for_each;
     for_each_nd_t for_each_nd;
     reduce_t      reduce;
 
-    const int size_x = 10;
-    const int size_y = 10;
-    const int size_z = 10;
-    const int size   = size_x * size_y * size_z;
+    const ordinal_t size_x = 10;
+    const ordinal_t size_y = 10;
+    const ordinal_t size_z = 10;
+    const ordinal_t size   = size_x * size_y * size_z;
 
     array3_t values3;
-    values3.init( idx3_t( size_x, size_y, size_z ) );
+    values3.init( size_x, size_y, size_z );
     const rect_t range( idx3_t( 0, 0, 0 ), idx3_t( size_x, size_y, size_z ) );
     for_each_nd( fill_imaginary_coordinate<idx3_t, array3_t>( values3 ), range );
 
@@ -162,7 +162,7 @@ int main()
 
     array_t values1;
     values1.init( size );
-    for_each( fill_index<array_t>( values1 ), size );
+    for_each( fill_index<array_t, ordinal_t>( values1 ), size );
     result    = reduce( size, values1.raw_ptr(), value_t( 0, 0 ) );
     reference = value_t( ( size - 1 ) * size * 0.5, 0 );
     reduce.wait();
@@ -175,12 +175,22 @@ int main()
         return 1;
     }
 
+    std::cout << scfd_backend_tests::expected_backend_configuration_name() << "/" << ordinal_name << ": PASSED"
+              << std::endl;
+    return 0;
+}
+
+}
+
+int main()
+{
     if ( !test_default_initialized_scans() )
     {
         std::cout << "FAILED DEFAULT-INITIALIZED OPENMP SCANS" << std::endl;
         return 2;
     }
 
-    std::cout << scfd_backend_tests::expected_backend_configuration_name() << ": PASSED" << std::endl;
-    return 0;
+    return scfd_backend_tests::run_backend_ordinal_tests( []( auto backend, const char *ordinal_name ) {
+        return test_backend_host<typename decltype( backend )::type>( ordinal_name );
+    } );
 }
