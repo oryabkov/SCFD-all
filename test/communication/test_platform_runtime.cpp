@@ -4,11 +4,18 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <vector>
+
 #include <scfd/platform/platform.h>
 #include <scfd/utils/log_std.h>
 
 #ifdef PLATFORM_MPI
 #    include <scfd/communication/mpi_comm.h>
+#endif
+
+#if defined( PLATFORM_MPI ) && ( defined( PLATFORM_CUDA ) || defined( PLATFORM_HIP ) || defined( PLATFORM_SYCL ) )
+#    include <scfd/utils/log_cformatted.h>
+#    include <scfd/utils/log_msg_type.h>
 #endif
 
 #include "../backend/test_backend_runtime_common.h"
@@ -90,12 +97,42 @@ int active_device()
 #endif
 }
 
-template <class Comm>
-int expected_device( const Comm &comm, int shift )
-{
 #if defined( PLATFORM_MPI ) && ( defined( PLATFORM_CUDA ) || defined( PLATFORM_HIP ) || defined( PLATFORM_SYCL ) )
-    auto node  = comm.split_type( MPI_COMM_TYPE_SHARED );
-    int  count = 0;
+class recording_log_basic
+{
+public:
+    using log_msg_type = scfd::utils::log_msg_type;
+
+    void msg( const std::string &text, log_msg_type type = log_msg_type::INFO, int = 1 )
+    {
+        messages_.push_back( { type, text } );
+    }
+    void set_verbosity( int = 1 )
+    {
+    }
+    int count( log_msg_type type, const std::string &text ) const
+    {
+        int result = 0;
+        for ( const auto &message : messages_ )
+            if ( message.type == type && message.text.find( text ) != std::string::npos )
+                ++result;
+        return result;
+    }
+
+private:
+    struct message
+    {
+        log_msg_type type;
+        std::string  text;
+    };
+    std::vector<message> messages_;
+};
+
+using recording_log = scfd::utils::log_cformatted<recording_log_basic>;
+
+int visible_device_count()
+{
+    int count = 0;
 #    if defined( PLATFORM_CUDA )
     SCFD_CUDA_SAFE_CALL( cudaGetDeviceCount( &count ) );
 #    elif defined( PLATFORM_HIP )
@@ -103,6 +140,36 @@ int expected_device( const Comm &comm, int shift )
 #    else
     count = static_cast<int>( ::sycl::device::get_devices( ::sycl::info::device_type::gpu ).size() );
 #    endif
+    return count;
+}
+
+template <class Comm>
+bool check_initialization_log( const recording_log &log, const Comm &comm )
+{
+    using message_type                  = scfd::utils::log_msg_type;
+    auto              node              = comm.split_type( MPI_COMM_TYPE_SHARED );
+    const int         expected_warnings = node.myid() == 0 && node.num_procs() > visible_device_count() ? 1 : 0;
+    const std::string rank_fields =
+        "global_size = " + std::to_string( comm.num_procs ) + ", global_id = " + std::to_string( comm.myid ) + ",";
+    // Capture every rank's calls without relying on interleaved MPI stdout.
+    bool valid = log.count( message_type::INFO_ALL, "node_device_id = " ) == 1 &&
+                 log.count( message_type::INFO_ALL, rank_fields ) == 1 &&
+                 log.count( message_type::WARNING, "is wrapping " ) == expected_warnings;
+#    if defined( PLATFORM_CUDA )
+    valid = valid && log.count( message_type::INFO, "init_cuda:" ) > 0;
+#    elif defined( PLATFORM_HIP )
+    valid = valid && log.count( message_type::INFO, "init_hip:" ) > 0;
+#    endif
+    return valid;
+}
+#endif
+
+template <class Comm>
+int expected_device( const Comm &comm, int shift )
+{
+#if defined( PLATFORM_MPI ) && ( defined( PLATFORM_CUDA ) || defined( PLATFORM_HIP ) || defined( PLATFORM_SYCL ) )
+    auto      node  = comm.split_type( MPI_COMM_TYPE_SHARED );
+    const int count = visible_device_count();
     return count > 0 ? ( node.myid() + shift ) % count : -1;
 #else
     (void)comm;
@@ -151,7 +218,18 @@ int run_platform_tests( const typename Platform::communicator_type &comm, const 
 #endif
     for ( int shift = 0; shift < shift_cases; ++shift )
     {
-        const int with_log    = Platform::init( log, comm, shift, true );
+#if defined( PLATFORM_MPI ) && ( defined( PLATFORM_CUDA ) || defined( PLATFORM_HIP ) || defined( PLATFORM_SYCL ) )
+        recording_log initialization_log;
+        initialization_log.set_verbosity( 1 );
+        const int with_log = Platform::init( initialization_log, comm, shift, true );
+        if ( comm.all_reduce_sum( check_initialization_log( initialization_log, comm ) ? 0 : 1 ) != 0 )
+        {
+            log.error_f( "%s: MPI initialization did not forward the expected log diagnostics", name.c_str() );
+            return 4;
+        }
+#else
+        const int with_log = Platform::init( log, comm, shift, true );
+#endif
         const int without_log = Platform::init( comm, shift, true );
         const int expected    = expected_device( comm, shift );
         int       status      = with_log != expected || without_log != expected || active_device() != expected;
@@ -170,6 +248,32 @@ int run_platform_tests( const typename Platform::communicator_type &comm, const 
     }
     return 0;
 }
+
+#if defined( PLATFORM_MPI ) && ( defined( PLATFORM_CUDA ) || defined( PLATFORM_HIP ) )
+int run_direct_initialization_tests( const default_communicator &comm )
+{
+    for ( int shift = 0; shift < 2; ++shift )
+    {
+        recording_log log;
+#    if defined( PLATFORM_CUDA )
+        const int with_log    = scfd::utils::init_cuda_mpi( log, comm, shift, true );
+        const int without_log = scfd::utils::init_cuda_mpi( comm, shift, true );
+#    else
+        const int with_log    = scfd::utils::init_hip_mpi( log, comm, shift, true );
+        const int without_log = scfd::utils::init_hip_mpi( comm, shift, true );
+#    endif
+        const int  expected  = expected_device( comm, shift );
+        const bool valid_log = check_initialization_log( log, comm );
+        const int failed = with_log != expected || without_log != expected || active_device() != expected || !valid_log;
+        if ( comm.all_reduce_sum( failed ) != 0 )
+        {
+            std::cerr << "direct MPI device initialization returned an unexpected device or log diagnostics\n";
+            return 4;
+        }
+    }
+    return 0;
+}
+#endif
 
 int run_ordinal_cases( const default_communicator &comm )
 {
@@ -197,9 +301,19 @@ int main( int argc, char *argv[] )
 #ifdef PLATFORM_MPI
         if ( status == 0 )
         {
+            // Reverse actual ranks even when running with only two processes.
+            auto reordered = comm.split( 0, -comm.myid );
+            status         = run_platform_tests<default_platform>( reordered.info(), "reordered-communicator" );
+        }
+        if ( status == 0 )
+        {
             // Use subsets and reversed rank ordering, not an implicit MPI_COMM_WORLD.
             auto subset = comm.split( comm.myid % 2, -comm.myid );
             status      = run_platform_tests<default_platform>( subset.info(), "subcommunicator" );
+#    if defined( PLATFORM_CUDA ) || defined( PLATFORM_HIP )
+            if ( status == 0 )
+                status = run_direct_initialization_tests( subset.info() );
+#    endif
         }
 #endif
         return comm.all_reduce_sum( status != 0 ? 1 : 0 ) != 0 ? 1 : 0;

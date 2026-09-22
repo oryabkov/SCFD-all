@@ -27,7 +27,7 @@
 #include <scfd/communication/mpi_comm.h>
 #include <scfd/communication/mpi_comm_info.h>
 #include <scfd/communication/mpi_wrap.h>
-#include <scfd/utils/log_std.h>
+#include <scfd/utils/log_mpi.h>
 
 namespace scfd
 {
@@ -70,13 +70,13 @@ struct sycl_mpi : public backend::sycl<Ordinal>
         const int device_id = ( my_id + shift_index ) % number_of_devices_on_node;
         if ( number_of_devices_on_node < node_size && wrap_procs_devices && my_id == 0 )
         {
-            log.info_f(
-                "WARNING: sycl_mpi::init is wrapping %i MPI processes over %i visible device(s). "
+            log.warning_f(
+                "sycl_mpi::init is wrapping %i MPI processes over %i visible device(s). "
                 "Several MPI processes will share one device.",
                 node_size, number_of_devices_on_node
             );
         }
-        log.info_f(
+        log.info_all_f(
             "sycl_mpi::init: global_size = %i, global_id = %i, node_size = %i, devices_on_node = %i, "
             "node_device_id = %i, node_my_id = %i",
             comm.num_procs, comm.myid, node_size, number_of_devices_on_node, device_id, my_id
@@ -87,7 +87,7 @@ struct sycl_mpi : public backend::sycl<Ordinal>
 
     static int init( const communicator_type &comm, int shift_index = 0, bool wrap_procs_devices = false )
     {
-        scfd::utils::log_std log;
+        scfd::utils::log_mpi log( comm.comm );
         return init( log, comm, shift_index, wrap_procs_devices );
     }
 };

@@ -21,7 +21,6 @@
 #include <scfd/communication/mpi_comm_info.h>
 #include <scfd/communication/mpi_wrap.h>
 #include <scfd/utils/init_cuda_mpi.h>
-#include <scfd/utils/log_std.h>
 
 namespace scfd
 {
@@ -49,8 +48,7 @@ struct cuda_mpi : public backend::cuda<Ordinal>
 
     static int init( const communicator_type &comm, int shift_index = 0, bool wrap_procs_devices = false )
     {
-        scfd::utils::log_std log;
-        return init( log, comm, shift_index, wrap_procs_devices );
+        return scfd::utils::init_cuda_mpi( comm, shift_index, wrap_procs_devices );
     }
 };
 

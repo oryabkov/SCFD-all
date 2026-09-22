@@ -19,11 +19,12 @@
 
 #include <stdexcept>
 #include <string>
+
 #include <scfd/communication/mpi_comm.h>
-#include <scfd/utils/hip_safe_call.h>
 #include <scfd/communication/mpi_comm_info.h>
-#include <scfd/utils/log_std.h>
+#include <scfd/utils/hip_safe_call.h>
 #include <scfd/utils/init_hip.h>
+#include <scfd/utils/log_mpi.h>
 
 namespace scfd
 {
@@ -68,25 +69,25 @@ inline int init_hip_mpi(
     device_id = ( my_id + shift_index ) % number_of_devices_on_node;
     if ( number_of_devices_on_node < node_size && wrap_procs_devices && my_id == 0 )
     {
-        log.info_f(
-            "WARNING: init_hip_mpi is wrapping %i MPI processes over %i visible GPU(s) on node %s. "
+        log.warning_f(
+            "init_hip_mpi is wrapping %i MPI processes over %i visible GPU(s) on node %s. "
             "Several MPI processes will share one GPU.",
             node_size, number_of_devices_on_node, node_name
         );
     }
-    log.info_f(
+    log.info_all_f(
         "init_hip_mpi split_color: node_name = %s, node_color = %i, global_size = %i, global_id = %i, node_size = %i, "
         "devices_on_node = %i, node_device_id = %i, node_my_id = %i",
         node_name, char_hash, comm.num_procs, comm.myid, node_size, number_of_devices_on_node, device_id, my_id
     );
-    return scfd::utils::init_hip( -2, device_id );
+    return scfd::utils::init_hip( log, -2, device_id );
 }
 
 
 inline int
 init_hip_mpi( const scfd::communication::mpi_comm_info &comm, int shift_index = 0, bool wrap_procs_devices = false )
 {
-    log_std log;
+    log_mpi log( comm.comm );
     return init_hip_mpi( log, comm, shift_index, wrap_procs_devices );
 }
 

@@ -17,13 +17,13 @@
 #ifndef __SCFD_UTILS_LOG_MPI_BASIC_H__
 #define __SCFD_UTILS_LOG_MPI_BASIC_H__
 
-#include <string>
-#include <exception>
-#include <stdexcept>
-#include <cstdarg>
 #include <cstdio>
+#include <stdexcept>
+#include <string>
+
 #include <mpi.h>
-#include "log_msg_type.h"
+
+#include <scfd/utils/log_msg_type.h>
 
 namespace scfd
 {
@@ -40,12 +40,19 @@ private:
     int comm_rank_, comm_size_;
 
 public:
-    //TODO: add mpi_comm with default value in the constructor and redistribute this in init_cuda_device
-    log_mpi_basic() : log_lev( 1 )
+    log_mpi_basic() : log_mpi_basic( MPI_COMM_WORLD )
     {
-        if ( MPI_Comm_rank( MPI_COMM_WORLD, &comm_rank_ ) != MPI_SUCCESS )
+    }
+
+    // MPI must be initialized and comm valid. Only rank/size are cached;
+    // the logger does not retain or own the communicator.
+    explicit log_mpi_basic( MPI_Comm comm ) : log_lev( 1 )
+    {
+        if ( comm == MPI_COMM_NULL )
+            throw std::invalid_argument( "log_mpi_basic: MPI_COMM_NULL is not a valid communicator" );
+        if ( MPI_Comm_rank( comm, &comm_rank_ ) != MPI_SUCCESS )
             throw std::runtime_error( "log_mpi_basic::MPI_Comm_rank failed" );
-        if ( MPI_Comm_size( MPI_COMM_WORLD, &comm_size_ ) != MPI_SUCCESS )
+        if ( MPI_Comm_size( comm, &comm_size_ ) != MPI_SUCCESS )
             throw std::runtime_error( "log_mpi_basic::MPI_Comm_size failed" );
     }
 
