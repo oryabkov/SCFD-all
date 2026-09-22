@@ -28,8 +28,7 @@ namespace scfd
 {
 namespace backend
 {
-template <class Ordinal = PLATFORM_ORDINAL>
-using current = serial_cpu<Ordinal>;
+using current = serial_cpu<PLATFORM_ORDINAL>;
 }
 }
 
@@ -39,8 +38,7 @@ namespace scfd
 {
 namespace backend
 {
-template <class Ordinal = PLATFORM_ORDINAL>
-using current = omp<Ordinal>;
+using current = omp<PLATFORM_ORDINAL>;
 }
 }
 
@@ -50,8 +48,7 @@ namespace scfd
 {
 namespace backend
 {
-template <class Ordinal = PLATFORM_ORDINAL>
-using current = cuda<Ordinal>;
+using current = cuda<PLATFORM_ORDINAL>;
 }
 }
 
@@ -61,8 +58,7 @@ namespace scfd
 {
 namespace backend
 {
-template <class Ordinal = PLATFORM_ORDINAL>
-using current = hip<Ordinal>;
+using current = hip<PLATFORM_ORDINAL>;
 }
 }
 
@@ -72,8 +68,7 @@ namespace scfd
 {
 namespace backend
 {
-template <class Ordinal = PLATFORM_ORDINAL>
-using current = sycl<Ordinal>;
+using current = sycl<PLATFORM_ORDINAL>;
 }
 }
 
@@ -86,37 +81,24 @@ namespace backend
 // Useful aliases.
 using device_memory_info = detail::device_memory_info;
 using host_memory_info   = detail::host_memory_info;
-using memory             = current<>::memory_type;
-using timer_event        = current<>::timer_event_type;
+using memory             = current::memory_type;
+using timer_event        = current::timer_event_type;
 
-template <class Ordinal = PLATFORM_ORDINAL>
-using for_each = typename current<Ordinal>::for_each_type;
-template <int Dim, class Ordinal = PLATFORM_ORDINAL>
-using for_each_nd = typename current<Ordinal>::template for_each_nd_type<Dim>;
-template <class Ordinal = PLATFORM_ORDINAL>
-using reduce = typename current<Ordinal>::reduce_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using sort = typename current<Ordinal>::sort_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using unique = typename current<Ordinal>::unique_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using exclusive_scan = typename current<Ordinal>::exclusive_scan_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using copy = typename current<Ordinal>::copy_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using inclusive_scan = typename current<Ordinal>::inclusive_scan_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using sort_by_key = typename current<Ordinal>::sort_by_key_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using reduce_by_key = typename current<Ordinal>::reduce_by_key_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using set_intersection = typename current<Ordinal>::set_intersection_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using sequence = typename current<Ordinal>::sequence_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using count_by_key = typename current<Ordinal>::count_by_key_type;
-template <class Ordinal = PLATFORM_ORDINAL>
-using runtime = current<Ordinal>;
+
+using for_each = typename current::for_each_type;
+template <int Dim>
+using for_each_nd      = typename current::template for_each_nd_type<Dim>;
+using reduce           = typename current::reduce_type;
+using sort             = typename current::sort_type;
+using unique           = typename current::unique_type;
+using exclusive_scan   = typename current::exclusive_scan_type;
+using copy             = typename current::copy_type;
+using inclusive_scan   = typename current::inclusive_scan_type;
+using sort_by_key      = typename current::sort_by_key_type;
+using reduce_by_key    = typename current::reduce_by_key_type;
+using set_intersection = typename current::set_intersection_type;
+using sequence         = typename current::sequence_type;
+using count_by_key     = typename current::count_by_key_type;
 }
 }
 

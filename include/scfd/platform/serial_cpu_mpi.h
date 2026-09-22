@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_PLATFORM_SERIAL_CPU_H__
-#define __SCFD_PLATFORM_SERIAL_CPU_H__
+#ifndef __SCFD_PLATFORM_SERIAL_CPU_MPI_H__
+#define __SCFD_PLATFORM_SERIAL_CPU_MPI_H__
 
 #include <scfd/backend/serial_cpu.h>
 #include <scfd/communication/mpi_comm_info.h>
@@ -26,18 +26,14 @@ namespace scfd
 namespace platform
 {
 
-template <
-    class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL,
-    class Communicator = scfd::communication::mpi_comm_info>
-struct serial_cpu_mpi : public backend::serial_cpu<Ordinal>
+template <class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL>
+struct serial_cpu_mpi
 {
     using backend_type                   = backend::serial_cpu<Ordinal>;
     using ordinal_type                   = Ordinal;
     using big_ordinal_type               = BigOrdinal;
-    using communicator_type              = Communicator;
+    using communicator_type              = scfd::communication::mpi_comm_info;
     using communication_environment_type = scfd::communication::mpi_wrap;
-    using runtime_type                   = serial_cpu_mpi<Ordinal, BigOrdinal, Communicator>;
-    using backend_type::init_device;
 
     template <class Log>
     static int init( Log &log, const communicator_type &, int shift_index = 0, bool = false )

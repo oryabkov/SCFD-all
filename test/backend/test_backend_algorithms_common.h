@@ -150,22 +150,32 @@ int run_backend_algorithm_tests( const char *backend_name )
     using expected_copy_t        = scfd::copy::sycl<ordinal_t>;
 #endif
 
-    static_assert( std::is_same<Backend, scfd::backend::current<ordinal_t>>::value, "current backend type" );
+    // Shortcuts describe the macro-selected backend, not every explicit ordinal instantiation.
+    constexpr bool uses_configured_ordinal = std::is_same<ordinal_t, PLATFORM_ORDINAL>::value;
+    static_assert(
+        !uses_configured_ordinal || std::is_same<Backend, scfd::backend::current>::value, "current backend type"
+    );
     static_assert( std::is_same<for_each_t, expected_for_each_t>::value, "for_each ordinal propagation" );
     static_assert( std::is_same<for_each_nd_t, expected_for_each_nd_t>::value, "for_each_nd ordinal propagation" );
     static_assert( std::is_same<copy_t, expected_copy_t>::value, "copy ordinal propagation" );
-    static_assert( std::is_same<for_each_t, scfd::backend::for_each<ordinal_t>>::value, "for_each shortcut" );
     static_assert(
-        std::is_same<for_each_nd_t, scfd::backend::for_each_nd<2, ordinal_t>>::value, "for_each_nd shortcut"
+        !uses_configured_ordinal || std::is_same<for_each_t, scfd::backend::for_each>::value, "for_each shortcut"
     );
-    static_assert( std::is_same<copy_t, scfd::backend::copy<ordinal_t>>::value, "copy shortcut" );
+    static_assert(
+        !uses_configured_ordinal || std::is_same<for_each_nd_t, scfd::backend::for_each_nd<2>>::value,
+        "for_each_nd shortcut"
+    );
+    static_assert( !uses_configured_ordinal || std::is_same<copy_t, scfd::backend::copy>::value, "copy shortcut" );
 
 #define SCFD_TEST_ALGORITHM_ORDINAL( operation )                                                                       \
     static_assert(                                                                                                     \
         std::is_same<operation##_t, scfd::operation::SCFD_TEST_ALGORITHM_IMPL<ordinal_t>>::value,                      \
         #operation " ordinal propagation"                                                                              \
     );                                                                                                                 \
-    static_assert( std::is_same<operation##_t, scfd::backend::operation<ordinal_t>>::value, #operation " shortcut" )
+    static_assert(                                                                                                     \
+        !uses_configured_ordinal || std::is_same<operation##_t, scfd::backend::operation>::value,                      \
+        #operation " shortcut"                                                                                         \
+    )
 
     SCFD_TEST_ALGORITHM_ORDINAL( reduce );
     SCFD_TEST_ALGORITHM_ORDINAL( sort );

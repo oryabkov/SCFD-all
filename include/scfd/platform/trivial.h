@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_PLATFORM_LOCAL_H__
-#define __SCFD_PLATFORM_LOCAL_H__
+#ifndef __SCFD_PLATFORM_TRIVIAL_H__
+#define __SCFD_PLATFORM_TRIVIAL_H__
 
 #include <scfd/backend/backend.h>
 #include <scfd/communication/trivial_comm.h>
@@ -30,18 +30,25 @@ namespace platform
 
 // The environment owns the host message queue. Keep it alive while any
 // communicator handles or distributors use that queue.
-template <
-    class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL,
-    class Communicator = scfd::communication::trivial_comm<scfd::memory::host>>
-struct local : public backend::current<Ordinal>
+template <class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL>
+struct trivial
 {
-    using backend_type                   = backend::current<Ordinal>;
-    using ordinal_type                   = Ordinal;
+    // Explicit adapter ordinals must reach the backend, independently of current.
+#if defined( PLATFORM_SERIAL_CPU )
+    using backend_type = backend::serial_cpu<Ordinal>;
+#elif defined( PLATFORM_OMP )
+    using backend_type = backend::omp<Ordinal>;
+#elif defined( PLATFORM_CUDA )
+    using backend_type = backend::cuda<Ordinal>;
+#elif defined( PLATFORM_HIP )
+    using backend_type = backend::hip<Ordinal>;
+#elif defined( PLATFORM_SYCL )
+    using backend_type = backend::sycl<Ordinal>;
+#endif
+    using ordinal_type                   = typename backend_type::ordinal_type;
     using big_ordinal_type               = BigOrdinal;
-    using communicator_type              = Communicator;
+    using communicator_type              = scfd::communication::trivial_comm<scfd::memory::host>;
     using communication_environment_type = scfd::communication::trivial_platform<scfd::memory::host>;
-    using runtime_type                   = local<Ordinal, BigOrdinal, Communicator>;
-    using backend_type::init_device;
 
     template <class Log>
     static int init( Log &log, const communicator_type &, int device_id = 0, bool = false )

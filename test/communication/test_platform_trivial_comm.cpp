@@ -16,17 +16,18 @@
 /// runs WITHOUT mpiexec and reproduces a periodic (x) halo exchange done as a self-send.
 using namespace scfd;
 
-using platform_t     = platform::current<>;
+using platform_t     = platform::current;
+using backend_t      = platform_t::backend_type;
 using ordinal        = platform_t::ordinal_type;
 using big_ordinal    = platform_t::big_ordinal_type;
 using value_t        = unsigned int;
 static const int dim = 3;
 
-using mem_t         = platform_t::memory_type;
+using mem_t         = backend_t::memory_type;
 using environment_t = platform_t::communication_environment_type;
 using comm_info_t   = platform_t::communicator_type;
 using part_t        = communication::rect_partitioner<dim, ordinal, big_ordinal, comm_info_t>;
-using for_each_t    = platform_t::for_each_nd_type<dim>;
+using for_each_t    = backend_t::for_each_nd_type<dim>;
 
 using idx_t            = static_vec::vec<ordinal, dim>;
 using periodic_flags_t = static_vec::vec<bool, dim>;

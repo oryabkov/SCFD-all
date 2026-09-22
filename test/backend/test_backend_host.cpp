@@ -129,7 +129,7 @@ int test_backend_host( const char *ordinal_name )
     using for_each_nd_t = typename backend_t::template for_each_nd_type<3>;
     using reduce_t      = typename backend_t::reduce_type;
 
-    if ( !std::is_same<backend_t, scfd::backend::current<ordinal_t>>::value )
+    if ( std::is_same<ordinal_t, PLATFORM_ORDINAL>::value && !std::is_same<backend_t, scfd::backend::current>::value )
     {
         std::cout << "FAILED BACKEND TYPE CHECK" << std::endl;
         return 10;

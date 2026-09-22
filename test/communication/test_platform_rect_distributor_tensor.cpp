@@ -29,7 +29,8 @@
 /// Selected-platform MPI distributor integration test.
 using namespace scfd;
 
-using platform_t            = platform::current<>;
+using platform_t            = platform::current;
+using backend_t             = platform_t::backend_type;
 using log_t                 = utils::log_mpi;
 using ordinal               = platform_t::ordinal_type;
 using big_ordinal           = platform_t::big_ordinal_type;
@@ -44,8 +45,8 @@ using periodic_flags_t      = static_vec::vec<bool, dim>;
 using rect_t                = static_vec::rect<ordinal, dim>;
 using big_idx_t             = static_vec::vec<big_ordinal, dim>;
 using big_rect_t            = static_vec::rect<big_ordinal, dim>;
-using for_each_t            = platform_t::for_each_nd_type<dim>;
-using mem_t                 = platform_t::memory_type;
+using for_each_t            = backend_t::for_each_nd_type<dim>;
+using mem_t                 = backend_t::memory_type;
 using array_t               = arrays::tensor1_array_nd<value_t, dim, mem_t, tensor_dim>;
 using dist_t = communication::mpi_rect_distributor<value_t, dim, mem_t, for_each_t, ordinal, big_ordinal, comm_t>;
 

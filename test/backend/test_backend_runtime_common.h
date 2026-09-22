@@ -138,7 +138,7 @@ inline int check_host_memory_info( const char *backend_name, const scfd::backend
 template <class Backend>
 int run_backend_runtime_tests( const char *backend_name, bool test_local_initialization = true )
 {
-    using runtime_t       = typename Backend::runtime_type;
+    using runtime_t       = Backend;
     using ordinal_t       = typename Backend::ordinal_type;
     using memory_t        = typename Backend::memory_type;
     using for_each_t      = typename Backend::for_each_type;
@@ -149,19 +149,14 @@ int run_backend_runtime_tests( const char *backend_name, bool test_local_initial
     using device_alias_t  = scfd::backend::device_memory_info;
     using host_alias_t    = scfd::backend::host_memory_info;
     using timer_alias_t   = scfd::backend::timer_event;
-    using current_alias_t = scfd::backend::current<ordinal_t>;
+    using current_alias_t = scfd::backend::current;
 
     try
     {
-        if ( !std::is_same<Backend, current_alias_t>::value )
+        if ( std::is_same<ordinal_t, PLATFORM_ORDINAL>::value && !std::is_same<Backend, current_alias_t>::value )
         {
             std::cout << backend_name << ": FAILED current backend type check" << std::endl;
             return 10;
-        }
-        if ( !std::is_same<runtime_t, scfd::backend::runtime<ordinal_t>>::value )
-        {
-            std::cout << backend_name << ": FAILED runtime type check" << std::endl;
-            return 11;
         }
         if ( !std::is_same<typename runtime_t::timer_event_type, timer_alias_t>::value )
         {

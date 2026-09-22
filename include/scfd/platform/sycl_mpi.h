@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with SCFD.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __SCFD_PLATFORM_SYCL_H__
-#define __SCFD_PLATFORM_SYCL_H__
+#ifndef __SCFD_PLATFORM_SYCL_MPI_H__
+#define __SCFD_PLATFORM_SYCL_MPI_H__
 
 #include <stdexcept>
 #include <string>
@@ -34,18 +34,14 @@ namespace scfd
 namespace platform
 {
 
-template <
-    class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL,
-    class Communicator = scfd::communication::mpi_comm_info>
-struct sycl_mpi : public backend::sycl<Ordinal>
+template <class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL>
+struct sycl_mpi
 {
     using backend_type                   = backend::sycl<Ordinal>;
     using ordinal_type                   = Ordinal;
     using big_ordinal_type               = BigOrdinal;
-    using communicator_type              = Communicator;
+    using communicator_type              = scfd::communication::mpi_comm_info;
     using communication_environment_type = scfd::communication::mpi_wrap;
-    using runtime_type                   = sycl_mpi<Ordinal, BigOrdinal, Communicator>;
-    using backend_type::init_device;
 
     template <class Log>
     static int init( Log &log, const communicator_type &comm, int shift_index = 0, bool wrap_procs_devices = false )

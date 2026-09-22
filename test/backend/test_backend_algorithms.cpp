@@ -6,7 +6,7 @@
 #include "test_backend_algorithms_common.h"
 
 static_assert(
-    std::is_same<scfd::backend::current<>, scfd_backend_tests::expected_backend<>>::value,
+    std::is_same<scfd::backend::current, scfd_backend_tests::expected_backend<>>::value,
     "current uses the configured default ordinal"
 );
 

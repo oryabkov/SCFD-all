@@ -18,34 +18,42 @@
 #    include <scfd/utils/log_msg_type.h>
 #endif
 
+#include "../backend/test_backend_config.h"
 #include "../backend/test_backend_runtime_common.h"
 
 namespace
 {
 
 #if !defined( PLATFORM_MPI )
-template <class Ordinal, class BigOrdinal, class Comm>
-using expected_platform = scfd::platform::local<Ordinal, BigOrdinal, Comm>;
+template <class Ordinal, class BigOrdinal>
+using expected_platform = scfd::platform::trivial<Ordinal, BigOrdinal>;
 #elif defined( PLATFORM_SERIAL_CPU )
-template <class Ordinal, class BigOrdinal, class Comm>
-using expected_platform = scfd::platform::serial_cpu_mpi<Ordinal, BigOrdinal, Comm>;
+template <class Ordinal, class BigOrdinal>
+using expected_platform = scfd::platform::serial_cpu_mpi<Ordinal, BigOrdinal>;
 #elif defined( PLATFORM_OMP )
-template <class Ordinal, class BigOrdinal, class Comm>
-using expected_platform = scfd::platform::omp_mpi<Ordinal, BigOrdinal, Comm>;
+template <class Ordinal, class BigOrdinal>
+using expected_platform = scfd::platform::omp_mpi<Ordinal, BigOrdinal>;
 #elif defined( PLATFORM_CUDA )
-template <class Ordinal, class BigOrdinal, class Comm>
-using expected_platform = scfd::platform::cuda_mpi<Ordinal, BigOrdinal, Comm>;
+template <class Ordinal, class BigOrdinal>
+using expected_platform = scfd::platform::cuda_mpi<Ordinal, BigOrdinal>;
 #elif defined( PLATFORM_HIP )
-template <class Ordinal, class BigOrdinal, class Comm>
-using expected_platform = scfd::platform::hip_mpi<Ordinal, BigOrdinal, Comm>;
+template <class Ordinal, class BigOrdinal>
+using expected_platform = scfd::platform::hip_mpi<Ordinal, BigOrdinal>;
 #elif defined( PLATFORM_SYCL )
-template <class Ordinal, class BigOrdinal, class Comm>
-using expected_platform = scfd::platform::sycl_mpi<Ordinal, BigOrdinal, Comm>;
+template <class Ordinal, class BigOrdinal>
+using expected_platform = scfd::platform::sycl_mpi<Ordinal, BigOrdinal>;
 #endif
 
-using default_platform     = scfd::platform::current<>;
+using default_platform     = scfd::platform::current;
 using default_communicator = default_platform::communicator_type;
 
+static_assert(
+    std::is_same<default_platform, expected_platform<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>>::value,
+    "default platform selection"
+);
+static_assert(
+    std::is_same<default_platform::backend_type, scfd::backend::current>::value, "default backend selection"
+);
 static_assert( std::is_same<default_platform::ordinal_type, PLATFORM_ORDINAL>::value, "default local ordinal" );
 static_assert(
     std::is_same<default_platform::big_ordinal_type, PLATFORM_BIG_ORDINAL>::value, "default global ordinal"
@@ -68,13 +76,6 @@ static_assert(
     "local queue owner"
 );
 #endif
-
-struct custom_communicator : default_communicator
-{
-    explicit custom_communicator( const default_communicator &comm ) : default_communicator( comm )
-    {
-    }
-};
 
 int active_device()
 {
@@ -185,30 +186,18 @@ int run_platform_tests( const typename Platform::communicator_type &comm, const 
     using ordinal_t     = typename Platform::ordinal_type;
     using big_ordinal_t = typename Platform::big_ordinal_type;
     using comm_t        = typename Platform::communicator_type;
+    static_assert( std::is_same<Platform, expected_platform<ordinal_t, big_ordinal_t>>::value, "platform selection" );
     static_assert(
-        std::is_same<Platform, expected_platform<ordinal_t, big_ordinal_t, comm_t>>::value, "platform selection"
-    );
-    static_assert( std::is_same<backend_t, scfd::backend::current<ordinal_t>>::value, "local backend selection" );
-    static_assert( std::is_same<typename Platform::runtime_type, Platform>::value, "platform runtime" );
-    static_assert( std::is_base_of<backend_t, Platform>::value, "platform exposes its backend" );
-    static_assert(
-        std::is_same<typename Platform::memory_type, typename backend_t::memory_type>::value, "memory alias"
+        std::is_same<backend_t, scfd_backend_tests::expected_backend<ordinal_t>>::value, "local backend selection"
     );
     static_assert(
-        std::is_same<typename Platform::for_each_type, typename backend_t::for_each_type>::value,
-        "local algorithm ordinal"
+        std::is_same<typename backend_t::ordinal_type, ordinal_t>::value, "explicit platform ordinal reaches backend"
     );
-    static_assert(
-        std::is_same<
-            typename Platform::template for_each_nd_type<3>, typename backend_t::template for_each_nd_type<3>>::value,
-        "ND algorithm ordinal"
-    );
-    static_assert(
-        std::is_same<typename Platform::reduce_type, typename backend_t::reduce_type>::value, "reduction ordinal"
-    );
+    static_assert( std::is_same<comm_t, default_communicator>::value, "fixed platform communicator type" );
+    static_assert( !std::is_base_of<backend_t, Platform>::value, "platform does not inherit its backend" );
 
     scfd::utils::log_std log;
-    const std::string    name = std::string( Platform::name() ) + "/platform/" + case_name;
+    const std::string    name = std::string( backend_t::name() ) + "/platform/" + case_name;
 #ifdef PLATFORM_MPI
     const int shift_cases = 2;
 #else
@@ -279,13 +268,9 @@ int run_ordinal_cases( const default_communicator &comm )
 {
     int status = run_platform_tests<default_platform>( comm, "default" );
     if ( status == 0 )
-        status = run_platform_tests<scfd::platform::current<int, std::ptrdiff_t>>( comm, "int/ptrdiff_t" );
+        status = run_platform_tests<expected_platform<int, std::ptrdiff_t>>( comm, "int/ptrdiff_t" );
     if ( status == 0 )
-        status = run_platform_tests<scfd::platform::current<std::ptrdiff_t, long long>>( comm, "ptrdiff_t/long-long" );
-    if ( status == 0 )
-        status = run_platform_tests<scfd::platform::current<int, long long, custom_communicator>>(
-            custom_communicator( comm ), "custom-communicator"
-        );
+        status = run_platform_tests<expected_platform<std::ptrdiff_t, long long>>( comm, "ptrdiff_t/long-long" );
     return status;
 }
 

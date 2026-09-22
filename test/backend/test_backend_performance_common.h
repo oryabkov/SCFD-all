@@ -234,11 +234,10 @@ inline double env_double( const char *name, double default_value )
 template <class Backend>
 struct performance_timer_event_type
 {
-    using runtime_type = typename Backend::runtime_type;
-    using type         = typename runtime_type::timer_event_type;
+    using type = typename Backend::timer_event_type;
     static bool uses_device_events()
     {
-        return runtime_type::uses_device_timer();
+        return Backend::uses_device_timer();
     }
 };
 

@@ -783,10 +783,16 @@ Algorithm header guards must include both the operation directory and file name 
 
 ## Backend ordinal configuration
 
+Use C++14 as the baseline for backend/platform code and tests. SYCL builds may use C++17 as required by
+their toolchain; shared backend/platform interfaces must remain compatible with C++14.
+
 Backend templates use `Ordinal = PLATFORM_ORDINAL` and expose the selected type as `ordinal_type`.
 All algorithm aliases within a backend use that ordinal: `for_each_type` is a plain type alias, while
-`for_each_nd_type<Dim>` takes only the dimension. For example, `scfd::backend::current<std::ptrdiff_t>`
-selects a wide ordinal for all of that backend's algorithms; `scfd::backend::current<>` uses the configured default.
+`for_each_nd_type<Dim>` takes only the dimension. `scfd::backend::current` is a concrete type alias, not
+a template: it selects the configured backend with `PLATFORM_ORDINAL`. For an explicit ordinal, name the
+backend template, for example `scfd::backend::serial_cpu<std::ptrdiff_t>` or `scfd::backend::cuda<std::ptrdiff_t>`.
+The namespace-level aliases such as `scfd::backend::for_each` and `scfd::backend::reduce` use `current`;
+`scfd::backend::for_each_nd<Dim>` accepts only the dimension.
 
 Only headers within `scfd/backend` and `scfd/platform` may include `scfd/platform/config.h`.
 It defaults `PLATFORM_ORDINAL` to `int` and `PLATFORM_BIG_ORDINAL` to `std::ptrdiff_t`.
@@ -802,21 +808,27 @@ algorithm value types, MPI ranks, or device IDs.
 
 `scfd/backend/backend.h` selects local execution only. Define exactly one of `PLATFORM_SERIAL_CPU`,
 `PLATFORM_OMP`, `PLATFORM_CUDA`, `PLATFORM_HIP`, or `PLATFORM_SYCL`. Enabling MPI does not change
-`scfd::backend::current<Ordinal>` or introduce MPI dependencies into backend headers.
+`scfd::backend::current` or introduce MPI dependencies into backend headers.
 
 `scfd/platform/platform.h` combines that backend with communication. Define `PLATFORM_MPI` to select
 an MPI platform; leave it undefined for a local platform. This is a presence flag, not a numeric boolean:
 defining it to `0` still enables MPI. Only the selected execution implementation is included.
+MPI implementation headers are named `serial_cpu_mpi.h`, `omp_mpi.h`, `cuda_mpi.h`, `hip_mpi.h`, and
+`sycl_mpi.h`; the non-MPI adapter is `trivial.h`.
 
-`scfd::platform::current<Ordinal, BigOrdinal, Communicator>` defaults its local and global ordinal types
-to `PLATFORM_ORDINAL` and `PLATFORM_BIG_ORDINAL`. It exposes `backend_type`, `ordinal_type`,
-`big_ordinal_type`, `communicator_type`, `communication_environment_type`, and its inherited backend operations.
+`scfd::platform::current` is also a concrete type alias, configured by `PLATFORM_ORDINAL` and
+`PLATFORM_BIG_ORDINAL`. For explicit ordinals, use a named adapter such as
+`scfd::platform::cuda_mpi<int, std::ptrdiff_t>` or `scfd::platform::trivial<std::ptrdiff_t, long long>`.
+Adapters expose `backend_type`, `ordinal_type`, `big_ordinal_type`, `communicator_type`, and
+`communication_environment_type`; they do not inherit backend operations. Access local algorithms,
+memory types, synchronization, and device initialization through `backend_type`.
+Neither backends nor platforms provide a `runtime_type` self-alias; use the chosen type directly.
 Changing `BigOrdinal` affects global geometry types selected by consumers, not local algorithm indices,
 MPI ranks, device IDs, or communication count limits. Communication algorithms must receive these types
 explicitly; they must not include platform configuration themselves.
 
-MPI platforms default to `communication::mpi_comm_info` and use `communication::mpi_wrap` for the
-communication environment. Local platforms default to `communication::trivial_comm<memory::host>` and
+MPI platforms use the fixed type `communication::mpi_comm_info` and `communication::mpi_wrap` for the
+communication environment. Local platforms use the fixed type `communication::trivial_comm<memory::host>` and
 use `communication::trivial_platform<memory::host>` to own its message queue. This is a single-rank,
 host-buffer transport, not a full MPI replacement or a device-buffer transport. In particular, matching
 sends must precede receives, and send buffers must remain valid until their receives consume them.
@@ -825,7 +837,10 @@ The serial non-MPI communication tests exercise this configuration.
 Keep communication ownership separate from platform configuration:
 
 ```cpp
-using platform_t = scfd::platform::current<>;
+using platform_t = scfd::platform::current;
+using backend_t = platform_t::backend_type;
+using memory_t = backend_t::memory_type;
+using for_each_t = backend_t::for_each_type;
 
 platform_t::communication_environment_type environment( argc, argv );
 auto comm = environment.comm_world();
@@ -836,13 +851,15 @@ The environment must outlive its borrowed communicator handles and all communica
 `init` does not initialize/finalize MPI or create/free a communicator. MPI initialization accepts
 `init(log, comm, shift_index, wrap_procs_devices)` or `init(comm, shift_index, wrap_procs_devices)`;
 local initialization interprets the integer argument as a device ID and ignores the wrapping flag.
-The integer defaults to `0` and wrapping defaults to `false`. Custom communicator template arguments
-must satisfy the chosen adapter's interface; CUDA/HIP MPI helpers require `mpi_comm_info`-compatible input.
-The environment aliases still describe the default environment, so construct custom handles explicitly
-from it when necessary.
+The integer defaults to `0` and wrapping defaults to `false`. Adapters do not accept custom communicator
+types. A fixed `mpi_comm_info` can still wrap a valid user-provided `MPI_Comm`, including a split or
+reordered communicator, and be passed to `init`. Such communicator values must remain valid for every
+operation using them. Wrapping does not transfer ownership: the creator must free owned custom
+communicators before MPI finalization; predefined communicators must not be freed by the caller.
 
-Use platform `init` before device allocation and communication. Do not subsequently call the inherited
-local `init_device(0)` unless intentionally changing the device selected for that communicator.
+Use platform `init` before device allocation and communication. For local-only device initialization,
+use `backend_t::init_device( device_id )`; do not call it after platform `init` unless intentionally changing
+the device selected for that communicator.
 Define array configuration switches, including `SCFD_ARRAYS_ENABLE_INDEX_SHIFT`, before platform/backend
 includes, because a selected backend may include array headers transitively.
 
@@ -854,7 +871,7 @@ Keep direct communication setup tests separate from platform-selection tests. `t
 host memory, serial execution, and ordinal types without including backend or platform headers.
 Their platform-selected counterparts are `test_platform_rect_distributor.cpp`,
 `test_platform_rect_distributor_tensor.cpp`, and `test_platform_trivial_comm.cpp`; they exercise the same
-communication scenarios through `platform::current<>` and its initialization interface.
+communication scenarios through `platform::current` and its initialization interface.
 
 Independent MPI test binaries remain shared in `build/mpi/`, and the direct trivial communicator test is
 built with the ordinary host compiler in `build/trivial/`. Platform tests are configuration-specific in

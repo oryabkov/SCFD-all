@@ -29,7 +29,6 @@ namespace backend
 template <class Ordinal = PLATFORM_ORDINAL>
 struct hip : public hip_common<Ordinal>
 {
-    using runtime_type = hip<Ordinal>;
 
     template <class Log>
     static int init_device( Log &log, int device_id = 0 )

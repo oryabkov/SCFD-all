@@ -22,18 +22,18 @@
 
 #ifdef PLATFORM_MPI
 #    if defined( PLATFORM_SERIAL_CPU )
-#        include "serial_cpu.h"
+#        include "serial_cpu_mpi.h"
 #    elif defined( PLATFORM_OMP )
-#        include "omp.h"
+#        include "omp_mpi.h"
 #    elif defined( PLATFORM_CUDA )
-#        include "cuda.h"
+#        include "cuda_mpi.h"
 #    elif defined( PLATFORM_HIP )
-#        include "hip.h"
+#        include "hip_mpi.h"
 #    elif defined( PLATFORM_SYCL )
-#        include "sycl.h"
+#        include "sycl_mpi.h"
 #    endif
 #else
-#    include "local.h"
+#    include "trivial.h"
 #endif
 
 namespace scfd
@@ -42,27 +42,21 @@ namespace platform
 {
 
 // PLATFORM_MPI is a presence flag. Without it, use a single-rank host
-// communicator; backend selection remains independent of communication.
+// communicator; backend selection assumes either trivial or scfd mpi communicator.
 #ifdef PLATFORM_MPI
-template <
-    class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL,
-    class Communicator = scfd::communication::mpi_comm_info>
 #    if defined( PLATFORM_SERIAL_CPU )
-using current = serial_cpu_mpi<Ordinal, BigOrdinal, Communicator>;
+using current = serial_cpu_mpi<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>;
 #    elif defined( PLATFORM_OMP )
-using current = omp_mpi<Ordinal, BigOrdinal, Communicator>;
+using current = omp_mpi<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>;
 #    elif defined( PLATFORM_CUDA )
-using current = cuda_mpi<Ordinal, BigOrdinal, Communicator>;
+using current = cuda_mpi<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>;
 #    elif defined( PLATFORM_HIP )
-using current = hip_mpi<Ordinal, BigOrdinal, Communicator>;
+using current = hip_mpi<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>;
 #    elif defined( PLATFORM_SYCL )
-using current = sycl_mpi<Ordinal, BigOrdinal, Communicator>;
+using current = sycl_mpi<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>;
 #    endif
 #else
-template <
-    class Ordinal = PLATFORM_ORDINAL, class BigOrdinal = PLATFORM_BIG_ORDINAL,
-    class Communicator = scfd::communication::trivial_comm<scfd::memory::host>>
-using current = local<Ordinal, BigOrdinal, Communicator>;
+using current = trivial<PLATFORM_ORDINAL, PLATFORM_BIG_ORDINAL>;
 #endif
 
 }
