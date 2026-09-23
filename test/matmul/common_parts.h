@@ -15,8 +15,14 @@ if ( argc != 4 )
     std::cout << "       tests = d/h/a for device, host or all." << std::endl;
     return 1;
 }
-std::size_t N     = std::atoi( argv[1] );
-char        tests = argv[3][0];
+std::size_t N, number_of_iters;
+const char  tests = argv[3][0];
+if ( !parse_benchmark_integer( argv[1], N ) || !parse_benchmark_integer( argv[2], number_of_iters ) ||
+     number_of_iters < 2 || std::string( argv[3] ).size() != 1 || ( tests != 'd' && tests != 'h' && tests != 'a' ) )
+{
+    std::cerr << "N must be nonnegative, iterations at least 2, and mode d, h or a." << std::endl;
+    return 1;
+}
 
 std::string file_type;
 if ( std::is_same<double, REAL>::value )
@@ -49,8 +55,13 @@ if ( N == 0 ) //select automatic size
     N                          = static_cast<std::size_t>( std::floor( max_per_malloc * save_factor ) );
     std::cout << "device free mem = " << free_mem_l << " bytes, N = " << N << std::endl;
 }
-std::size_t total_size      = K2 * N;
-std::size_t number_of_iters = std::atoi( argv[2] );
+if ( N == 0 || N > static_cast<std::size_t>( std::numeric_limits<int>::max() ) ||
+     N > std::numeric_limits<std::size_t>::max() / K2 / sizeof( T ) )
+{
+    std::cerr << "Requested problem size is not representable." << std::endl;
+    return 1;
+}
+std::size_t total_size = K2 * N;
 
 T *u_ptr_host, *v_ptr_host, *mat_mul_ptr_host;
 T *u_ptr_ok_host, *v_ptr_ok_host, *mat_mul_ptr_ok_host;
@@ -61,8 +72,7 @@ T *u_ptr_func_dev, *v_ptr_func_dev, *mat_mul_ptr_func_dev; //func with plain ptr
 
 T *mat_mul_ptr_check, *mat_mul_ptr_ok_check, *mat_mul_ptr_func_check;
 
-std::random_device               rd;
-std::mt19937                     engine{ rd() };
+std::mt19937                     engine{ 1729 };
 std::uniform_real_distribution<> dist( -values_range, values_range );
 
 u_ptr_host             = reinterpret_cast<T *>( std::malloc( sizeof( T ) * total_size ) );
@@ -85,7 +95,7 @@ timer_event_host_t   host_e1, host_e2;
 timer_event_device_t device_e1, device_e2;
 timer_event_device_t device_int_e1, device_int_e2;
 
-#pragma omp parallel for
+// The random engine is intentionally not shared by OpenMP threads.
 for ( std::size_t n = 0u; n < N; ++n )
     for ( std::size_t i = 0u; i < K; ++i )
         for ( std::size_t j = 0u; j < K; ++j )
@@ -621,6 +631,8 @@ if ( ( tests == 'd' ) || ( tests == 'a' ) )
 #    else
             std::cout << "gpu ptr_ok diff = " << curr_diff << std::endl;
 #    endif
+            if ( curr_diff >= std::numeric_limits<T>::epsilon() * error_mul )
+                ++errors_num;
         }
         __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__( mat_mul_ptr_ok_dev ) );
         __COMMON_PARTS_SAFE_CALL__( __COMMON_PARTS_DEVICE_FREE__( v_ptr_ok_dev ) );
@@ -816,7 +828,7 @@ if ( ( tests == 'h' ) || ( tests == 'a' ) )
             for ( std::size_t i = 0u; i < K; ++i )
                 for ( std::size_t j = 0u; j < K; ++j )
                 {
-                    mat_mul_ptr_ok_host[IG( n, i, j )] = 0.f;
+                    mat_mul_ptr_host[IC( n, i, j )] = 0.f;
                     for ( std::size_t k = 0u; k < K; ++k )
                         mat_mul_ptr_host[IC( n, i, j )] += u_ptr_host[IC( n, i, k )] * v_ptr_host[IC( n, k, j )];
                 }
@@ -829,6 +841,19 @@ if ( ( tests == 'h' ) || ( tests == 'a' ) )
     }
     host_e2.record();
     std::cout << "host ptr time    = " << host_e2.elapsed_time( host_e1 ) / number_of_iters << "s." << std::endl;
+
+    const T host_tensor_diff = check_coincide_tensor( N, mat_mul_ptr_host, mat_mul_host );
+    T       host_layout_diff = 0;
+    for ( std::size_t n = 0; n < N; ++n )
+        for ( std::size_t i = 0; i < K; ++i )
+            for ( std::size_t j = 0; j < K; ++j )
+                host_layout_diff += std::abs( mat_mul_ptr_host[IC( n, i, j )] - mat_mul_ptr_ok_host[IG( n, i, j )] );
+    host_layout_diff /= N * K2;
+    std::cout << "host tensor diff = " << host_tensor_diff << ", host layout diff = " << host_layout_diff << std::endl;
+    if ( !std::isfinite( host_tensor_diff ) || host_tensor_diff >= std::numeric_limits<T>::epsilon() * error_mul )
+        ++errors_num;
+    if ( !std::isfinite( host_layout_diff ) || host_layout_diff >= std::numeric_limits<T>::epsilon() * error_mul )
+        ++errors_num;
 
     /*******************************************************************************************************/
     {

@@ -16,6 +16,12 @@
 
 #define SCFD_ARRAYS_ORDINAL_TYPE long int
 
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <string>
+
 
 #if defined( CUDA )
 #    include <scfd/utils/init_cuda_mpi.h>
@@ -50,6 +56,25 @@
 #include <scfd/utils/mpi_timer_event.h>
 #include <quick_test_check.h>
 
+
+bool parse_positive_integer( const char *text, int maximum, int &value )
+{
+    const std::string input( text );
+    if ( input.empty() || input.find_first_not_of( "0123456789" ) != std::string::npos )
+        return false;
+    try
+    {
+        const auto parsed = std::stoull( input );
+        if ( parsed == 0 || parsed > static_cast<unsigned long long>( maximum ) )
+            return false;
+        value = static_cast<int>( parsed );
+        return true;
+    }
+    catch ( const std::exception & )
+    {
+        return false;
+    }
+}
 
 template <class BaseT>
 std::vector<std::size_t> get_max_size_per_gpu( scfd::communication::mpi_comm_info mpi )
@@ -91,13 +116,28 @@ int main( int argc, char *argv[] )
     using timer_t                  = scfd::utils::mpi_timer_event;
     static const double mem_factor = 0.98; //reduce array size due to thrust::reduce bug
 
-    scfd::communication::mpi_wrap mpi( argc, argv );
-
-    int number_of_reps = 1;
+    int  number_of_reps  = 1;
+    int  bounded_edge    = 0;
+    bool valid_arguments = argc == 1;
     if ( argc == 2 )
     {
-        number_of_reps = std::stoi( argv[1] );
+        valid_arguments = parse_positive_integer( argv[1], std::numeric_limits<int>::max(), number_of_reps );
     }
+    else if ( ( argc == 3 || argc == 4 ) && std::string( argv[1] ) == "--size" )
+    {
+        // An explicit edge is bounded to at most 128 MiB of doubles per rank.
+        valid_arguments = parse_positive_integer( argv[2], 256, bounded_edge );
+        if ( argc == 4 )
+            valid_arguments &= parse_positive_integer( argv[3], std::numeric_limits<int>::max(), number_of_reps );
+    }
+    if ( !valid_arguments )
+    {
+        std::cerr << "Usage: " << argv[0] << " [positive repetitions] | --size EDGE [positive repetitions]\n"
+                  << "EDGE must be in [1,256]; without --size the legacy free-memory benchmark is used.\n";
+        return 1;
+    }
+
+    scfd::communication::mpi_wrap mpi( argc, argv );
 
     int     myid  = mpi.comm_world().myid;
     int     nproc = mpi.comm_world().num_procs;
@@ -110,9 +150,16 @@ int main( int argc, char *argv[] )
     auto device_id = scfd::utils::init_hip_mpi( mpi.comm_world() );
 #endif
 
-    vec_ops_t  vec_ops( &mpi.data );
-    for_each_t for_each;
-    auto       sizes = get_max_size_per_gpu<value_t>( mpi.comm_world() );
+    vec_ops_t                vec_ops( &mpi.data );
+    for_each_t               for_each;
+    std::vector<std::size_t> sizes;
+    if ( bounded_edge )
+        sizes.assign( nproc, static_cast<std::size_t>( bounded_edge ) * bounded_edge * bounded_edge );
+    else
+        sizes = get_max_size_per_gpu<value_t>( mpi.comm_world() );
+    const auto edge_for_size = [bounded_edge]( std::size_t size ) {
+        return bounded_edge ? bounded_edge : static_cast<int>( std::floor( std::pow( mem_factor * size, 1.0 / 3.0 ) ) );
+    };
     mpi.comm_world().barrier();
     t2.record();
     auto execution_time = t2.elapsed_time( t1 );
@@ -120,7 +167,7 @@ int main( int argc, char *argv[] )
 
     t1.record();
     auto    mysize = sizes[myid];
-    int     nn     = static_cast<int>( std::floor( std::pow( mem_factor * mysize, 1.0 / 3.0 ) ) );
+    int     nn     = edge_for_size( mysize );
     vec_t   vec3( nn, nn, nn );
     rect_t  rect_l = rect_t( vec_t::make_zero(), vec3 );
     array_t vec_loc;
@@ -132,6 +179,7 @@ int main( int argc, char *argv[] )
     auto myidp1 = myid + 1;
     //functors::fill_values_ker<big_ordinal, value_t, dim, array_t>(rect_l, myidp1, vec_loc );
     functors::fill_values<for_each_t, big_ordinal, value_t, dim, array_t>( for_each, rect_l, myidp1, vec_loc );
+    for_each.wait();
 
     mpi.comm_world().barrier();
     t2.record();
@@ -144,15 +192,19 @@ int main( int argc, char *argv[] )
         std::size_t              mlt = 0;
         std::vector<std::size_t> volumes_ref;
         std::vector<std::size_t> volumes;
-        std::transform( sizes.cbegin(), sizes.cend(), std::back_inserter( volumes_ref ), [&mlt]( std::size_t val ) {
-            auto nn = static_cast<std::size_t>( std::floor( std::pow( mem_factor * val, 1.0 / 3.0 ) ) );
-            mlt++;
-            return nn * nn * nn * mlt;
-        } );
-        std::transform( sizes.cbegin(), sizes.cend(), std::back_inserter( volumes ), []( std::size_t val ) {
-            auto nn = static_cast<std::size_t>( std::floor( std::pow( mem_factor * val, 1.0 / 3.0 ) ) );
-            return nn * nn * nn;
-        } );
+        std::transform(
+            sizes.cbegin(), sizes.cend(), std::back_inserter( volumes_ref ), [&mlt, &edge_for_size]( std::size_t val ) {
+                auto nn = static_cast<std::size_t>( edge_for_size( val ) );
+                mlt++;
+                return nn * nn * nn * mlt;
+            }
+        );
+        std::transform(
+            sizes.cbegin(), sizes.cend(), std::back_inserter( volumes ), [&edge_for_size]( std::size_t val ) {
+                auto nn = static_cast<std::size_t>( edge_for_size( val ) );
+                return nn * nn * nn;
+            }
+        );
         refernce_reduce_sum = std::reduce( volumes_ref.begin(), volumes_ref.end() );
         total_sum           = std::reduce( volumes.begin(), volumes.end() );
     }

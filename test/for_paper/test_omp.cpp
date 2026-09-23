@@ -3,16 +3,20 @@
 
 int main()
 {
-    int i;
-    int threadID = 0;
-#pragma omp parallel for private( i, threadID )
-    for ( i = 0; i < 16; i++ )
+    int iterations = 0;
+    int sum        = 0;
+#pragma omp parallel for reduction( + : iterations, sum )
+    for ( int i = 0; i < 16; i++ )
     {
-        threadID = omp_get_thread_num();
+        const int threadID = omp_get_thread_num();
+        ++iterations;
+        sum += i;
 #pragma omp critical
         {
             std::cout << "Thread " << threadID << " reporting" << std::endl;
         }
     }
-    return 0;
+    const bool passed = iterations == 16 && sum == 120;
+    std::cout << "OpenMP worksharing test: " << ( passed ? "PASS" : "FAIL" ) << std::endl;
+    return passed ? 0 : 1;
 }

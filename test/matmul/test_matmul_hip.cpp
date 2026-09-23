@@ -1,4 +1,5 @@
 #include "config_scfd.h"
+#include "arguments.h"
 
 #include <algorithm>
 #include <stdexcept>

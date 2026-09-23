@@ -26,7 +26,11 @@ struct t_test
 void test_init();
 void test_test();
 
+namespace
+{
+// These two translation units intentionally own independent constant buffers.
 DEFINE_CONSTANT_BUFFER( t_test, buf )
+}
 
 __global__ void ker_test()
 {
@@ -45,7 +49,8 @@ int main()
 
     printf( "host test1: buf().x = %d\n", buf().x );
     ker_test<<<1, 1>>>();
-    cudaDeviceSynchronize();
+    SCFD_CUDA_SAFE_CALL( cudaGetLastError() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
     test_test();
 

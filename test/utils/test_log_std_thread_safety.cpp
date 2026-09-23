@@ -13,7 +13,7 @@ int main( int argc, char const *args[] )
 
     for ( std::size_t i = 0; i < threads.size(); ++i )
     {
-        threads[i] = std::thread( [&log, i] { log.info_f( "test message from thread %d", i ); } );
+        threads[i] = std::thread( [&log, i] { log.info_f( "test message from thread %zu", i ); } );
     }
 
     for ( std::size_t i = 0; i < threads.size(); ++i )

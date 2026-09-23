@@ -1,5 +1,8 @@
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
 
+#include "test_checks.h"
+#include <numeric>
+
 #include <algorithm>
 #include <stdexcept>
 #include <string>
@@ -99,13 +102,16 @@ int main( int argc, char const *argv[] )
                   << std::endl;
         return 1;
     }
-    std::size_t N               = std::atoi( argv[1] );
-    std::size_t number_of_iters = std::atoi( argv[2] );
+    std::size_t N, number_of_iters;
+    if ( !test_checks::parse_positive( argv[1], N ) || !test_checks::parse_positive( argv[2], number_of_iters ) )
+    {
+        std::cerr << "N and iterations must be positive bounded integers." << std::endl;
+        return 1;
+    }
 
     std::size_t total_size = 3 * N;
 
-    std::random_device               rd;
-    std::mt19937                     engine{ rd() };
+    std::mt19937                     engine{ 1729 };
     std::uniform_real_distribution<> dist( -100.0, 100.0 );
 
     array_device_t u_dev, v_dev, cross_dev;
@@ -120,7 +126,7 @@ int main( int argc, char const *argv[] )
     array_device_view_t u_dev_view( u_dev ), v_dev_view( v_dev ), cross_dev_view( cross_dev );
     array_host_t        u_host_view( u_host ), v_host_view( v_host ), cross_host_view( cross_host );
 
-#pragma omp parallel for
+    // The random engine is intentionally used serially, not shared by OMP threads.
     for ( std::size_t j = 0; j < N; j++ )
     {
         for ( std::size_t k = 0; k < 3; k++ )
@@ -135,6 +141,12 @@ int main( int argc, char const *argv[] )
             cross_host_view( j, k ) = 0.0;
         }
     }
+
+    // Commit initialized host mirrors before any device work is submitted.
+    u_dev_view.release( true );
+    v_dev_view.release( true );
+    cross_dev_view.release( true );
+    cross_prod_device<for_each_omp_t, array_host_t>( N, u_host, v_host, cross_host );
 
     //WARM UP
     for ( int it_ = 0; it_ < number_of_iters; it_++ )
@@ -171,5 +183,12 @@ int main( int argc, char const *argv[] )
         out_file.close();
     }
 
-    return 0;
+    cross_dev_view.init( cross_dev, true );
+    T maximum_difference = 0;
+    for ( std::size_t j = 0; j < N; ++j )
+        for ( std::size_t k = 0; k < 3; ++k )
+            maximum_difference =
+                std::max( maximum_difference, test_checks::difference( cross_host( j, k ), cross_dev_view( j, k ) ) );
+    cross_dev_view.release( false );
+    return test_checks::check( "SYCL tensor", maximum_difference ) ? 0 : 1;
 }

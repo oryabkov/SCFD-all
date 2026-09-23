@@ -22,7 +22,10 @@ struct t_test
     int x;
 };
 
+namespace
+{
 DEFINE_CONSTANT_BUFFER( t_test, buf )
+}
 
 __global__ void ker_test2()
 {
@@ -41,5 +44,6 @@ void test_test()
 {
     printf( "host test2: buf().x = %d\n", buf().x );
     ker_test2<<<1, 1>>>();
-    cudaDeviceSynchronize();
+    SCFD_CUDA_SAFE_CALL( cudaGetLastError() );
+    SCFD_CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 }

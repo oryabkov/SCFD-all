@@ -480,7 +480,7 @@ T check_coincide_tensor( const std::size_t N, const T *ptr_, const MatrixND &ta_
             for ( std::size_t j = 0; j < K; ++j )
                 diff += std::abs( ptr_[IC( n, i, j )] - ta_( n, i, j ) );
 
-    return diff / N / K / K;
+    return std::isfinite( diff ) ? diff / N / K / K : std::numeric_limits<T>::infinity();
 }
 
 template <class T>
@@ -493,7 +493,7 @@ T check_coincide_ptr( std::size_t N, const T *ptr_, const T *ta_ )
             for ( std::size_t j = 0; j < K; ++j )
                 diff += std::abs( ptr_[IC( n, i, j )] - ta_[IC( n, i, j )] );
 
-    return diff / N / K / K;
+    return std::isfinite( diff ) ? diff / N / K / K : std::numeric_limits<T>::infinity();
 }
 
 #endif // ALL_KERNELS_H

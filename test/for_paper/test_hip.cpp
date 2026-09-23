@@ -1,5 +1,7 @@
 #define SCFD_ARRAYS_ENABLE_INDEX_SHIFT
 
+#include "test_checks.h"
+
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -90,7 +92,6 @@ __global__ void cross_prod_kern( std::size_t N, const T *f1_, const T *f2_, T *f
     f_out_[IC( idx, 0 )] = f1_[IC( idx, 1 )] * f2_[IC( idx, 2 )] - f1_[IC( idx, 2 )] * f2_[IC( idx, 1 )];
     f_out_[IC( idx, 1 )] = -( f1_[IC( idx, 0 )] * f2_[IC( idx, 2 )] - f1_[IC( idx, 2 )] * f2_[IC( idx, 0 )] );
     f_out_[IC( idx, 2 )] = f1_[IC( idx, 0 )] * f2_[IC( idx, 1 )] - f1_[IC( idx, 1 )] * f2_[IC( idx, 0 )];
-    printf( "Hi!" );
 }
 
 template <class T>
@@ -154,7 +155,7 @@ T check_coincide_tensor( const std::size_t N, const T *ptr_, const Vec3 &ta_ )
     {
         for ( std::size_t k = 0; k < 3; k++ )
         {
-            diff += std::abs( ptr_[3 * j + k] - ta_( j, k ) );
+            diff = std::max( diff, test_checks::difference( ptr_[3 * j + k], ta_( j, k ) ) );
         }
     }
     return diff;
@@ -168,7 +169,7 @@ T check_coincide_ptr( std::size_t N, const T *ptr_, const T *ta_ )
     {
         for ( std::size_t k = 0; k < 3; k++ )
         {
-            diff += std::abs( ptr_[3 * j + k] - ta_[3 * j + k] );
+            diff = std::max( diff, test_checks::difference( ptr_[3 * j + k], ta_[3 * j + k] ) );
         }
     }
     return diff;
@@ -185,9 +186,15 @@ int main( int argc, char const *argv[] )
         std::cout << "       tests = d/h/a for device, host or all." << std::endl;
         return 1;
     }
-    std::size_t N               = std::atoi( argv[1] );
-    std::size_t number_of_iters = std::atoi( argv[2] );
-    char        tests           = argv[3][0];
+    std::size_t N, number_of_iters;
+    const char  tests = argv[3][0];
+    if ( !test_checks::parse_positive( argv[1], N ) || !test_checks::parse_positive( argv[2], number_of_iters ) ||
+         std::string( argv[3] ).size() != 1 || ( tests != 'd' && tests != 'h' && tests != 'a' ) )
+    {
+        std::cerr << "N and iterations must be positive bounded integers; mode must be d, h or a." << std::endl;
+        return 1;
+    }
+    bool passed = true;
 
     std::size_t total_size = 3 * N;
 
@@ -202,8 +209,7 @@ int main( int argc, char const *argv[] )
     T *u_ptr_ok_dev, *v_ptr_ok_dev, *cross_ptr_ok_dev; //with correct GPU layout
 
 
-    std::random_device               rd;
-    std::mt19937                     engine{ rd() };
+    std::mt19937                     engine{ 1729 };
     std::uniform_real_distribution<> dist( -100.0, 100.0 );
 
     // auto gen_rand = [&dist, &engine]()
@@ -245,7 +251,7 @@ int main( int argc, char const *argv[] )
     timer_event_device_t device_e1, device_e2;
     timer_event_device_t device_int_e1, device_int_e2;
 
-#pragma omp parallel for
+    // The random engine is intentionally used serially, not shared by OMP threads.
     for ( std::size_t j = 0; j < N; j++ )
     {
         for ( std::size_t k = 0; k < 3; k++ )
@@ -353,18 +359,19 @@ int main( int argc, char const *argv[] )
                   << std::endl;
 
         cross_dev_view.init( cross_dev, true );
-        std::cout << "gpu tensor diff = " << check_coincide_tensor( N, cross_ptr_host, cross_dev_view ) << std::endl;
+        passed &= test_checks::check( "gpu tensor", check_coincide_tensor( N, cross_ptr_host, cross_dev_view ) );
         cross_dev_view.release( false );
 
         SCFD_HIP_SAFE_CALL( hipMemcpy(
             (void *)cross_ptr_host_check, (void *)cross_ptr_dev, sizeof( T ) * total_size, hipMemcpyDeviceToHost
         ) );
-        std::cout << "gpu ptr diff    = " << check_coincide_ptr( N, cross_ptr_host, cross_ptr_host_check ) << std::endl;
+        passed &= test_checks::check( "gpu ptr", check_coincide_ptr( N, cross_ptr_host, cross_ptr_host_check ) );
         SCFD_HIP_SAFE_CALL( hipMemcpy(
             (void *)cross_ptr_ok_host_check, (void *)cross_ptr_ok_dev, sizeof( T ) * total_size, hipMemcpyDeviceToHost
         ) );
-        std::cout << "gpu ptr diff    = " << check_coincide_ptr( N, cross_ptr_ok_host, cross_ptr_ok_host_check )
-                  << std::endl;
+        passed &= test_checks::check(
+            "gpu ptr aligned", check_coincide_ptr( N, cross_ptr_ok_host, cross_ptr_ok_host_check )
+        );
 
         std::string filename;
         filename = "executtion_times_array_3d_cross_product_" + std::to_string( device_id ) + ".csv";
@@ -455,6 +462,8 @@ int main( int argc, char const *argv[] )
         std::cout << "host ptr time =" << host_e2.elapsed_time( host_e1 ) / number_of_iters << "s." << std::endl;
 
 
+        passed &= test_checks::check( "host tensor", check_coincide_tensor( N, cross_ptr_host, cross_host ) );
+
         std::string filename;
         filename = "execution_times_array_3d_cross_product_host.csv";
         std::fstream out_file_cpu{ filename, out_file_cpu.out };
@@ -490,5 +499,5 @@ int main( int argc, char const *argv[] )
     std::free( cross_ptr_host_check );
 
 
-    return 0;
+    return passed ? 0 : 1;
 }
