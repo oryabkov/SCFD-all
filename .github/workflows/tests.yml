@@ -1,0 +1,50 @@
+name: SCFD tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: CPU, OpenMP and MPI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      OMP_NUM_THREADS: '2'
+      OMP_DYNAMIC: 'FALSE'
+      # The communication tests use up to four ranks on a small hosted VM.
+      OMPI_MCA_rmaps_base_oversubscribe: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install hosted dependencies
+        if: ${{ runner.environment == 'github-hosted' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake openmpi-bin libopenmpi-dev
+
+      - name: Build and run tests
+        id: ci
+        run: bash ./run_ci.sh --profile hosted --config build_configs/github_cpu.cmake
+
+      - name: Upload diagnostics
+        if: ${{ always() && steps.ci.outputs.run_dir != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: scfd-test-results
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            ${{ steps.ci.outputs.run_dir }}/**/*.log
+            ${{ steps.ci.outputs.run_dir }}/summary.txt

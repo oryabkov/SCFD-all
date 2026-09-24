@@ -1,7 +1,7 @@
 if(CUDA_ENABLED)
   add_executable(test_cuda_unified_arrays.bin test_cuda_unified_arrays.cu)
-  target_compile_options(test_cuda_unified_arrays.bin PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler=-fopenmp>)
-  target_link_libraries(test_cuda_unified_arrays.bin PRIVATE OpenMP::OpenMP_CXX gtest_main)
+  scfd_target_openmp(test_cuda_unified_arrays.bin)
+  target_link_libraries(test_cuda_unified_arrays.bin PRIVATE gtest_main)
 
   add_executable(test_tensor_array_nd_cuda.bin test_tensor_array_nd.cu)
   target_link_libraries(test_tensor_array_nd_cuda.bin gtest_main)
