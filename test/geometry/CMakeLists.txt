@@ -4,5 +4,5 @@ target_link_libraries(intersect_triangles_test.bin gtest_main)
 add_executable(static_vec_traits_test.bin static_vec_traits_test.cpp)
 target_link_libraries(static_vec_traits_test.bin gtest_main)
 
-add_test(NAME intersect_triangles_test COMMAND intersect_triangles_test.bin)
-add_test(NAME static_vec_traits_test COMMAND static_vec_traits_test.bin)
+scfd_add_test(intersect_triangles_test geometry SERIAL)
+scfd_add_test(static_vec_traits_test geometry SERIAL)

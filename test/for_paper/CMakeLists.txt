@@ -1,38 +1,40 @@
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/plot_resutls.py ${CMAKE_CURRENT_BINARY_DIR}/plot_resutls.py COPYONLY)
 
-if(CUDA_ENABLED)
+if(PLATFORM STREQUAL "CUDA")
   add_executable(test_tensor_array_3d_cross_product.bin test_tensor_array_3d_cross_product.cu)
   scfd_target_openmp(test_tensor_array_3d_cross_product.bin)
   target_link_libraries(test_tensor_array_3d_cross_product.bin PRIVATE gtest_main)
+  scfd_add_test(test_tensor_array_3d_cross_product for_paper CUDA 1024 2 a)
 endif()
 
-add_executable(test_omp.bin test_omp.cpp)
-scfd_target_openmp(test_omp.bin)
-target_link_libraries(test_omp.bin PRIVATE gtest_main)
+# Accelerator examples also retain the standalone OpenMP reference test.
+if(NOT PLATFORM STREQUAL "SERIAL")
+  add_executable(test_omp.bin test_omp.cpp)
+  scfd_target_openmp(test_omp.bin)
+  target_link_libraries(test_omp.bin PRIVATE gtest_main)
+  scfd_add_test(test_omp for_paper OMP)
+endif()
 
-if(CUDA_ENABLED)
+if(PLATFORM STREQUAL "CUDA")
   add_executable(test_omp_cu.bin test_omp.cu)
   scfd_target_openmp(test_omp_cu.bin)
   target_link_libraries(test_omp_cu.bin PRIVATE gtest_main)
+  scfd_add_test(test_omp_cu for_paper CUDA)
 endif()
 
-if(HIP_ENABLED)
+if(PLATFORM STREQUAL "HIP")
   add_executable(test_hip.bin test_hip.cpp)
   scfd_target_openmp(test_hip.bin)
   target_link_libraries(test_hip.bin PRIVATE gtest_main)
+  scfd_add_test(test_hip for_paper HIP 1024 2 a)
 endif()
 
-if(SYCL_ENABLED)
+if(PLATFORM STREQUAL "SYCL")
   add_executable(test_sycl.bin test_sycl.cpp)
   scfd_target_sycl(test_sycl.bin)
   scfd_target_openmp(test_sycl.bin)
   target_link_libraries(test_sycl.bin PRIVATE gtest_main)
   target_compile_definitions(test_sycl.bin PUBLIC
       SCFD_ARRAYS_ORDINAL_TYPE=std::ptrdiff_t)
+  scfd_add_test(test_sycl for_paper SYCL 1024 2)
 endif()
-
-#TODO add calls to test_omp tests
-if(CUDA_ENABLED)
-  add_test(NAME test_tensor_array_3d_cross_product COMMAND test_tensor_array_3d_cross_product.bin 100000 100 a)
-endif()
-

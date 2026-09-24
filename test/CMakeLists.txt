@@ -1,4 +1,6 @@
 
+include(${PROJECT_SOURCE_DIR}/cmake/SCFDTesting.cmake)
+
 add_subdirectory(external_libraries)
 
 add_subdirectory(arrays)

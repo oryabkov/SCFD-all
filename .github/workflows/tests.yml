@@ -36,7 +36,7 @@ jobs:
 
       - name: Build and run tests
         id: ci
-        run: bash ./run_ci.sh --profile hosted --config build_configs/github_cpu.cmake
+        run: bash ./run_ci.sh --profile hosted
 
       - name: Upload diagnostics
         if: ${{ always() && steps.ci.outputs.run_dir != '' }}

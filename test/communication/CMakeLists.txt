@@ -4,65 +4,39 @@ function(scfd_communication_target name source)
     target_compile_features(${name}.bin PRIVATE cxx_std_14)
 endfunction()
 
-function(scfd_communication_mpi_test name target ranks)
-    add_test(NAME ${name}
-        COMMAND "${MPIEXEC_EXECUTABLE}" ${MPIEXEC_NUMPROC_FLAG} ${ranks}
-                ${MPIEXEC_PREFLAGS} $<TARGET_FILE:${target}.bin>
-                ${MPIEXEC_POSTFLAGS} ${ARGN})
-    set_tests_properties(${name} PROPERTIES
-        LABELS "communication;mpi"
-        PROCESSORS ${ranks}
-        TIMEOUT 60
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-endfunction()
-
 scfd_communication_target(test_trivial_comm test_trivial_comm.cpp)
-scfd_communication_target(test_platform_trivial_comm_serial test_platform_trivial_comm.cpp)
-target_compile_definitions(test_platform_trivial_comm_serial.bin PRIVATE PLATFORM_SERIAL_CPU)
+scfd_add_test(test_trivial_comm communication SERIAL)
 
-foreach(platform IN ITEMS serial omp)
-    if(platform STREQUAL "serial")
-        set(platform_definition PLATFORM_SERIAL_CPU)
-    else()
-        set(platform_definition PLATFORM_OMP)
-    endif()
+# This regression always verifies a non-MPI platform, even alongside MPI tests.
+if(PLATFORM STREQUAL "SERIAL")
+    scfd_communication_target(test_platform_trivial_comm_serial test_platform_trivial_comm.cpp)
+    scfd_target_platform(test_platform_trivial_comm_serial.bin)
+    scfd_add_test(test_platform_trivial_comm_serial communication SERIAL)
+endif()
 
-    set(runtime test_platform_runtime_${platform})
-    scfd_communication_target(${runtime} test_platform_runtime.cpp)
-    target_compile_definitions(${runtime}.bin PRIVATE ${platform_definition})
-    if(platform STREQUAL "omp")
-        target_link_libraries(${runtime}.bin PRIVATE OpenMP::OpenMP_CXX)
-    endif()
+string(TOLOWER "${PLATFORM}" platform_suffix)
+set(runtime test_platform_runtime_${platform_suffix})
+scfd_communication_target(${runtime} test_platform_runtime.cpp)
+scfd_target_platform(${runtime}.bin)
+scfd_add_test(${runtime} communication "${PLATFORM}")
 
-    if(SCFD_WITH_MPI)
-        foreach(operation IN ITEMS runtime rect_distributor rect_distributor_tensor)
-            set(target test_platform_${operation}_${platform}_mpi)
-            scfd_communication_target(${target} test_platform_${operation}.cpp)
-            target_compile_definitions(${target}.bin PRIVATE ${platform_definition} PLATFORM_MPI)
-            target_link_libraries(${target}.bin PRIVATE MPI::MPI_CXX)
-            if(platform STREQUAL "omp")
-                target_link_libraries(${target}.bin PRIVATE OpenMP::OpenMP_CXX)
-            endif()
+if(PLATFORM_MPI)
+    # MPI definitions remain target-local: the local runtime above stays non-MPI.
+    foreach(operation IN ITEMS runtime rect_distributor rect_distributor_tensor)
+        set(target test_platform_${operation}_${platform_suffix}_mpi)
+        scfd_communication_target(${target} test_platform_${operation}.cpp)
+        scfd_target_platform(${target}.bin)
+        target_compile_definitions(${target}.bin PRIVATE PLATFORM_MPI)
+        target_link_libraries(${target}.bin PRIVATE MPI::MPI_CXX)
 
-            if(operation STREQUAL "runtime")
-                scfd_communication_mpi_test(${target} ${target} 4)
-            else()
-                scfd_communication_mpi_test(${target} ${target} 3 1 1 1 0 0)
-            endif()
-        endforeach()
-    endif()
-endforeach()
+        if(operation STREQUAL "runtime")
+            scfd_add_mpi_test(${target} ${target}.bin communication "${PLATFORM}" 4)
+        else()
+            scfd_add_mpi_test(${target} ${target}.bin communication "${PLATFORM}" 3 1 1 1 0 0)
+        endif()
+    endforeach()
 
-foreach(target IN ITEMS test_trivial_comm test_platform_trivial_comm_serial
-                        test_platform_runtime_serial test_platform_runtime_omp)
-    add_test(NAME ${target} COMMAND ${target}.bin)
-    set_tests_properties(${target} PROPERTIES
-        LABELS communication
-        TIMEOUT 60
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-endforeach()
-
-if(SCFD_WITH_MPI)
+    # These tests exercise the original host implementations without platform selection.
     foreach(target IN ITEMS test_sequential_mpi test_mpi_binary_file
                             test_mpi_thread_multiple test_mpi_comm_split
                             test_mpi_comm_collectives test_mpi_comm_p2p test_mpi_comm_calls
@@ -73,22 +47,17 @@ if(SCFD_WITH_MPI)
 
     foreach(target IN ITEMS test_sequential_mpi test_mpi_binary_file
                             test_mpi_comm_collectives test_mpi_comm_p2p test_mpi_comm_calls)
-        scfd_communication_mpi_test(${target} ${target} 4)
+        scfd_add_mpi_test(${target} ${target}.bin communication SERIAL 4)
     endforeach()
 
-    scfd_communication_mpi_test(test_mpi_thread_multiple_default test_mpi_thread_multiple 4)
+    scfd_add_mpi_test(test_mpi_thread_multiple_default test_mpi_thread_multiple.bin communication SERIAL 4)
     foreach(level RANGE 0 3)
-        scfd_communication_mpi_test(test_mpi_thread_multiple_${level} test_mpi_thread_multiple 4 ${level})
+        scfd_add_mpi_test(test_mpi_thread_multiple_${level} test_mpi_thread_multiple.bin communication SERIAL 4 ${level})
     endforeach()
     foreach(ranks IN ITEMS 3 4)
-        scfd_communication_mpi_test(test_mpi_comm_split_${ranks} test_mpi_comm_split ${ranks})
+        scfd_add_mpi_test(test_mpi_comm_split_${ranks} test_mpi_comm_split.bin communication SERIAL ${ranks})
     endforeach()
     foreach(target IN ITEMS test_mpi_rect_distributor test_mpi_rect_distributor_tensor)
-        scfd_communication_mpi_test(${target} ${target} 3 1 1 1 0 0)
+        scfd_add_mpi_test(${target} ${target}.bin communication SERIAL 3 1 1 1 0 0)
     endforeach()
-
-    # This test writes a fixed filename; keep its output out of the source tree.
-    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mpi_binary_file")
-    set_tests_properties(test_mpi_binary_file PROPERTIES
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mpi_binary_file")
 endif()

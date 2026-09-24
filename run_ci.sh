@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build with CMake; execute the existing test binaries directly (no CTest).
+# Select usable machine configurations; build with CMake and test with CTest.
 set -uo pipefail
 
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P) || exit 2
@@ -18,10 +18,10 @@ usage() {
         '  --jobs N               Parallel build jobs (default: 2).' \
         '  --timeout SECONDS      Per-test timeout (default: 120).' \
         '  --build-root DIR       Results parent directory (default: build/ci).' \
-        '  --list                 List candidate commands without compiling or running tests.' \
+        '  --list                 List candidate configurations without probing/building.' \
         '  --help                 Show this help.' \
         '' \
-        'Without --config, auto tries cpu/cuda/hip/sycl; hosted uses github_cpu.' \
+        'Without --config, auto tries serial/omp/cuda/hip/sycl; hosted uses serial/omp.' \
         'Compilers and SDK settings belong in build_configs/*.cmake, not in this script.'
 }
 
@@ -47,15 +47,15 @@ done
 [[ $jobs =~ ^[1-9][0-9]*$ ]] || die '--jobs must be a positive integer'
 [[ $test_timeout =~ ^[1-9][0-9]*$ ]] || die '--timeout must be a positive integer'
 ((BASH_VERSINFO[0] >= 4)) || die 'Bash 4 or newer is required'
-for tool in cmake timeout; do
+for tool in cmake ctest timeout; do
     command -v "$tool" >/dev/null || die "Required command not found: $tool"
 done
 if ((${#configs[@]} == 0)); then
     if [[ $profile == hosted ]]; then
-        configs=("$repo_dir/build_configs/github_cpu.cmake")
+        configs=("$repo_dir/build_configs/serial.cmake" "$repo_dir/build_configs/omp.cmake")
     else
-        for backend in cpu cuda hip sycl; do
-            configs+=("$repo_dir/build_configs/$backend.cmake")
+        for platform in serial omp cuda hip sycl; do
+            configs+=("$repo_dir/build_configs/$platform.cmake")
         done
     fi
 fi
@@ -119,8 +119,8 @@ trap finish EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# No eval: flags and commands always travel as arrays. Every command has a log
-# and timeout; each test owns its working directory for generated data files.
+# No eval: flags and commands always travel as arrays. CTest owns individual
+# test timeouts and working directories; configure/build have outer timeouts.
 logged_command() {
     local log=$1 working_dir=$2 limit=$3 status
     shift 3
@@ -128,60 +128,20 @@ logged_command() {
     printf 'Command: ' > "$log" || return 2
     printf '%q ' "$@" >> "$log" || return 2
     printf '\nWorking directory: %s\n\n' "$working_dir" >> "$log" || return 2
-    (cd -- "$working_dir" && timeout --kill-after=10s "${limit}s" "$@") >> "$log" 2>&1
+    if [[ $limit == 0 ]]; then
+        (cd -- "$working_dir" && "$@") >> "$log" 2>&1
+    else
+        (cd -- "$working_dir" && timeout --kill-after=10s "${limit}s" "$@") >> "$log" 2>&1
+    fi
     status=$?
     printf '\nExit status: %s\n' "$status" >> "$log" || return 2
     return "$status"
 }
 
-run_test_command() {
-    local suite=$1 name=$2
-    shift 2
-    if $list_only; then
-        printf '%s/%s/%s: ' "$config_id" "$suite" "$name"
-        printf '%q ' "$@"
-        printf '\n'
-        return
-    fi
-    local case_dir="$run_dir/test/$suite/$config_id/$name"
-    if logged_command "$case_dir/run.log" "$case_dir" "$test_timeout" "$@"; then
-        report PASS "$config_id/$suite/$name"
-    else
-        report FAIL "$config_id/$suite/$name" "See $case_dir/run.log"
-    fi
-    return 0 # Continue with other cases, but retain the failure in the summary.
-}
-
-run_test() {
-    local suite=$1 name=$2 binary=$3
-    shift 3
-    run_test_command "$suite" "$name" "$build_dir/$binary" "$@"
-}
-
-run_mpi_test() {
-    local suite=$1 name=$2 ranks=$3 binary=$4
-    shift 4
-    run_test_command "$suite" "$name" "$mpi_launcher" "${mpi_numproc[@]}" "$ranks" \
-        "${mpi_preflags[@]}" "$build_dir/$binary" "${mpi_postflags[@]}" "$@"
-}
-
-# shellcheck source=ci/tests.sh
-source "$repo_dir/ci/tests.sh" || die 'Cannot load the test command list'
-
-load_mpi_launcher() {
-    local metadata_dir=$1
-    mpi_launcher=$(< "$metadata_dir/executable.txt")
-    mpi_cxx_compiler=$(< "$metadata_dir/cxx_compiler.txt")
-    mapfile -t mpi_numproc < "$metadata_dir/numproc_flag.txt"
-    mapfile -t mpi_preflags < "$metadata_dir/preflags.txt"
-    mapfile -t mpi_postflags < "$metadata_dir/postflags.txt"
-    [[ -n $mpi_launcher && ${#mpi_numproc[@]} -gt 0 ]]
-}
-
 probe() {
     local kind=$1 probe_dir="$config_dir/probe-$1"
-    local extra=()
-    [[ $kind == mpi ]] && extra+=(-DSCFD_CI_PROBE_MPI=ON)
+    local extra=(-DPLATFORM_MPI=OFF)
+    [[ $kind == mpi ]] && extra=(-DSCFD_CI_PROBE_MPI=ON -DPLATFORM_MPI=ON)
     probe_failure="configuration failed; see $probe_dir/configure.log"
     logged_command "$probe_dir/configure.log" "$config_dir" 300 \
         cmake -S "$repo_dir/ci/probe" -B "$probe_dir" -G 'Unix Makefiles' \
@@ -190,15 +150,8 @@ probe() {
     logged_command "$probe_dir/build.log" "$config_dir" 300 \
         cmake --build "$probe_dir" --parallel "$jobs" || return 1
     probe_failure="execution failed; see $probe_dir/run.log"
-    if [[ $kind == mpi ]]; then
-        load_mpi_launcher "$probe_dir" || return 1
-        logged_command "$probe_dir/run.log" "$probe_dir" "$test_timeout" \
-            "$mpi_launcher" "${mpi_numproc[@]}" 4 "${mpi_preflags[@]}" \
-            "$probe_dir/mpi-capability.bin" "${mpi_postflags[@]}"
-    else
-        logged_command "$probe_dir/run.log" "$probe_dir" "$test_timeout" \
-            "$probe_dir/capability.bin"
-    fi
+    logged_command "$probe_dir/run.log" "$probe_dir" 0 \
+        ctest --output-on-failure --timeout "$test_timeout" --parallel 1
 }
 
 config_index=0
@@ -216,11 +169,11 @@ for config in "${configs[@]}"; do
         report FAIL "$config_id/settings" "Invalid configuration; see $config_dir/settings.log"
         continue
     fi
-    backend=$(< "$metadata_dir/backend.txt")
+    platform=$(< "$metadata_dir/platform.txt")
     mpi_mode=$(< "$metadata_dir/mpi_mode.txt")
     required=$(< "$metadata_dir/required.txt")
     if [[ $profile == hosted ]]; then
-        if [[ $backend != host ]]; then
+        if [[ $platform != SERIAL && $platform != OMP ]]; then
             report SKIP "$config_id" 'Accelerators are disabled in the hosted profile'
             continue
         fi
@@ -228,20 +181,10 @@ for config in "${configs[@]}"; do
         mpi_mode=ON
     fi
     if $list_only; then
-        printf '\n%s: backend=%s required=%s MPI=%s (not probed)\n' "$config_id" "$backend" "$required" "$mpi_mode"
-        scfd_run_host_tests
-        if [[ $backend != host ]]; then
-            "scfd_run_${backend}_tests"
-        elif [[ $mpi_mode != OFF ]]; then
-            mpi_launcher='<MPI launcher>'
-            mpi_numproc=('<rank flag>')
-            mpi_preflags=()
-            mpi_postflags=()
-            scfd_run_mpi_tests
-        fi
+        printf '\n%s: PLATFORM=%s required=%s MPI=%s (not probed)\n' "$config_id" "$platform" "$required" "$mpi_mode"
         continue
     fi
-    printf '\nChecking %s (%s)\n' "$config_id" "$backend"
+    printf '\nChecking %s (%s)\n' "$config_id" "$platform"
     if ! probe backend; then
         state=SKIP
         [[ $required == ON ]] && state=FAIL
@@ -254,18 +197,18 @@ for config in "${configs[@]}"; do
     if [[ $mpi_mode != OFF ]]; then
         if probe mpi; then
             mpi_enabled=ON
-            mpi_args+=("-DMPIEXEC_EXECUTABLE=$mpi_launcher")
-            [[ -z $mpi_cxx_compiler ]] || mpi_args+=("-DMPI_CXX_COMPILER=$mpi_cxx_compiler")
+            mpi_args+=(-C "$config_dir/probe-mpi/mpi.cmake")
             report PASS "$config_id/mpi-capability"
         else
             state=SKIP
             [[ $mpi_mode == ON ]] && state=FAIL
-            report "$state" "$config_id/mpi-capability" "Unavailable: $probe_failure. CPU tests still run."
+            report "$state" "$config_id/mpi-capability" "Unavailable: $probe_failure. Local-only tests still run."
         fi
     fi
     if ! logged_command "$config_dir/configure.log" "$config_dir" 600 \
         cmake -S "$repo_dir" -B "$build_dir" -G 'Unix Makefiles' -C "$config" \
-        -DSCFD_WITH_TESTS=ON "-DSCFD_WITH_MPI=$mpi_enabled" "${mpi_args[@]}"; then
+        "${mpi_args[@]}" -DBUILD_TESTING=ON "-DPLATFORM_MPI=$mpi_enabled" \
+        "-DSCFD_TEST_TIMEOUT=$test_timeout"; then
         report FAIL "$config_id/configure" "See $config_dir/configure.log"
         continue
     fi
@@ -275,13 +218,13 @@ for config in "${configs[@]}"; do
         continue
     fi
     report PASS "$config_id/build"
-    scfd_run_host_tests
-    if [[ $backend != host ]]; then
-        "scfd_run_${backend}_tests"
+    if logged_command "$config_dir/ctest.log" "$build_dir" 0 \
+        ctest --output-on-failure --timeout "$test_timeout" --parallel 1; then
+        report PASS "$config_id/tests" "See $config_dir/ctest.log"
+    else
+        report FAIL "$config_id/tests" "See $config_dir/ctest.log"
     fi
-    if [[ $mpi_enabled == ON ]]; then
-        scfd_run_mpi_tests
-    fi
+    cat "$config_dir/ctest.log"
 done
 if ! $list_only && ((passed == 0 && failed == 0)); then
     report FAIL runner 'No usable configuration was selected'

@@ -1,5 +1,13 @@
 #include <cuda_runtime.h>
 
+// Probe SDK dependencies only: SCFD compilation failures must fail the build,
+// not turn a usable accelerator configuration into an optional capability skip.
+#include <cublas_v2.h>
+#include <cusolverDn.h>
+#include <thrust/complex.h>
+#include <thrust/device_ptr.h>
+#include <thrust/reduce.h>
+
 #include <iostream>
 
 __global__ void write_value( int *value )

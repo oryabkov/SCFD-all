@@ -1,5 +1,14 @@
 #include <hip/hip_runtime.h>
 
+// hipcc supplies the appropriate HIP/Thrust backend for AMD or NVIDIA.
+// Do not include SCFD headers: library regressions belong to the main build.
+#include <hipblas/hipblas.h>
+#include <hipblas/hipblas-version.h>
+#include <hipsolver/hipsolver.h>
+#include <thrust/complex.h>
+#include <thrust/device_ptr.h>
+#include <thrust/reduce.h>
+
 #include <iostream>
 
 __global__ void write_value( int *value )
