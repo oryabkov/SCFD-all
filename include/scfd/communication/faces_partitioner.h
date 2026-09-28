@@ -93,7 +93,7 @@ struct faces_partitioner
 
         Ord own_size = own_glob_indices.size();
 
-        total_size = comm.template reduce_sum<Ord>( own_size );
+        total_size = comm.template all_reduce_sum<Ord>( own_size );
 
         //my_rank = part.my_rank;
         //is_complete = part.is_complete;

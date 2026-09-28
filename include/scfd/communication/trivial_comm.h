@@ -132,6 +132,16 @@ struct trivial_comm
     {
         return loc_val;
     }
+
+    int size() const
+    {
+        return num_procs;
+    }
+
+    int my_rank() const
+    {
+        return myid;
+    }
 };
 
 } // namespace communication
