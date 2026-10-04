@@ -159,6 +159,8 @@ struct coalesced_rect_distributor
             pack_bucket_views( for_each, array, pkg );
 #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
             pkg.buf.sync_from_array();
+#else
+            for_each.wait();
 #endif
             comm_info_.template isend<char>(
                 transport_ptr( pkg ), static_cast<int>( bytes( pkg ) ), pkg.proc_id, 0, isend_requests_[pkg_i]
