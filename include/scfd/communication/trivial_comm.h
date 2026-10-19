@@ -132,6 +132,30 @@ struct trivial_comm
     {
         return loc_val;
     }
+
+    template <class T>
+    void all_reduce_max( const T *loc_data, T *res_data, int count ) const
+    {
+        all_reduce_sum( loc_data, res_data, count );
+    }
+
+    template <class T>
+    T all_reduce_max( T loc_val ) const
+    {
+        return loc_val;
+    }
+
+    template <class T>
+    void all_reduce_min( const T *loc_data, T *res_data, int count ) const
+    {
+        all_reduce_sum( loc_data, res_data, count );
+    }
+
+    template <class T>
+    T all_reduce_min( T loc_val ) const
+    {
+        return loc_val;
+    }
 };
 
 } // namespace communication
