@@ -26,6 +26,7 @@
 #include <scfd/utils/hipsolver_safe_call.h>
 #include <scfd/utils/hip_safe_call.h>
 #include <stdexcept>
+#include <utility>
 #include <scfd/utils/manual_init_singleton.h>
 
 namespace scfd
@@ -121,6 +122,8 @@ public:
         w.d_work_f  = nullptr;
         work_size   = w.work_size;
         w.work_size = 0;
+        work_capacity_d = std::exchange( w.work_capacity_d, 0 );
+        work_capacity_f = std::exchange( w.work_capacity_f, 0 );
 
         hipblas     = w.hipblas;
         hipblas_set = w.hipblas_set;
@@ -259,6 +262,8 @@ private:
     double             *d_work_d  = nullptr;
     float              *d_work_f  = nullptr;
     int                 work_size = 0;
+    int                 work_capacity_d = 0;
+    int                 work_capacity_f = 0;
     blas_t             *hipblas;
     bool                hipblas_set = false;
 
@@ -378,21 +383,25 @@ private:
     }
     void set_d_work_double( int work_size_ )
     {
-        if ( work_size < work_size_ )
+        if ( work_capacity_d < work_size_ )
         {
-            work_size = work_size_;
             free_d_work_double();
-            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&d_work_d, sizeof( double ) * work_size ) );
+            work_capacity_d = 0;
+            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&d_work_d, sizeof( double ) * work_size_ ) );
+            work_capacity_d = work_size_;
         }
+        work_size = work_capacity_d;
     }
     void set_d_work_float( int work_size_ )
     {
-        if ( work_size < work_size_ )
+        if ( work_capacity_f < work_size_ )
         {
-            work_size = work_size_;
             free_d_work_float();
-            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&d_work_f, sizeof( float ) * work_size ) );
+            work_capacity_f = 0;
+            SCFD_HIP_SAFE_CALL( hipMalloc( (void **)&d_work_f, sizeof( float ) * work_size_ ) );
+            work_capacity_f = work_size_;
         }
+        work_size = work_capacity_f;
     }
 };
 

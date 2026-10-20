@@ -25,6 +25,7 @@
 #include <scfd/utils/cusolver_safe_call.h>
 #include <scfd/utils/cuda_safe_call.h>
 #include <stdexcept>
+#include <utility>
 #include <scfd/utils/manual_init_singleton.h>
 
 namespace scfd
@@ -146,6 +147,8 @@ public:
         w.d_work_f  = nullptr;
         work_size   = w.work_size;
         w.work_size = 0;
+        work_capacity_d = std::exchange( w.work_capacity_d, 0 );
+        work_capacity_f = std::exchange( w.work_capacity_f, 0 );
 
         cublas     = w.cublas;
         cublas_set = w.cublas_set;
@@ -284,6 +287,8 @@ private:
     double            *d_work_d  = nullptr;
     float             *d_work_f  = nullptr;
     int                work_size = 0;
+    int                work_capacity_d = 0;
+    int                work_capacity_f = 0;
     blas_t            *cublas;
     bool               cublas_set = false;
 
@@ -403,21 +408,25 @@ private:
     }
     void set_d_work_double( int work_size_ )
     {
-        if ( work_size < work_size_ )
+        if ( work_capacity_d < work_size_ )
         {
-            work_size = work_size_;
             free_d_work_double();
-            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_d, sizeof( double ) * work_size ) );
+            work_capacity_d = 0;
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_d, sizeof( double ) * work_size_ ) );
+            work_capacity_d = work_size_;
         }
+        work_size = work_capacity_d;
     }
     void set_d_work_float( int work_size_ )
     {
-        if ( work_size < work_size_ )
+        if ( work_capacity_f < work_size_ )
         {
-            work_size = work_size_;
             free_d_work_float();
-            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_f, sizeof( float ) * work_size ) );
+            work_capacity_f = 0;
+            SCFD_CUDA_SAFE_CALL( cudaMalloc( (void **)&d_work_f, sizeof( float ) * work_size_ ) );
+            work_capacity_f = work_size_;
         }
+        work_size = work_capacity_f;
     }
 };
 
