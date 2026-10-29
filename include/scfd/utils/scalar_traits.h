@@ -17,9 +17,10 @@
 #ifndef __SCFD_UTILS_SCALAR_TRAITS_H__
 #define __SCFD_UTILS_SCALAR_TRAITS_H__
 
-#include <cmath>
 #include <algorithm>
-#include <string>
+#include <cmath>
+#include <complex>
+#include <type_traits>
 #include "device_tag.h"
 
 namespace scfd
@@ -27,287 +28,307 @@ namespace scfd
 namespace utils
 {
 
-template <class T>
-struct scalar_traits_err
+// Unsupported scalars require an explicit specialization and its defining header.
+template <class T, class Enable = void>
+struct scalar_traits;
+
+namespace detail
 {
-    inline __DEVICE_TAG__ static T not_defined()
-    {
-        return T::this_type_is_missing_a_specialization();
-    };
-};
 
 template <class T>
-struct scalar_traits
+struct real_scalar_traits
 {
-    static constexpr T zero = T( 0.f );
-    //inline __DEVICE_TAG__ static T  zero() { return T(0.f); }
-    //inline __DEVICE_TAG__ static T  one() { return T(1.f); }
-    inline __DEVICE_TAG__ static T pi()
+    using scalar_type                = T;
+    using component_type             = T;
+    using abs_type                   = T;
+    static constexpr bool is_complex = false;
+
+    __DEVICE_TAG__ static T zero()
     {
-        return T( 3.1415926535897932384626433832795f );
+        return T( 0 );
     }
-    inline __DEVICE_TAG__ static T sqrt( const T &x )
+    __DEVICE_TAG__ static T make( const T &value, const T & = T( 0 ) )
     {
-        return std::sqrt( x );
+        return value;
     }
-    inline __DEVICE_TAG__ static T abs( const T &x )
+    __DEVICE_TAG__ static T from_real( const T &value )
     {
-        return std::abs( x );
+        return value;
     }
-    inline __DEVICE_TAG__ static T sqr( const T &x )
+    __DEVICE_TAG__ static T real( const T &value )
+    {
+        return value;
+    }
+    __DEVICE_TAG__ static T imag( const T & )
+    {
+        return T( 0 );
+    }
+    __DEVICE_TAG__ static T conj( const T &value )
+    {
+        return value;
+    }
+    __DEVICE_TAG__ static T add( const T &x, const T &y )
+    {
+        return x + y;
+    }
+    __DEVICE_TAG__ static T mul( const T &x, const T &y )
+    {
+        return x * y;
+    }
+    __DEVICE_TAG__ static T conj_mul( const T &x, const T &y )
+    {
+        return x * y;
+    }
+    __DEVICE_TAG__ static T abs_sq( const T &x )
     {
         return x * x;
     }
-    inline __DEVICE_TAG__ static T pow( const T &x, const T &y )
+    __DEVICE_TAG__ static T sqr( const T &x )
     {
-        return std::pow( x, y );
+        return x * x;
     }
-    inline __DEVICE_TAG__ static T exp( const T &x )
+    __DEVICE_TAG__ static T asum_term( const T &x )
     {
-        return std::exp( x );
-    }
-    inline __DEVICE_TAG__ static T iconst( const int &i )
-    {
-        return T( i );
-    }
-    inline __DEVICE_TAG__ static T fconst( const float &f )
-    {
-        return T( f );
-    }
-    inline __DEVICE_TAG__ static T dconst( const double &d )
-    {
-        return T( d );
-    }
-    inline __DEVICE_TAG__ static T max( const T &x, const T &y )
-    {
-        return std::max( x, y );
-    }
-    inline __DEVICE_TAG__ static T min( const T &x, const T &y )
-    {
-        return std::min( x, y );
-    }
-    inline __DEVICE_TAG__ static T atan2( const T &y, const T &x )
-    {
-        return std::atan2( y, x );
-    }
-    inline __DEVICE_TAG__ static T sin( const T &x )
-    {
-        return std::sin( x );
-    }
-    inline __DEVICE_TAG__ static T cos( const T &x )
-    {
-        return std::cos( x );
-    }
-    inline static std::string name()
-    {
-        return scalar_traits_err<T>::not_defined();
+        return scalar_traits<T>::abs( x );
     }
 };
 
-template <>
-struct scalar_traits<float>
+// Shared arithmetic for complex classes with value_type, real(), imag() and operators.
+template <class Complex>
+struct complex_scalar_traits
 {
-    static constexpr float zero = 0.f;
-    //inline __DEVICE_TAG__ static float  zero() { return 0.f; }
-    //inline __DEVICE_TAG__ static float  one() { return 1.f; }
-    inline __DEVICE_TAG__ static float pi()
-    {
-        return 3.1415926535897932384626433832795f;
-    }
-    inline __DEVICE_TAG__ static float sqrt( const float &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::sqrt( x );
-#else
-        return ::sqrtf( x );
-#endif
-    }
-    inline __DEVICE_TAG__ static float abs( const float &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::abs( x );
-#else
-        return ::fabsf( x );
-#endif
-    }
-    inline __DEVICE_TAG__ static float sqr( const float &x )
-    {
-        return x * x;
-    }
-    inline __DEVICE_TAG__ static float pow( const float &x, const float &y )
-    {
-#ifndef __CUDA_ARCH__
-        return std::pow( x, y );
-#else
-        return ::powf( x, y );
-#endif
-    }
-    inline __DEVICE_TAG__ static float exp( const float &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::exp( x );
-#else
-        return ::expf( x );
-#endif
-    }
-    inline __DEVICE_TAG__ static float iconst( const int &i )
-    {
-        return float( i );
-    }
-    inline __DEVICE_TAG__ static float fconst( const float &f )
-    {
-        return f;
-    }
-    inline __DEVICE_TAG__ static float dconst( const double &d )
-    {
-        return float( d );
-    }
-    inline __DEVICE_TAG__ static float max( const float &x, const float &y )
-    {
-#ifndef __CUDA_ARCH__
-        return std::max( x, y );
-#else
-        return ::fmaxf( x, y );
-#endif
-    }
-    inline __DEVICE_TAG__ static float min( const float &x, const float &y )
-    {
-#ifndef __CUDA_ARCH__
-        return std::min( x, y );
-#else
-        return ::fminf( x, y );
-#endif
-    }
-    inline __DEVICE_TAG__ static float atan2( const float &y, const float &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::atan2( y, x );
-#else
-        return ::atan2f( y, x );
-#endif
-    }
-    inline __DEVICE_TAG__ static float sin( const float &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::sin( x );
-#else
-        return ::sinf( x );
-#endif
-    }
-    inline __DEVICE_TAG__ static float cos( const float &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::cos( x );
-#else
-        return ::cosf( x );
-#endif
-    }
-    //inline static std::string       name() { return scalar_traits_err<float>::not_defined(); }
-};
+    using scalar_type                = Complex;
+    using component_type             = typename Complex::value_type;
+    using component_traits_type      = scalar_traits<component_type>;
+    using abs_type                   = typename component_traits_type::abs_type;
+    static constexpr bool is_complex = true;
 
-template <>
-struct scalar_traits<double>
-{
-    static constexpr double zero = 0.;
-    //inline __DEVICE_TAG__ static double  zero() { return 0.; }
-    //inline __DEVICE_TAG__ static double  one() { return 1.; }
-    inline __DEVICE_TAG__ static double pi()
+    __DEVICE_TAG__ static Complex make( const component_type &re, const component_type &im = component_type( 0 ) )
     {
-        return 3.1415926535897932384626433832795;
+        return Complex( re, im );
     }
-    inline __DEVICE_TAG__ static double sqrt( const double &x )
+    __DEVICE_TAG__ static Complex zero()
     {
-#ifndef __CUDA_ARCH__
-        return std::sqrt( x );
-#else
-        return ::sqrt( x );
-#endif
+        return make( component_type( 0 ) );
     }
-    inline __DEVICE_TAG__ static double abs( const double &x )
+    __DEVICE_TAG__ static Complex from_real( const component_type &value )
     {
-#ifndef __CUDA_ARCH__
-        return std::abs( x );
-#else
-        return ::fabs( x );
-#endif
+        return make( value );
     }
-    inline __DEVICE_TAG__ static double sqr( const double &x )
+    __DEVICE_TAG__ static component_type real( const Complex &x )
     {
-        return x * x;
+        return x.real();
     }
-    inline __DEVICE_TAG__ static double pow( const double &x, const double &y )
+    __DEVICE_TAG__ static component_type imag( const Complex &x )
     {
-#ifndef __CUDA_ARCH__
-        return std::pow( x, y );
-#else
-        return ::pow( x, y );
-#endif
+        return x.imag();
     }
-    inline __DEVICE_TAG__ static double exp( const double &x )
+    __DEVICE_TAG__ static Complex conj( const Complex &x )
     {
-#ifndef __CUDA_ARCH__
-        return std::exp( x );
-#else
-        return ::exp( x );
-#endif
+        return make( x.real(), -x.imag() );
     }
-    inline __DEVICE_TAG__ static double iconst( const int &i )
+    __DEVICE_TAG__ static Complex add( const Complex &x, const Complex &y )
     {
-        return double( i );
+        return x + y;
     }
-    inline __DEVICE_TAG__ static double fconst( const double &f )
+    __DEVICE_TAG__ static Complex mul( const Complex &x, const Complex &y )
     {
-        return f;
+        return x * y;
     }
-    inline __DEVICE_TAG__ static double dconst( const double &d )
+    __DEVICE_TAG__ static Complex conj_mul( const Complex &x, const Complex &y )
     {
-        return double( d );
+        return conj( x ) * y;
     }
-    inline __DEVICE_TAG__ static double max( const double &x, const double &y )
+    __DEVICE_TAG__ static abs_type abs( const Complex &x )
     {
-#ifndef __CUDA_ARCH__
-        return std::max( x, y );
-#else
-        return ::fmax( x, y );
-#endif
+        return component_traits_type::hypot( x.real(), x.imag() );
     }
-    inline __DEVICE_TAG__ static double min( const double &x, const double &y )
+    __DEVICE_TAG__ static abs_type abs_sq( const Complex &x )
     {
-#ifndef __CUDA_ARCH__
-        return std::min( x, y );
-#else
-        return ::fmin( x, y );
-#endif
+        return component_traits_type::abs_sq( x.real() ) + component_traits_type::abs_sq( x.imag() );
     }
-    inline __DEVICE_TAG__ static double atan2( const double &y, const double &x )
+    // BLAS ASUM uses component absolute sums, not the complex modulus.
+    __DEVICE_TAG__ static abs_type asum_term( const Complex &x )
     {
-#ifndef __CUDA_ARCH__
-        return std::atan2( y, x );
-#else
-        return ::atan2( y, x );
-#endif
+        return component_traits_type::abs( x.real() ) + component_traits_type::abs( x.imag() );
     }
-    inline __DEVICE_TAG__ static double sin( const double &x )
+    __DEVICE_TAG__ static bool is_finite( const Complex &x )
     {
-#ifndef __CUDA_ARCH__
-        return std::sin( x );
-#else
-        return ::sin( x );
-#endif
+        return component_traits_type::is_finite( x.real() ) && component_traits_type::is_finite( x.imag() );
     }
-    inline __DEVICE_TAG__ static double cos( const double &x )
-    {
-#ifndef __CUDA_ARCH__
-        return std::cos( x );
-#else
-        return ::cos( x );
-#endif
-    }
-    //inline static std::string       name() { return scalar_traits_err<double>::not_defined(); }
 };
 
 }
 
+template <class T>
+struct scalar_traits<T, typename std::enable_if<std::is_arithmetic<T>::value>::type> : detail::real_scalar_traits<T>
+{
+    __DEVICE_TAG__ static T pi()
+    {
+        return T( 3.141592653589793238462643383279502884L );
+    }
+    __DEVICE_TAG__ static T sqrt( const T &x )
+    {
+        return std::sqrt( x );
+    }
+    __DEVICE_TAG__ static T abs( const T &x )
+    {
+        return abs_impl( x, std::is_unsigned<T>{} );
+    }
+    __DEVICE_TAG__ static T hypot( const T &x, const T &y )
+    {
+        return std::hypot( x, y );
+    }
+    __DEVICE_TAG__ static bool is_finite( const T &x )
+    {
+        return std::isfinite( x );
+    }
+    __DEVICE_TAG__ static T pow( const T &x, const T &y )
+    {
+        return std::pow( x, y );
+    }
+    __DEVICE_TAG__ static T exp( const T &x )
+    {
+        return std::exp( x );
+    }
+    __DEVICE_TAG__ static T sin( const T &x )
+    {
+        return std::sin( x );
+    }
+    __DEVICE_TAG__ static T cos( const T &x )
+    {
+        return std::cos( x );
+    }
+    __DEVICE_TAG__ static T atan2( const T &y, const T &x )
+    {
+        return std::atan2( y, x );
+    }
+    __DEVICE_TAG__ static T min( const T &x, const T &y )
+    {
+#ifdef __CUDA_ARCH__
+        return std::fmin( x, y );
+#else
+        return std::min( x, y );
+#endif
+    }
+    __DEVICE_TAG__ static T max( const T &x, const T &y )
+    {
+#ifdef __CUDA_ARCH__
+        return std::fmax( x, y );
+#else
+        return std::max( x, y );
+#endif
+    }
+    __DEVICE_TAG__ static T iconst( const int &x )
+    {
+        return T( x );
+    }
+    __DEVICE_TAG__ static T fconst( const float &x )
+    {
+        return T( x );
+    }
+    __DEVICE_TAG__ static T dconst( const double &x )
+    {
+        return T( x );
+    }
+
+private:
+    __DEVICE_TAG__ static T abs_impl( const T &x, std::true_type )
+    {
+        return x;
+    }
+    __DEVICE_TAG__ static T abs_impl( const T &x, std::false_type )
+    {
+        return std::abs( x );
+    }
+};
+
+template <class T>
+struct scalar_traits<std::complex<T>>
+{
+    using scalar_type                = std::complex<T>;
+    using component_type             = typename scalar_type::value_type;
+    using component_traits_type      = scalar_traits<component_type>;
+    using abs_type                   = typename component_traits_type::abs_type;
+    static constexpr bool is_complex = true;
+
+    static scalar_type make( const component_type &re, const component_type &im = component_type( 0 ) )
+    {
+        return scalar_type( re, im );
+    }
+    static scalar_type zero()
+    {
+        return make( component_type( 0 ) );
+    }
+    static scalar_type from_real( const component_type &value )
+    {
+        return make( value );
+    }
+    static component_type real( const scalar_type &x )
+    {
+        return x.real();
+    }
+    static component_type imag( const scalar_type &x )
+    {
+        return x.imag();
+    }
+    static scalar_type conj( const scalar_type &x )
+    {
+        return make( x.real(), -x.imag() );
+    }
+    static scalar_type add( const scalar_type &x, const scalar_type &y )
+    {
+        return x + y;
+    }
+    static scalar_type mul( const scalar_type &x, const scalar_type &y )
+    {
+        return x * y;
+    }
+    static scalar_type conj_mul( const scalar_type &x, const scalar_type &y )
+    {
+        return conj( x ) * y;
+    }
+    static abs_type abs( const scalar_type &x )
+    {
+        return component_traits_type::hypot( x.real(), x.imag() );
+    }
+    static abs_type abs_sq( const scalar_type &x )
+    {
+        return component_traits_type::abs_sq( x.real() ) + component_traits_type::abs_sq( x.imag() );
+    }
+    // BLAS ASUM uses component absolute sums, not the complex modulus.
+    static abs_type asum_term( const scalar_type &x )
+    {
+        return component_traits_type::abs( x.real() ) + component_traits_type::abs( x.imag() );
+    }
+    static bool is_finite( const scalar_type &x )
+    {
+        return component_traits_type::is_finite( x.real() ) && component_traits_type::is_finite( x.imag() );
+    }
+
+    static std::complex<T> sqrt( const std::complex<T> &x )
+    {
+        return std::sqrt( x );
+    }
+    static std::complex<T> pow( const std::complex<T> &x, const std::complex<T> &y )
+    {
+        return std::pow( x, y );
+    }
+    static std::complex<T> exp( const std::complex<T> &x )
+    {
+        return std::exp( x );
+    }
+    static std::complex<T> sin( const std::complex<T> &x )
+    {
+        return std::sin( x );
+    }
+    static std::complex<T> cos( const std::complex<T> &x )
+    {
+        return std::cos( x );
+    }
+};
+
+}
 }
 
 #endif
