@@ -55,8 +55,10 @@ struct trivial_binary_file
 
     template <class Comm>
     trivial_binary_file(
-        const Comm &comm_info, const std::string &file_name, int amode = binary_file_mode::rdwr | binary_file_mode::create
-    ) : file_name_( file_name )
+        const Comm &comm_info, const std::string &file_name,
+        int amode = binary_file_mode::rdwr | binary_file_mode::create
+    )
+        : file_name_( file_name )
     {
         (void)comm_info;
 
@@ -71,7 +73,7 @@ struct trivial_binary_file
             }
         }
 
-        bool want_read  = ( amode & binary_file_mode::rdonly ) != 0 || ( amode & binary_file_mode::rdwr ) != 0;
+        bool want_read = ( amode & binary_file_mode::rdonly ) != 0 || ( amode & binary_file_mode::rdwr ) != 0;
         bool want_write =
             ( amode & binary_file_mode::wronly ) != 0 || ( amode & binary_file_mode::rdwr ) != 0 || want_create;
 
@@ -162,8 +164,8 @@ struct trivial_binary_file
     }
 
 private:
-    std::string           file_name_;
-    mutable std::fstream  fs_;
+    std::string          file_name_;
+    mutable std::fstream fs_;
 };
 
 

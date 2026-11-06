@@ -18,10 +18,10 @@
 /// by test_mpi_coalesced_rect_distributor.cu.
 using namespace scfd;
 
-using ordinal         = int;
-using big_ordinal     = long int;
-using value_t         = long int;
-static const int dim  = 3;
+using ordinal        = int;
+using big_ordinal    = long int;
+using value_t        = long int;
+static const int dim = 3;
 
 using mem_t       = memory::host;
 using comm_t      = communication::trivial_platform<mem_t>;
@@ -48,8 +48,7 @@ value_t make_value( ordinal ix, ordinal iy, ordinal iz, int t )
 
 template <int TensorDim>
 int run_case(
-    const std::string &name, ordinal stencil, int max_stencil_order, periodic_flags_t periodic_flags,
-    big_ordinal size
+    const std::string &name, ordinal stencil, int max_stencil_order, periodic_flags_t periodic_flags, big_ordinal size
 )
 {
     std::cout << "case " << name << " ... " << std::flush;
@@ -82,7 +81,7 @@ int run_case(
                 bool interior = my_own_loc_rect.is_own( idx_t( ix, iy, iz ) );
                 for ( int t = 0; t < TensorDim; ++t )
                 {
-                    value_t v            = interior ? make_value( ix, iy, iz, t ) : ghost_sentinel;
+                    value_t v                = interior ? make_value( ix, iy, iz, t ) : ghost_sentinel;
                     arr_old( ix, iy, iz, t ) = v;
                     arr_new( ix, iy, iz, t ) = v;
                 }
@@ -105,8 +104,8 @@ int run_case(
                         if ( errors_num < 10 )
                         {
                             std::cout << std::endl
-                                       << "  mismatch at (" << ix << "," << iy << "," << iz << ",t=" << t
-                                       << "): old=" << v_old << " new=" << v_new;
+                                      << "  mismatch at (" << ix << "," << iy << "," << iz << ",t=" << t
+                                      << "): old=" << v_old << " new=" << v_new;
                         }
                         ++errors_num;
                     }
@@ -129,18 +128,12 @@ int main()
 {
     int errors_num = 0;
 
-    errors_num += run_case<1>(
-        "periodic_full_order3_stencil2_tensor1", 2, dim, periodic_flags_t( true, true, true ), 10
-    );
-    errors_num += run_case<2>(
-        "periodic_full_order3_stencil2_tensor2", 2, dim, periodic_flags_t( true, true, true ), 10
-    );
-    errors_num += run_case<2>(
-        "order1_stencil1_mixed_periodic", 1, 1, periodic_flags_t( true, false, true ), 10
-    );
-    errors_num += run_case<1>(
-        "order1_stencil2_mixed_periodic", 2, 1, periodic_flags_t( false, true, true ), 10
-    );
+    errors_num +=
+        run_case<1>( "periodic_full_order3_stencil2_tensor1", 2, dim, periodic_flags_t( true, true, true ), 10 );
+    errors_num +=
+        run_case<2>( "periodic_full_order3_stencil2_tensor2", 2, dim, periodic_flags_t( true, true, true ), 10 );
+    errors_num += run_case<2>( "order1_stencil1_mixed_periodic", 1, 1, periodic_flags_t( true, false, true ), 10 );
+    errors_num += run_case<1>( "order1_stencil2_mixed_periodic", 2, 1, periodic_flags_t( false, true, true ), 10 );
 
     if ( errors_num == 0 )
     {

@@ -162,9 +162,9 @@ int main( int argc, char *args[] )
     dist_old.sync( loc_data_array_old );
 
     log.info_all( "check for data" );
-    auto data_view2_new = loc_data_array_new.create_view( true );
-    auto data_view2_old = loc_data_array_old.create_view( true );
-    int  error_flag      = 0;
+    auto data_view2_new   = loc_data_array_new.create_view( true );
+    auto data_view2_old   = loc_data_array_old.create_view( true );
+    int  error_flag       = 0;
     int  cross_check_flag = 0;
     for ( ordinal ix = my_loc_rect.i1[0]; ix < my_loc_rect.i2[0]; ++ix )
         for ( ordinal iy = my_loc_rect.i1[1]; iy < my_loc_rect.i2[1]; ++iy )

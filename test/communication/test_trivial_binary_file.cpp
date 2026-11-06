@@ -31,8 +31,8 @@
 #include <scfd/communication/trivial_binary_file.h>
 
 const int Dim        = 3;
-using mem_t           = scfd::memory::host;
-using comm_t          = scfd::communication::trivial_platform<mem_t>;
+using mem_t          = scfd::memory::host;
+using comm_t         = scfd::communication::trivial_platform<mem_t>;
 using comm_info_type = scfd::communication::trivial_comm<mem_t>;
 
 using ordinal     = std::int32_t;
@@ -193,7 +193,7 @@ int main( int argc, char *argv[] )
         scfd::communication::trivial_binary_file<double> file( comm_info, size_file_name );
         file.size( 100 );
         std::ifstream check( size_file_name, std::ios::binary | std::ios::ate );
-        auto           grown_sz = static_cast<std::streamoff>( check.tellg() );
+        auto          grown_sz = static_cast<std::streamoff>( check.tellg() );
         check.close();
         if ( grown_sz != static_cast<std::streamoff>( 100 * sizeof( double ) ) )
         {
@@ -205,7 +205,7 @@ int main( int argc, char *argv[] )
         scfd::communication::trivial_binary_file<double> file( comm_info, size_file_name );
         file.size( 10 );
         std::ifstream check( size_file_name, std::ios::binary | std::ios::ate );
-        auto           shrunk_sz = static_cast<std::streamoff>( check.tellg() );
+        auto          shrunk_sz = static_cast<std::streamoff>( check.tellg() );
         check.close();
         if ( shrunk_sz != static_cast<std::streamoff>( 10 * sizeof( double ) ) )
         {
@@ -235,7 +235,7 @@ int main( int argc, char *argv[] )
             if ( std::abs( wbuf[i] - rbuf[i] ) > std::numeric_limits<double>::epsilon() )
             {
                 std::cerr << "error at write_at/read_at: " << i << " with ref = " << wbuf[i]
-                           << " and file read = " << rbuf[i] << std::endl;
+                          << " and file read = " << rbuf[i] << std::endl;
                 is_failed = true;
             }
         }

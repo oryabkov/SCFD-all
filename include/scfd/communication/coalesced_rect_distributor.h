@@ -288,7 +288,7 @@ private:
     {
         big_ord_rect_t recv_rect = partitioner.proc_rects[reciever_proc_id],
                        send_rect = partitioner.proc_rects[sender_proc_id];
-        big_ord_vec_t  my_i1     = partitioner.proc_rects[get_own_rank()].i1;
+        big_ord_vec_t my_i1      = partitioner.proc_rects[get_own_rank()].i1;
         if ( reciever_proc_id == get_own_rank() )
         {
             pack.proc_id = sender_proc_id;
