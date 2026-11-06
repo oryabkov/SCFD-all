@@ -19,12 +19,14 @@ CUDALIBRARIES = -lcudart
 INCLUDE_MPI = -I${MPI_ROOT_PATH}/include
 MPICOMPILER_OPENMP = -fopenmp -lpthread
 MPI_CXXFLAGS = -std=c++14
+SERIAL_CXXFLAGS = -std=c++14
 MPI_TEST_HOST = localhost:4
 MPI_TEST_PROCS = 4
 MPI_TEST_RUN_FLAGS = --bind-to none
-CUDA_TEST_TARGETS = test_mpi_rect_distributor.bin test_mpi_rect_distributor_tensor.bin
+CUDA_TEST_TARGETS = test_mpi_rect_distributor.bin test_mpi_rect_distributor_tensor.bin test_mpi_coalesced_rect_distributor.bin
 MPI_TEST_TARGETS = test_sequential_mpi.bin test_mpi_binary_file.bin test_mpi_thread_multiple.bin test_mpi_comm_split.bin test_mpi_comm_collectives.bin test_mpi_comm_p2p.bin test_mpi_comm_calls.bin test_backend_runtime_mpi.bin
-TEST_TARGETS = $(CUDA_TEST_TARGETS) $(MPI_TEST_TARGETS)
+SERIAL_TEST_TARGETS = test_trivial_comm.bin test_coalesced_rect_distributor.bin test_trivial_binary_file.bin
+TEST_TARGETS = $(CUDA_TEST_TARGETS) $(MPI_TEST_TARGETS) $(SERIAL_TEST_TARGETS)
 BACKEND_RUNTIME_MPI_DEVICE_TEST = test_backend_runtime_mpi_device.cpp
 
 .PHONY: all clean
@@ -37,6 +39,9 @@ test_mpi_rect_distributor.bin: test_mpi_rect_distributor.cu
 test_mpi_rect_distributor_tensor.bin: test_mpi_rect_distributor_tensor.cu
 	$(NVCC) -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 test_mpi_rect_distributor_tensor.cu -c -o test_mpi_rect_distributor_tensor.o
 	${MPICC} test_mpi_rect_distributor_tensor.o $(LIBPATH) $(CUDALIBRARIES) $(MPICOMPILER_OPENMP) -o test_mpi_rect_distributor_tensor.bin
+test_mpi_coalesced_rect_distributor.bin: test_mpi_coalesced_rect_distributor.cu
+	$(NVCC) -I${SCFD_INCLUDE} $(INCLUDE_MPI) -O3 test_mpi_coalesced_rect_distributor.cu -c -o test_mpi_coalesced_rect_distributor.o
+	${MPICC} test_mpi_coalesced_rect_distributor.o $(LIBPATH) $(CUDALIBRARIES) $(MPICOMPILER_OPENMP) -o test_mpi_coalesced_rect_distributor.bin
 
 test_sequential_mpi.bin: test_sequential_mpi.cpp
 	${MPICC} -I${SCFD_INCLUDE} test_sequential_mpi.cpp -o test_sequential_mpi.bin
@@ -94,6 +99,18 @@ test_backend_runtime_mpi_hip.bin: $(BACKEND_RUNTIME_MPI_DEVICE_TEST)
 test_backend_runtime_mpi_sycl.bin: $(BACKEND_RUNTIME_MPI_DEVICE_TEST)
 	$(SYCL_CXX) $(SYCL_CPPSTD) $(SYCL_TARGET_FLAGS) -DPLATFORM_SYCL -DSCFD_BACKEND_ENABLE_MPI -fsycl -I${SCFD_INCLUDE} $(INCLUDE_MPI) $(BACKEND_RUNTIME_MPI_DEVICE_TEST) -L${MPI_ROOT_PATH}/lib -lmpi -o test_backend_runtime_mpi_sycl.bin
 	$(MPIRUN) $(MPI_TEST_RUN_FLAGS) --host $(MPI_TEST_HOST) -n $(MPI_TEST_PROCS) ./test_backend_runtime_mpi_sycl.bin
+
+test_trivial_comm.bin: test_trivial_comm.cpp
+	$(CXX) $(SERIAL_CXXFLAGS) -I${SCFD_INCLUDE} test_trivial_comm.cpp -o test_trivial_comm.bin
+	./test_trivial_comm.bin
+
+test_coalesced_rect_distributor.bin: test_coalesced_rect_distributor.cpp
+	$(CXX) $(SERIAL_CXXFLAGS) -I${SCFD_INCLUDE} test_coalesced_rect_distributor.cpp -o test_coalesced_rect_distributor.bin
+	./test_coalesced_rect_distributor.bin
+
+test_trivial_binary_file.bin: test_trivial_binary_file.cpp
+	$(CXX) $(SERIAL_CXXFLAGS) -I${SCFD_INCLUDE} test_trivial_binary_file.cpp -o test_trivial_binary_file.bin
+	./test_trivial_binary_file.bin
 
 clean:
 	rm -f *.bin *.o test_file_write.txt

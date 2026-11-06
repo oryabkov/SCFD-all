@@ -25,16 +25,13 @@ namespace scfd
 namespace communication
 {
 
-/// Analog of mpi_wrap, but WITHOUT any MPI. It owns the single shared message queue
-/// and hands out trivial_comm handles onto it. Deliberately NON-copyable and
-/// NON-movable so the queue keeps one stable address shared by every handle.
+/// Analog of mpi_wrap, but WITHOUT any MPI.
 template <class Memory>
 struct trivial_platform
 {
     using queue_type = detail::trivial_message_queue<Memory>;
     using comm_type  = trivial_comm<Memory>;
 
-    /// argc/argv kept only for signature parity with mpi_wrap; no MPI_Init here.
     trivial_platform( int argc, char *argv[] )
     {
         (void)argc;
@@ -48,10 +45,9 @@ struct trivial_platform
     trivial_platform( trivial_platform && )                 = delete;
     trivial_platform &operator=( trivial_platform && )      = delete;
 
-    /// Mirrors mpi_wrap::comm_world(): a num_procs==1, myid==0 handle onto the queue.
     comm_type comm_world() const
     {
-        return comm_type( 1, 0, queue_.get() );
+        return comm_type( queue_.get() );
     }
 
 private:

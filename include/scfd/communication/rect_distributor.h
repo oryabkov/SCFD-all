@@ -360,6 +360,8 @@ private:
             );
 #ifndef SCFD_COMMUNICATION_ENABLE_CUDA_AWARE_MPI
             data_buf->sync_from_array();
+#else
+            for_each.wait();
 #endif
         }
         template <class Array>
